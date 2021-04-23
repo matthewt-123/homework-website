@@ -1,0 +1,47 @@
+{% extends 'hwapp/layout.html' %}
+
+{% block body %}
+<h1>
+Homework List for {{user.username}}
+</h1>
+<table width='100%'>
+    <thead>
+        <strong><tr>
+            <td width='50%'>
+                <strong>Class Name</strong>
+            </td width = '10%'>
+            <td>
+                <strong>Period</strong>
+            </td>
+            <td width='20%'>
+                <strong>Class Time</strong>
+            </td>
+            <td width='10%'>
+                <strong>Edit</strong>
+            </td>
+        </tr></strong>
+    </thead>
+    <tbody>
+        {% for class in classes %}
+            <tr>
+                <td><a href='/classhw/{{class.id}}'>
+                    {{class.class_name}}
+                </a></td>
+                <td><a href='/classhw/{{class.id}}'>
+                    {{class.period}}
+                </a></td>
+                <td><a href='/classhw/{{class.id}}'>
+                    {{class.time}}
+                </a></td>
+                <td>
+                    <a href='/editclass/{{class.id}}'>
+                        <img src='/static/hwapp/edit.png' width='20%'>
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<hr>
+<a href='/addclass'>Add Class</a>
+{% endblock %}

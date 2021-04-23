@@ -1,0 +1,17 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+
+<h1>Add Homework</h1>
+<hr>
+    <form action='{% url "addhw" %}' method='POST' class='indented'>
+        {% csrf_token %}
+        <table>
+          {{form.as_table}}
+        </table>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+
+
+{% endblock %}
