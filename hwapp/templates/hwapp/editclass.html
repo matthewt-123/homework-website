@@ -21,15 +21,15 @@
         </div>
     {% endfor %}
 {% endif %}
-<h1>Add Class</h1>
-
+<h1 style='margin-left: 35%;'>Add Class</h1>
+<hr>
 <form action='{% url "editclass" class_id %}' method='POST' class='indented'>
   {% csrf_token %}
-  <table>
+  <table style='margin-left: 35%;'>
     {{form.as_table}}
   </table>
 
-  <button type="submit" class="btn btn-primary">Save</button>
+  <button  style='margin-left: 35%;' type="submit" class="btn btn-primary">Save</button>
 </form>
 
 

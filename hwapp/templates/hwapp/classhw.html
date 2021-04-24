@@ -1,0 +1,19 @@
+{% extends 'hwapp/layout.html' %}
+
+{% block body %}
+<h1>
+Homework for {{class1.class_name}}
+</h1>
+
+{% for hw in hwlist %}
+<a href = '/edit_hw/{{hw.id}}'>
+    <li class="hwlist">
+        {{hw.hw_title}}({{hw.hw_class}}) is due on {{hw.due_date}}
+    </li>
+</a>
+
+
+{% endfor %}
+<hr>
+<a href='/addhw'>Add Homework</a>
+{% endblock %}

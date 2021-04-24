@@ -7,14 +7,14 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django import forms
-import time
+import time, sched
 from django.contrib.auth.decorators import login_required, user_passes_test
 import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from . import basics
 from django.contrib.admin import widgets
-
+s= sched.scheduler(time.time, time.sleep)
 class AddClassForm(ModelForm):
     class Meta:
         model = Class
@@ -27,14 +27,27 @@ class AddClassForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(AddClassForm, self).__init__(*args, **kwargs)
         self.fields['time'].widget = widgets.AdminTimeWidget()
-
+class PreferencesForm(ModelForm):
+    class Meta:
+        model = Preferences
+        fields = ['email_notifications', 'email_recurrence']
 
 def user_check(user):
     return user.username=="Power_Automate"
+
 @login_required(login_url='/login')
 def index(request):
-    user = request.user
-    hwlist = Homework.objects.filter(hw_user = user, active=True)
+    hwlist = Homework.objects.filter(hw_user = request.user, completed=False).order_by('due_date', 'hw_class__period', 'priority')
+    if request.is_ajax():
+        hw_id=request.POST.get('hw_id')
+        try: 
+            update = request.POST['hw_completion']
+            update = True
+        except:
+            update = False
+        hw_instance = Homework.objects.get(hw_user=request.user, id=hw_id)
+        hw_instance.completed=update
+        hw_instance.save()
     return render(request, 'hwapp/index.html', {
         'hwlist': hwlist
     })
@@ -93,14 +106,13 @@ def register(request):
     else:
         return render(request, "hwapp/register.html")
 # Create your views here.
-@user_passes_test(user_check)
+
 def hourly_refresh(request):
     user = request.user
-    hw =  Homework.objects.filter(hw_user=user, active=True)
+    hw =  Homework.objects.filter(hw_user=user, completed=False)
     listed= f'Homework email for {user.username}.'
     for each in hw:
         listed = listed + f"<li>{each.hw_title}({each.hw_class}) is due at {each.due_date}</li>"
-        print(each)
     message = Mail(
         from_email = basics.from_email,
         to_emails= basics.to_emails,
@@ -116,11 +128,10 @@ def hourly_refresh(request):
 @user_passes_test(user_check)
 def daily_refresh(request):
     user = User.objects.get(id=request.session['id'])
-    hw =  Homework.objects.filter(hw_user=user, active=True)
+    hw =  Homework.objects.filter(hw_user=user, completed=False)
     listed= f'Homework email for {user.username}.'
     for each in hw:
         listed = listed + f"<li>{each.hw_title}({each.hw_class}) is due at {each.due_date}</li>"
-        print(each)
     message = Mail(
         from_email = basics.from_email,
         to_emails= basics.to_emails,
@@ -136,11 +147,10 @@ def daily_refresh(request):
 @user_passes_test(user_check)
 def weekly_refresh(request):
     user = request.user
-    hw =  Homework.objects.filter(hw_user=user, active=True)
+    hw =  Homework.objects.filter(hw_user=user, completed=False)
     listed= f'Homework email for {user.username}.'
     for each in hw:
         listed = listed + f"<li>{each.hw_title}({each.hw_class}) is due at {each.due_date}</li>"
-        print(each)
     message = Mail(
         from_email = basics.from_email,
         to_emails= basics.to_emails,
@@ -156,11 +166,10 @@ def weekly_refresh(request):
 @user_passes_test(user_check)
 def monthly_refresh(request):
     user = request.user
-    hw =  Homework.objects.filter(hw_user=user, active=True)
+    hw =  Homework.objects.filter(hw_user=user, completed=False)
     listed= f'Homework email for {user.username}.'
     for each in hw:
         listed = listed + f"<li>{each.hw_title}({each.hw_class}) is due at {each.due_date}</li>"
-        print(each)
     message = Mail(
         from_email = basics.from_email,
         to_emails= basics.to_emails,
@@ -175,33 +184,20 @@ def monthly_refresh(request):
     pass
 @login_required(login_url='/login')
 def classes(request):
-    if request.method == "POST":
-        pass
-    else:
-        classes = Class.objects.filter(class_user=request.user)
-        return render(request, 'hwapp/classes.html', {
-            'classes': classes
-        })
-def preferences(request):
-    if request.method == 'POST':
-        pass
-    else:
-        try: 
-            user = request.user
-        except:
-            return render(request, "auctions/error.html", {
-                "error": "Not signed in. Please <a href = '/login'> Sign In Here </a>"
-            })
-        try: 
-            preferences = Preferences.objects.get(preferences_user=user)
-        except:
-            preferences = None
-            pass
-        return render(request, 'hwapp/preferences.html', {
-            'preferences': preferences
-        })
+    classes = Class.objects.filter(class_user=request.user)
+    return render(request, 'hwapp/classes.html', {
+        'classes': classes
+    })
+
 @login_required(login_url='/login')
 def addhw(request):
+    class AddHwForm(ModelForm):
+        class Meta:
+            model = Homework
+            fields = ['hw_class', 'hw_title', 'due_date', 'priority', 'notes']
+        def __init__(self, *args, **kwargs):
+            super(AddHwForm, self).__init__(*args, **kwargs)
+            self.fields['hw_class'].queryset = Class.objects.filter(class_user=request.user)
     if request.method == 'POST':
         form = AddHwForm(request.POST)
         if form.is_valid():
@@ -210,21 +206,56 @@ def addhw(request):
             due_date = form.cleaned_data['due_date']
             priority = form.cleaned_data['priority']
             notes = form.cleaned_data['notes']
-            addhw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=hw_title, priority=priority, notes=notes, due_date=due_date, active=True)
+            addhw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=hw_title, priority=priority, notes=notes, due_date=due_date, completed=False)
             addhw.save()
             return HttpResponseRedirect(reverse('index'))
+        else:
+            return render(request, 'hwapp/addhw.html', {
+                'form': form
+            })
     else:
-        class AddHwForm(ModelForm):
-            class Meta:
-                model = Homework
-                fields = ['hw_class', 'hw_title', 'due_date', 'priority', 'notes']
-            def __init__(self, *args, **kwargs):
-                super(AddHwForm, self).__init__(*args, **kwargs)
-                self.fields['hw_class'].queryset = Class.objects.filter(class_user=request.user)
+
         form = AddHwForm()
         return render(request, 'hwapp/addhw.html', {
             'form': form
         })
+@login_required(login_url='/login')
+def preferences(request):
+    if request.method == 'POST':
+        form = PreferencesForm(request.POST)  
+        if form.is_valid():
+            email_recurrence=form.cleaned_data['email_recurrence']
+            email_notifications=form.cleaned_data['email_notifications']
+            try:
+                preferences = Preferences.objects.get(preferences_user=request.user)
+                preferences.email_notifications = email_notifications
+                preferences.email_recurrence = email_recurrence
+                preferences.save()
+            except:
+                new_pref = Preferences(preference_user=request.user, email_recurrence=email_recurrence, email_notifications=email_notifications)
+                new_pref.save()
+            return render(request, 'hwapp/preferences.html', {
+                'form': form,
+                'message': "Success! Your preferences have been saved."
+            })
+    else:
+        try: 
+            preferences = Preferences.objects.get(preferences_user=request.user)
+            email_notifications = preferences.email_notifications
+            email_recurrence = preferences.email_recurrence
+            initial = {
+                'email_notifications': email_notifications,
+                'email_recurrence': email_recurrence
+            }
+            form = PreferencesForm(initial=initial)
+            return render(request, 'hwapp/preferences.html', {
+                'form': form
+        })
+        except:
+            form = PreferencesForm()
+            return render(request, 'hwapp/preferences.html', {
+                'form': form
+            })
 @login_required(login_url='/login')
 def edit_hw(request, hw_id):
     if request.method == 'POST':
@@ -239,14 +270,11 @@ def edit_hw(request, hw_id):
 
             #updating model
             updated = Homework.objects.get(hw_user=request.user, id=hw_id)
-            print(type(hw_class))
             updated.hw_class = hw_class
             updated.hw_title = hw_title
             updated.due_date = due_date
             updated.priority = priority
             updated.notes = notes
-            print('updated')
-            print(updated.hw_class)
             updated.save()
             try:
                 x=1
@@ -278,7 +306,6 @@ def edit_hw(request, hw_id):
                 'due_date': hw.due_date
             }   
             form = EditHwForm(initial=values)
-            print(form)
             return render(request, 'hwapp/edit_hw.html', {
                 'form': form,
                 'hw_id': hw_id
@@ -357,11 +384,27 @@ def editclass(request, class_id):
             'time': editclass.time,
             'days': editclass.days.all()
         }
-        print(editclass)
         form = AddClassForm(initial=initial)
-        print(form)
         return render(request, 'hwapp/editclass.html', {
             'form': form,
             'class_id': class_id
         })
-    
+@login_required(login_url='/login')
+def classhw(request, class_id):
+    if class_id == None:
+        return HttpResponseRedirect(reverse('index'))
+    class1=Class.objects.get(id=class_id, class_user=request.user)
+    hwlist = Homework.objects.filter(hw_class=class1, hw_user=request.user)
+    if hwlist is None:
+        hwlist = f"No Homework for {class1.class_name}"
+    return render(request, 'hwapp/classhw.html', {
+        'hwlist': hwlist,
+        'class1': class1
+    })
+@login_required(login_url='/login')
+def allhw(request):
+    user = request.user
+    hwlist = Homework.objects.filter(hw_user = user)
+    return render(request, 'hwapp/index.html', {
+        'hwlist': hwlist
+    })

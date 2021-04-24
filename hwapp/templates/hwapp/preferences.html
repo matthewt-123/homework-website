@@ -1,0 +1,23 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+{% if message %}
+<div class="alert alert-success" role="alert">
+    {{message}}    
+    </div>
+{% endif %}
+    <h2>Preferences</h2>
+
+    {% if message %}
+        <div>{{ message }}</div>
+    {% endif %}
+
+    <form action='{% url "preferences" %}' method='POST'>
+        {% csrf_token %}
+        <table style='margin-left: 35%;'>
+          {{form.as_table}}
+        </table>
+        <button style='margin-left: 35%' type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+{% endblock %}

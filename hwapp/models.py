@@ -8,7 +8,7 @@ class Recurrence(models.Model):
     basis = models.CharField(max_length=128)
     hour_definition = models.IntegerField()
     def __str__(self):
-        return f"{self.basis}: {self.hour_definition}"
+        return f"{self.basis}"
 class Day(models.Model):
     days = models.CharField(max_length=128)
     def __str__(self):
@@ -28,8 +28,8 @@ class Homework(models.Model):
     due_date = models.DateField()
     priority = models.IntegerField()
     notes = models.TextField()
-    active = models.BooleanField()
+    completed = models.BooleanField(default=True)
 class Preferences(models.Model):
     preferences_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='preferences_user')
     email_notifications = models.BooleanField()
-    email_recurrence = models.ForeignKey(Recurrence, on_delete=models.CASCADE, related_name="recurrence")
+    email_recurrence = models.ForeignKey(Recurrence, null=True, blank=True, on_delete=models.CASCADE, related_name="recurrence")
