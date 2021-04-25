@@ -258,8 +258,15 @@ def preferences(request):
             })
 @login_required(login_url='/login')
 def edit_hw(request, hw_id):
+    class EditHwForm(ModelForm):
+        class Meta:
+            model = Homework
+            fields = ['hw_class', 'hw_title', 'due_date', 'priority', 'notes']
+        def __init__(self, *args, **kwargs):
+            super(EditHwForm, self).__init__(*args, **kwargs)
+            self.fields['hw_class'].queryset = Class.objects.filter(class_user=request.user)
     if request.method == 'POST':
-        form = AddHwForm(request.POST)
+        form = EditHwForm(request.POST)
         if form.is_valid():
             #pulling form data
             hw_class = form.cleaned_data['hw_class']
@@ -288,14 +295,6 @@ def edit_hw(request, hw_id):
                 'form': form
             })
     else:
-        class EditHwForm(ModelForm):
-            class Meta:
-                model = Homework
-                fields = ['hw_class', 'hw_title', 'due_date', 'priority', 'notes']
-            def __init__(self, *args, **kwargs):
-                super(EditHwForm, self).__init__(*args, **kwargs)
-                self.fields['hw_class'].queryset = Class.objects.filter(class_user=request.user)
-      
         try:
             hw = Homework.objects.get(hw_user=request.user, id=hw_id)
             values = {
@@ -404,7 +403,17 @@ def classhw(request, class_id):
 @login_required(login_url='/login')
 def allhw(request):
     user = request.user
-    hwlist = Homework.objects.filter(hw_user = user)
+    hwall = Homework.objects.filter(hw_user = user).order_by('due_date', 'hw_class__period', 'priority')
+    hwlist = []
+    completed = []
+    for hw in hwall:
+        if hw.completed == True:
+            completed.append(hw)
+        else:
+            hwlist.append(hw)
+    print(completed)
+    print(hwlist)
     return render(request, 'hwapp/index.html', {
-        'hwlist': hwlist
+        'hwlist': hwlist,
+        'completed': completed
     })

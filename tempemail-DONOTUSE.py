@@ -16,23 +16,24 @@ priority = []
 def create_connection():
     con = sqlite3.connect('db.sqlite3')
     cur=con.cursor()
-    cur.execute("SELECT * FROM hwapp_homework WHERE hw_user_id = 1 AND active=True")
+    cur.execute("SELECT * FROM hwapp_homework WHERE hw_user_id = 1 AND completed=False" + 
+        "INNER JOIN hwapp_class ON id = hwapp_homework.class" + 
+        "ORDER BY due_date, hwclass__period, priority")
     global hw_title
     global priority
     global notes
     global due_date
+    print(cur.fetchall())
     for each in cur.fetchall():
         hw_title.append(each[1])
         priority.append(each[2])
         notes.append(each[3])
-        due_date.append(each[5])
-        hw_class_temp.append(each[7])
-
-    for class1 in hw_class_temp:
-        cur.execute(f"SELECT * FROM hwapp_class WHERE id={class1}")
-        for each in cur.fetchall():
-            hw_class.append(each[1])
-            print(each)
+        due_date.append(each[7])
+        hw_class_temp.append(each[4])
+        for class1 in hw_class_temp:
+            cur.execute(f"SELECT * FROM hwapp_class WHERE id={class1}")
+        for every in cur.fetchall():
+            hw_class.append(every[1])
 create_connection()
 
 def hourly_refresh_admin():
