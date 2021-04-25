@@ -1,0 +1,23 @@
+#hwlist {
+    float: right;
+}
+#indented {
+    display: block;
+    margin: auto;
+    right:100px;
+    margin-left: 575px;
+
+}
+
+.label {
+    margin-left: 50px;
+    display: inline-block;
+    width: 200px;
+    text-align: left;
+}
+
+.class-adv {
+    display: fixed;
+    margin-left: 125px;
+    width: 42%
+}
