@@ -1,0 +1,4 @@
+1. flexbox->mobile friendly
+2. iOS app
+3. Email implementation
+4. align signed in as... with logo OR create vertical sidebar/menu

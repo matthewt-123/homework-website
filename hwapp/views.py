@@ -14,6 +14,8 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from . import basics
 from django.contrib.admin import widgets
+import sendgrid-admin
+
 s= sched.scheduler(time.time, time.sleep)
 class AddClassForm(ModelForm):
     class Meta:
@@ -34,6 +36,10 @@ class PreferencesForm(ModelForm):
 
 def user_check(user):
     return user.username=="Power_Automate"
+@user_passes_test(user_check)
+def daily_email(request):
+    create_connection()
+    hourly_refresh_admin()
 
 @login_required(login_url='/login')
 def index(request):
@@ -274,20 +280,18 @@ def edit_hw(request, hw_id):
             due_date = form.cleaned_data['due_date']
             priority = form.cleaned_data['priority']
             notes = form.cleaned_data['notes']
-
-            #updating model
-            updated = Homework.objects.get(hw_user=request.user, id=hw_id)
-            updated.hw_class = hw_class
-            updated.hw_title = hw_title
-            updated.due_date = due_date
-            updated.priority = priority
-            updated.notes = notes
-            updated.save()
             try:
-                x=1
+                #updating model
+                updated = Homework.objects.get(hw_user=request.user, id=hw_id)
+                updated.hw_class = hw_class
+                updated.hw_title = hw_title
+                updated.due_date = due_date
+                updated.priority = priority
+                updated.notes = notes
+                updated.save()
             except:
                 return render(request, 'hwapp/error.html', {
-                    'error': "Unknown error"
+                    'error': "Access Denied"
                 })
             return HttpResponseRedirect(reverse('index'))
         else:
@@ -392,8 +396,13 @@ def editclass(request, class_id):
 def classhw(request, class_id):
     if class_id == None:
         return HttpResponseRedirect(reverse('index'))
-    class1=Class.objects.get(id=class_id, class_user=request.user)
-    hwlist = Homework.objects.filter(hw_class=class1, hw_user=request.user)
+    try: 
+        class1=Class.objects.get(id=class_id, class_user=request.user)
+        hwlist = Homework.objects.filter(hw_class=class1, hw_user=request.user)
+    except:
+        return render(request, 'hwapp/error.html', {
+          'error': "Access Denied"
+        })
     if hwlist is None:
         hwlist = f"No Homework for {class1.class_name}"
     return render(request, 'hwapp/classhw.html', {
@@ -417,3 +426,34 @@ def allhw(request):
         'hwlist': hwlist,
         'completed': completed
     })
+def about(request):
+    return render(request, 'hwapp/aboutme.html')
+@login_required(login_url='/login')
+def profile(request):
+    class UserForm(ModelForm):
+        class Meta:
+            model = User
+            fields = ['first_name', 'last_name', 'email', 'is_active']
+    if request.method == 'POST':
+        form = UserForm(request.POST)
+        if form.is_valid():
+            request.user.first_name = form.cleaned_data['first_name']
+            request.user.last_name = form.cleaned_data['last_name']
+            request.user.email = form.cleaned_data['email']
+            request.user.is_active = form.cleaned_data['is_active']
+            request.user.save()
+            return render(request, 'hwapp/profile.html', {
+                'form': form,
+                'message': "Success!"
+            })
+    else:
+        initial = {
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+            'email': request.user.email,
+            'is_active': request.user.is_active
+        }
+        form = UserForm(initial = initial)
+        return render(request, 'hwapp/profile.html', {
+            'form': form
+        })

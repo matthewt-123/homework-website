@@ -4,46 +4,46 @@
 <h1>
 Homework List for {{user.username}}
 </h1>
-<table width='100%'>
-    <thead>
-        <tr>
-            <td width=5%></td>
-            <td width='40%'>
+<table class='index' width='100%'>
+    <thead class='index'>
+        <tr class='index'>
+            <td class='index' width=5%></td>
+            <td class='index'width='40%'>
                 <strong>Assignment Name</strong>
             </td>
-            <td width='20%'>
+            <td class='index' width='20%'>
                 <strong>Class Name</strong>
             </td>
-            <td width=15%>
+            <td class='index' width=15%>
                 <strong>Due Date </strong>
             </td>
-            <td width='10%'>
+            <td class='index' width='10%'>
                 <strong>Priority</strong>
             </td>
-            <td width=5%>
+            <td class='index' width=5%>
                 <strong>Completed?</strong>        
             </td>
             <td width=5%></td>
         </tr>
     </thead>
-    <tbody>
+    <tbody class='index'>
         {% for hw in hwlist %}
-        <tr>
-            <td></td>
-            <td>
+        <tr class='index'>
+            <td class='index'></td>
+            <td class='index'>
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_title}}</a>
             </td>
-            <td>
+            <td class='index'>
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_class}}</a>
             </td>
-            <td>
+            <td class='index'>
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>
             </td>
-            <td>
+            <td class='index'>
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.priority}}</a>
             </td>
 
-                <td>
+                <td class='index'>
                 <form action='/' method="POST" id="hwform">
                     {% csrf_token %}
                     {% if not hw.completed %}

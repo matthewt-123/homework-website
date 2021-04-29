@@ -27,7 +27,7 @@ class Homework(models.Model):
     hw_title = models.CharField(max_length=256)
     due_date = models.DateField()
     priority = models.IntegerField()
-    notes = models.TextField()
+    notes = models.TextField(blank=True, null=True)
     completed = models.BooleanField(default=True)
 class Preferences(models.Model):
     preferences_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='preferences_user')

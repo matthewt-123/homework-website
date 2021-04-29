@@ -1,0 +1,6 @@
+4/24/21- set DEBUG=TRUE
+    updated flexbox for index
+    set logo to image
+4/25/21- modified header -> table
+    added about me, profile tab
+    

@@ -1,4 +1,5 @@
 appdirs==1.4.4
+APScheduler==3.7.0
 asgiref==3.3.1
 astroid==2.5
 attrs==19.3.0
@@ -71,6 +72,7 @@ termcolor==1.1.0
 toml==0.10.2
 tornado==6.0.4
 traitlets==4.3.3
+tzlocal==2.1
 urllib3==1.25.10
 virtualenv==20.0.30
 wcwidth==0.2.5

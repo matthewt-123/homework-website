@@ -1,0 +1,43 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+
+    <h2>About Me</h2>
+
+    {% if message %}
+        <div>{{ message }}</div>
+    {% endif %}
+
+<table>
+    <tbody>
+        <tr>
+            <td width=10%></td>
+            <td width=20%>
+                About Me:
+            </td>
+            <td width=10%></td>
+            <td width=60%>
+                Hi, I am Matthew
+            </td>
+        </tr>
+        <tr>
+            <td width=10%></td>
+            <td width=20%>
+                About This Site:
+            </td>
+            <td width=10%></td>
+            <td width=60%>
+
+                    <li>
+                        The email function is under development
+                    </li>
+                    <li>
+
+                    </li>
+
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+{% endblock %}

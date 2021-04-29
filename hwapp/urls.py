@@ -16,5 +16,7 @@ urlpatterns = [
     path("editclass/<int:class_id>", views.editclass, name="editclass"),
     path("classhw/<int:class_id>", views.classhw, name="classhw"),
     path("allhw", views.allhw, name="allhw"),
+    path("about", views.about, name="about"),
+    path("profile", views.profile, name="profile"),
 
 ]
