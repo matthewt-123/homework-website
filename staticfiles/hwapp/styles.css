@@ -21,6 +21,7 @@
     margin-left: 125px;
     width: 42%
 }
+
 @media
 only screen and (max-width: 760px),
 (min-device-width: 768px) and (max-device-width: 1024px) {
@@ -56,10 +57,9 @@ only screen and (max-width: 760px),
     td.index:nth-of-type(7):before { content: ""; }
 
 }
-
 .logo {
     display: flex;
-    margin-top: -20px;
+    margin-top: 0px;
     max-width: 100px;
     height:auto;
 }
@@ -70,9 +70,8 @@ only screen and (max-width: 760px),
     white-space:nowrap;
     overflow-x: auto;
     overflow-y: hidden;
-    margin-left: 1200px;
+    margin-left: 1000px;
     right:0;
     left:0;
-    margin-top: -300px;
-    vertical-align: middle;
+    margin-top: 0px;
 }

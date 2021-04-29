@@ -12,9 +12,8 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from . import basics
+from . import basics, sendgrid-admin
 from django.contrib.admin import widgets
-import sendgrid-admin
 
 s= sched.scheduler(time.time, time.sleep)
 class AddClassForm(ModelForm):
