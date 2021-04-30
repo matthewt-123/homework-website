@@ -18,5 +18,6 @@ urlpatterns = [
     path("allhw", views.allhw, name="allhw"),
     path("about", views.about, name="about"),
     path("profile", views.profile, name="profile"),
+    path("refresh", views.daily_email, name="daily_email"),
 
 ]

@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from . import basics, sendgrid-admin
+from . import basics
 from django.contrib.admin import widgets
 
 s= sched.scheduler(time.time, time.sleep)
