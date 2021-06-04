@@ -2,18 +2,64 @@
 
 {% block body %}
 <h1>
-Homework for {{class1.class_name}}
+Homework for {{class1.class_name}} (Active Assignments Only)
 </h1>
 
-{% for hw in hwlist %}
-<a href = '/edit_hw/{{hw.id}}'>
-    <li class="hwlist">
-        {{hw.hw_title}}({{hw.hw_class}}) is due on {{hw.due_date}}
-    </li>
-</a>
+<table class='index' width='100%'>
+    <thead class='index'>
+        <tr class='index'>
+            <td class='index' width=5%></td>
+            <td class='index'width='40%'>
+                <strong>Assignment Name</strong>
+            </td>
+            <td class='index' width='20%'>
+                <strong>Class Name</strong>
+            </td>
+            <td class='index' width=15%>
+                <strong>Due Date </strong>
+            </td>
+            <td class='index' width='10%'>
+                <strong>Priority</strong>
+            </td>
+            <td class='index' width=5%>
+                <strong>Completed?</strong>        
+            </td>
+            <td width=5%></td>
+        </tr>
+    </thead>
+    <tbody class='index'>
+        {% for hw in hwlist %}
+        <tr class='index'>
+            <td class='index'></td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_title}}</a>
+            </td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_class}}</a>
+            </td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>
+            </td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.priority}}</a>
+            </td>
 
-
-{% endfor %}
+                <td class='index'>
+                <form action='/' method="POST" id="hwform">
+                    {% csrf_token %}
+                    {% if not hw.completed %}
+                        <input type='checkbox' class='completed' id='hw_completion' name='hw_completion' value='{{hw.completed}}'>
+                    {% else %}
+                    <input type='checkbox' class='completed' id='hw_completion' name='hw_completion' value='{{hw.completed}}'  checked='{{hw.completed}}'>
+                    {% endif %}
+                    <input type='hidden' class='completed' name='hw_id'  value={{hw.id}}>
+                    </form>
+                </td>
+                <td></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 <hr>
 <a href='/addhw'>Add Homework</a>
 {% endblock %}

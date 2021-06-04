@@ -4,38 +4,38 @@
 <h1>
 Homework List for {{user.username}}
 </h1>
-<table width='100%'>
-    <thead>
-        <strong><tr>
-            <td width='50%'>
+<table class="classes" width='100%'>
+    <thead class="classes">
+        <strong><tr class="classes">
+            <td class="classes" width='50%'>
                 <strong>Class Name</strong>
             </td width = '10%'>
-            <td>
+            <td class="classes">
                 <strong>Period</strong>
             </td>
-            <td width='20%'>
+            <td class="classes" width='20%'>
                 <strong>Class Time</strong>
             </td>
-            <td width='10%'>
+            <td class="classes" width='10%'>
                 <strong>Edit</strong>
             </td>
         </tr></strong>
     </thead>
-    <tbody>
+    <tbody class="classes">
         {% for class in classes %}
-            <tr>
-                <td><a href='/classhw/{{class.id}}'>
+            <tr class="classes">
+                <td class="classes"><a href='/classhw/{{class.id}}'>
                     {{class.class_name}}
                 </a></td>
-                <td><a href='/classhw/{{class.id}}'>
+                <td class="classes"><a href='/classhw/{{class.id}}'>
                     {{class.period}}
                 </a></td>
-                <td><a href='/classhw/{{class.id}}'>
+                <td class="classes"><a href='/classhw/{{class.id}}'>
                     {{class.time}}
                 </a></td>
-                <td>
+                <td class="classes">
                     <a href='/editclass/{{class.id}}'>
-                        <img src='/static/hwapp/edit.png' width='20%'>
+                        <img id="edit_logo" src='/static/hwapp/edit.png' width='20%'>
                     </a>
                 </td>
             </tr>

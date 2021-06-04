@@ -1,48 +1,41 @@
+from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError, connection
 from django.forms import ModelForm
 from .models import User, Recurrence, Day, Class, Homework, Preferences
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django import forms
 import time, sched
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 from . import basics
-from django.contrib.admin import widgets
+from ics import Calendar, Event
+from .forms import HomeworkForm, PreferencesForm, AddClassForm
+from dotenv import load_dotenv
+import json
+from datetime import datetime
+from django.core.paginator import Paginator
 
-s= sched.scheduler(time.time, time.sleep)
-class AddClassForm(ModelForm):
-    class Meta:
-        model = Class
-        fields = ['class_name', 'period', 'days', 'time']
-    days = forms.ModelMultipleChoiceField(
-        queryset = Day.objects.all(),
-        widget=forms.CheckboxSelectMultiple
-    )
-    time = forms.TimeInput()
-    def __init__(self, *args, **kwargs):
-        super(AddClassForm, self).__init__(*args, **kwargs)
-        self.fields['time'].widget = widgets.AdminTimeWidget()
-class PreferencesForm(ModelForm):
-    class Meta:
-        model = Preferences
-        fields = ['email_notifications', 'email_recurrence']
 
-def user_check(user):
-    return user.username=="Power_Automate"
-@user_passes_test(user_check)
-def daily_email(request):
-    create_connection()
-    hourly_refresh_admin()
+
+#allow python to access Calendar data model
+import sys
+sys.path.append("..")
+from integrations.models import CalendarEvent, IntegrationPreference
+
+load_dotenv()
+
+
+
 
 @login_required(login_url='/login')
 def index(request):
     hwlist = Homework.objects.filter(hw_user = request.user, completed=False).order_by('due_date', 'hw_class__period', 'priority')
+    load_dotenv()
     if request.is_ajax():
         hw_id=request.POST.get('hw_id')
         try: 
@@ -54,7 +47,9 @@ def index(request):
         hw_instance.completed=update
         hw_instance.save()
     return render(request, 'hwapp/index.html', {
-        'hwlist': hwlist
+        'hwlist': hwlist,
+        'CLIENT_ID': os.environ.get('oauth_client_id_google'),
+        'ENDPOINT': os.environ.get('oauth_endpoint_google')
     })
 
 
@@ -76,7 +71,10 @@ def login_view(request):
                 "message": "Invalid username and/or password."
             })
     else:
-        return render(request, "hwapp/login.html")
+        return render(request, "hwapp/login.html", {
+            'CLIENT_ID': os.environ.get('oauth_client_id_google'),
+            'ENDPOINT': os.environ.get('oauth_endpoint_google')
+        })
 
 
 def logout_view(request):
@@ -107,6 +105,11 @@ def register(request):
                 "message": "Username already taken."
             })
         login(request, user)
+        #create integration profile
+        integration_profile = IntegrationPreference(integrations_user=request.user)
+        calendar = CalendarEvent(calendar_user=request.user)
+        calendar.save()
+        integration_profile.save()
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "hwapp/register.html")
@@ -130,26 +133,7 @@ def hourly_refresh(request):
     except Exception as e:
         print(e.details)
     pass
-@user_passes_test(user_check)
-def daily_refresh(request):
-    user = User.objects.get(id=request.session['id'])
-    hw =  Homework.objects.filter(hw_user=user, completed=False)
-    listed= f'Homework email for {user.username}.'
-    for each in hw:
-        listed = listed + f"<li>{each.hw_title}({each.hw_class}) is due at {each.due_date}</li>"
-    message = Mail(
-        from_email = basics.from_email,
-        to_emails= basics.to_emails,
-        subject = f"{user.username} Homework Email",
-        html_content=listed
-    )
-    try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        response = sg.send(message)
-    except Exception as e:
-        print(e.details)
-    pass
-@user_passes_test(user_check)
+
 def weekly_refresh(request):
     user = request.user
     hw =  Homework.objects.filter(hw_user=user, completed=False)
@@ -168,28 +152,10 @@ def weekly_refresh(request):
     except Exception as e:
         print(e.details)
     pass
-@user_passes_test(user_check)
-def monthly_refresh(request):
-    user = request.user
-    hw =  Homework.objects.filter(hw_user=user, completed=False)
-    listed= f'Homework email for {user.username}.'
-    for each in hw:
-        listed = listed + f"<li>{each.hw_title}({each.hw_class}) is due at {each.due_date}</li>"
-    message = Mail(
-        from_email = basics.from_email,
-        to_emails= basics.to_emails,
-        subject = f"{user.username} Homework Email",
-        html_content=listed
-    )
-    try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        response = sg.send(message)
-    except Exception as e:
-        print(e.details)
-    pass
+
 @login_required(login_url='/login')
 def classes(request):
-    classes = Class.objects.filter(class_user=request.user)
+    classes = Class.objects.filter(class_user=request.user).order_by('period')
     return render(request, 'hwapp/classes.html', {
         'classes': classes
     })
@@ -197,6 +163,7 @@ def classes(request):
 @login_required(login_url='/login')
 def addhw(request):
     class AddHwForm(ModelForm):
+        forms.DateInput.input_type="date"
         class Meta:
             model = Homework
             fields = ['hw_class', 'hw_title', 'due_date', 'priority', 'notes']
@@ -206,6 +173,7 @@ def addhw(request):
     if request.method == 'POST':
         form = AddHwForm(request.POST)
         if form.is_valid():
+            #append new hw to database
             hw_class = form.cleaned_data['hw_class']
             hw_title = form.cleaned_data['hw_title']
             due_date = form.cleaned_data['due_date']
@@ -213,10 +181,29 @@ def addhw(request):
             notes = form.cleaned_data['notes']
             addhw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=hw_title, priority=priority, notes=notes, due_date=due_date, completed=False)
             addhw.save()
+
+            time = Class.objects.get(class_user = request.user, class_name =hw_class).time
+            time = datetime.combine(due_date, time)
+
+            #check to see if user has calendar, create event: 
+            calendar = CalendarEvent.objects.get(calendar_user = request.user)
+            e = Event()
+            e.name = hw_title
+            e.begin = time
+            e.description = notes
+            try:
+                c = Calendar(calendar.ics)
+            except:
+                c = Calendar()
+            c.events.add(e) 
+
+            #append new hw to database
+            calendar.ics = c
+            calendar.save()
             return HttpResponseRedirect(reverse('index'))
         else:
             return render(request, 'hwapp/addhw.html', {
-                'form': form
+                'form': form,
             })
     else:
 
@@ -231,13 +218,24 @@ def preferences(request):
         if form.is_valid():
             email_recurrence=form.cleaned_data['email_recurrence']
             email_notifications=form.cleaned_data['email_notifications']
+            phone_number=form.cleaned_data['phone_number']
+            carrier=form.cleaned_data['carrier']
+            text_notifications = form.cleaned_data['text_notifications']
+            if phone_number and not carrier:
+                return render(request, 'hwapp/preferences.html', {
+                    'form': form,
+                    'error': "The carrier field is required."
+                })
             try:
                 preferences = Preferences.objects.get(preferences_user=request.user)
                 preferences.email_notifications = email_notifications
                 preferences.email_recurrence = email_recurrence
+                preferences.phone_number = phone_number
+                preferences.carrier = carrier    
+                preferences.text_notifications = text_notifications            
                 preferences.save()
             except:
-                new_pref = Preferences(preference_user=request.user, email_recurrence=email_recurrence, email_notifications=email_notifications)
+                new_pref = Preferences(preferences_user=request.user, email_recurrence=email_recurrence, email_notifications=email_notifications, carrier=carrier, phone_number=phone_number, text_notifications=text_notifications)
                 new_pref.save()
             return render(request, 'hwapp/preferences.html', {
                 'form': form,
@@ -250,9 +248,12 @@ def preferences(request):
             email_recurrence = preferences.email_recurrence
             initial = {
                 'email_notifications': email_notifications,
-                'email_recurrence': email_recurrence
+                'email_recurrence': email_recurrence,
+                'carrier': preferences.carrier,
+                'phone_number': preferences.phone_number
             }
             form = PreferencesForm(initial=initial)
+            print(form)
             return render(request, 'hwapp/preferences.html', {
                 'form': form
         })
@@ -397,7 +398,7 @@ def classhw(request, class_id):
         return HttpResponseRedirect(reverse('index'))
     try: 
         class1=Class.objects.get(id=class_id, class_user=request.user)
-        hwlist = Homework.objects.filter(hw_class=class1, hw_user=request.user)
+        hwlist = Homework.objects.filter(hw_class=class1, hw_user=request.user, completed=False)
     except:
         return render(request, 'hwapp/error.html', {
           'error': "Access Denied"
@@ -419,8 +420,6 @@ def allhw(request):
             completed.append(hw)
         else:
             hwlist.append(hw)
-    print(completed)
-    print(hwlist)
     return render(request, 'hwapp/index.html', {
         'hwlist': hwlist,
         'completed': completed
@@ -432,14 +431,13 @@ def profile(request):
     class UserForm(ModelForm):
         class Meta:
             model = User
-            fields = ['first_name', 'last_name', 'email', 'is_active']
+            fields = ['first_name', 'last_name', 'email']
     if request.method == 'POST':
         form = UserForm(request.POST)
         if form.is_valid():
             request.user.first_name = form.cleaned_data['first_name']
             request.user.last_name = form.cleaned_data['last_name']
             request.user.email = form.cleaned_data['email']
-            request.user.is_active = form.cleaned_data['is_active']
             request.user.save()
             return render(request, 'hwapp/profile.html', {
                 'form': form,
@@ -450,9 +448,37 @@ def profile(request):
             'first_name': request.user.first_name,
             'last_name': request.user.last_name,
             'email': request.user.email,
-            'is_active': request.user.is_active
         }
         form = UserForm(initial = initial)
         return render(request, 'hwapp/profile.html', {
             'form': form
+        })
+@login_required(login_url='/login')
+def calendar(request):
+    if request.is_ajax():
+        pass
+    else:
+        pass
+
+
+@login_required(login_url='/login')
+def completion(request, hw_id):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        hw_id=data['hw_id']
+        if str(data['completion']) == str(True):
+            update = False
+        else:
+            update = True
+
+        hw_instance = Homework.objects.get(hw_user=request.user, id=hw_id)
+        hw_instance.completed=update
+        hw_instance.save()
+        return JsonResponse({
+            "message": "Item updated successfully",
+            "status": 201,
+        }, status=201)
+    else:
+        return JsonResponse({
+            "message": "method GET not supported"
         })

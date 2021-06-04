@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from phone_field import PhoneField
 
 # Create your models here.
 class User(AbstractUser):
@@ -29,7 +30,15 @@ class Homework(models.Model):
     priority = models.IntegerField()
     notes = models.TextField(blank=True, null=True)
     completed = models.BooleanField(default=True)
+class Carrier(models.Model):
+    carrier = models.CharField(max_length = 64)
+    email = models.CharField(max_length = 128)
+    def __str__(self):
+        return f"{self.carrier}"
 class Preferences(models.Model):
     preferences_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='preferences_user')
     email_notifications = models.BooleanField()
     email_recurrence = models.ForeignKey(Recurrence, null=True, blank=True, on_delete=models.CASCADE, related_name="recurrence")
+    text_notifications = models.BooleanField()
+    phone_number = PhoneField(blank=True )
+    carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE, null=True, blank=True)

@@ -3,28 +3,12 @@ var validate = function(e) {
     e.value = (t.indexOf(".") >= 0) ? (t.substr(0, t.indexOf(".")) + t.substr(t.indexOf("."), 1)) : t;
     
 }
-$('#hw_completion').change(function(){
-    var name = $(this).attr('name')
-    $("input[type=hidden][name=" + name + "]").val(($(this).is(":checked") ? "Yes" : "No"));
-    console.log($("input[type=hidden][name=" + name + "]").val());
-})
-$(document).ready(function(){
-    // click on button submit
-    $('#hwform').click(function(){
-        // send ajax
-        $.ajax({
-            url: '/', // url where to submit the request
-            type : "POST", // type of action POST || GET
-            dataType : 'json', // data type
-            data : $("#hwform").serialize(), // post data || get data
-            success : function(result) {
-                // you can see the result from the console
-                // tab of the developer tools
-                console.log(result);
-            },
-            error: function(xhr, resp, text) {
-                console.log(xhr, resp, text);
-            }
-        })
-    });
-});
+
+
+
+$('tr.date_field').each(function() {
+    var t = this.cells[1].textContent.split('-');
+    $(this).data('_ts', new Date(t[2], t[1]-1, t[0]).getTime());
+}).sort(function (a, b) {
+   return $(a).data('_ts') < $(b).data('_ts');
+}).appendTo('tbody');

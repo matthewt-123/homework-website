@@ -1,0 +1,31 @@
+{% extends "hwapp/layout.html" %}
+{% load static %}
+{% block body %}
+<div class="ics_form">
+    <form action='/integrations/schoology_init' method='POST'>
+        {% csrf_token %}
+        <label>Schoology ICS Link(instructions below): </label><input style="width:60%;" type="text" name="schoology_ics_link" id="schoology_ics_link"><br>
+        <button type="submit" class="btn btn-primary submit_button">Submit</button>
+    </form>
+
+</div>
+<hr><h1>How to access Schoology webcal link</h1>
+<ol>
+    <li>
+        Click on the calendar icon on the top right of Schoology
+    </li>
+    <li>
+        Scroll down to the bottom of the calendar and click "Export"
+    </li>
+    <li>
+        Click "Share Calendar" and copy and paste the link into the above field, press submit
+    </li>
+    <li>
+        This may take a while
+    </li>
+</ol>
+
+
+
+
+{% endblock %}

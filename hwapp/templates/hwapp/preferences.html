@@ -5,12 +5,15 @@
 <div class="alert alert-success" role="alert">
     {{message}}    
     </div>
-{% endif %}
-    <h2>Preferences(NON-FUNCTIONAL)</h2>
 
-    {% if message %}
-        <div>{{ message }}</div>
-    {% endif %}
+{% endif %}
+{% if error %}
+<div class="alert alert-danger" role="alert">
+    {{error}}    
+    </div>
+{% endif %}
+    <h2>Preferences</h2>
+
 
     <form action='{% url "preferences" %}' method='POST'>
         {% csrf_token %}
