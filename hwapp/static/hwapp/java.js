@@ -6,9 +6,13 @@ var validate = function(e) {
 
 
 
-$('tr.date_field').each(function() {
-    var t = this.cells[1].textContent.split('-');
-    $(this).data('_ts', new Date(t[2], t[1]-1, t[0]).getTime());
-}).sort(function (a, b) {
-   return $(a).data('_ts') < $(b).data('_ts');
-}).appendTo('tbody');
+
+
+$('#non_functional_form').submit(function () {
+    return false;
+   });
+$(document).ready(function() {
+    $('#class_filter').multiselect();
+});
+
+   

@@ -15,7 +15,8 @@ class IntegrationPreference(models.Model):
     
 class CalendarEvent(models.Model):
     calendar_user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
+    homework_event = models.ForeignKey('hwapp.Homework', on_delete=models.CASCADE, blank=True, null=True)
+    integration_event = models.ForeignKey(IntegrationOption, on_delete=models.CASCADE, blank=True, null=True)
     ics = models.TextField(blank=True, null=True)
-    schoology_ics = models.TextField(blank=True, null=True)
     def __str__(self):
         return f"{self.calendar_user}"

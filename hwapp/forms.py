@@ -7,7 +7,6 @@ from django.contrib.admin import widgets
 forms.DateInput.input_type="date"
 forms.TimeInput.input_type="time"
 
-
 class HomeworkForm(ModelForm):
     class Meta:
         model = Homework
@@ -17,7 +16,7 @@ class HomeworkForm(ModelForm):
 class PreferencesForm(ModelForm):
     class Meta:
         model = Preferences
-        fields = ['email_notifications', 'email_recurrence', 'text_notifications', 'phone_number', 'carrier']
+        fields = ['email_notifications', 'email_recurrence', 'text_notifications', 'phone_number', 'carrier', 'calendar_output']
 
 class AddClassForm(ModelForm):
     class Meta:

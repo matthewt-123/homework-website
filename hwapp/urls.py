@@ -15,13 +15,12 @@ urlpatterns = [
     path("edit_hw/<int:hw_id>", views.edit_hw, name="edit_hw"),
     path("addclass", views.addclass, name="addclass"),
     path("editclass/<int:class_id>", views.editclass, name="editclass"),
-    path("classhw/<int:class_id>", views.classhw, name="classhw"),
     path("allhw", views.allhw, name="allhw"),
     path("about", views.about, name="about"),
     path("profile", views.profile, name="profile"),
     path("calendar", views.calendar, name="calendar"),
     path("completion/<int:hw_id>", views.completion, name="completion"),
-
+    path("deleteclass/<int:id>", views.deleteclass, name='delete_a_class')
 
 
 ]

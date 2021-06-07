@@ -1,36 +1,18 @@
-from django.test import TestCase
+from django.test import TestCase, Client
+
+from .models import User, Recurrence, Day, Class, Homework, Preferences
 
 # Create your tests here.
-$(document).ready(function() {           
-    $('table tbody tr td .completed').click(function() {   
-            $.ajax({ 
-                data: $(this).serialize(), 
-                type: $(this).attr('method'), 
-                url: $(this).attr('action'), 
-                      
-                success: function(response) { 
-                    // on success..
-                },
-                error: function(e, x, r) { 
-                   // on error...                           
+class HwAppTestCase(TestCase):
+    def setUp(self):
+        #create user
+        user = User.objects.create(username = 'test', password='password', email='test@test.com')
+        user2 = User.objects.create(username = 'test2', password='password', email='test2@test.com')
 
-                }
+        #initialize days:
+        days1 = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        for day in days1:
+            day = Day.objects.create(days=day)
 
-            }); 
-        return false;
-
-    }); 
-});
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.1/howto/static-files/
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.9/howto/static-files/
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATIC_URL = '/static/'
-
-# Extra places for collectstatic to find static files.
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
-)
+        #create classes
+        class_user1 = Class.objects.create(class_user = user, class_name="user1_class1", days=[Monday, Tuesday], period=1, time='01-')

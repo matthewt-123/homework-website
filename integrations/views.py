@@ -32,16 +32,10 @@ def schoology_init(request):
         link = request.POST.get('schoology_ics_link')
         link = link.replace('webcal', 'https')
         c = Calendar(requests.get(link).text)
-        calendar = CalendarEvent.objects.get(calendar_user = request.user)
         #append new hw to database and calendar
-        calendar.schoology_ics = c        
-        calendar.save()
-        
-        #append each task to hw list
-        print(Event(c.events))
-        print(Event(c))
         for event in c:
-            print(f"{Event(event)} \n" )
+            if "VEVENT" in event:
+                print(event)
 
         
     else:
