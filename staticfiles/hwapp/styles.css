@@ -24,7 +24,7 @@
 
 @media
 only screen and (max-width: 760px),
-(min-device-width: 768px) and (max-device-width: 1024px) {
+(min-device-width: 0px) and (max-device-width: 1024px) {
     table.index, thead.index, tbody.index, th.index, td.index, tr.index {
         display: block
     }
@@ -57,6 +57,42 @@ only screen and (max-width: 760px),
     td.index:nth-of-type(7):before { content: ""; }
 
 }
+
+@media
+only screen and (max-width: 760px),
+(min-device-width: 0px) and (max-device-width: 1024px) {
+    table.classes, thead.classes, tbody.classes, th.classes, td.classes, tr.classes {
+        display: block
+    }
+    thead tr.classes {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    tr.classes {border: 1px solid #ccc}
+    td.classes {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+    }
+    td.classes:before {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+    }
+    #edit_logo {
+        width: 10%;
+    }
+    td.classes:nth-of-type(1):before { content: "Class Name"; }
+	td.classes:nth-of-type(2):before { content: "Period"; }
+	td.classes:nth-of-type(3):before { content: "Class Time"; }
+	td.classes:nth-of-type(4):before { content: "Edit"; }
+
+}
 .logo {
     display: flex;
     margin-top: 0px;
@@ -75,3 +111,120 @@ only screen and (max-width: 760px),
     left:0;
     margin-top: 0px;
 }
+
+/* The side navigation menu */
+.sidenav {
+    height: 100%; /* 100% Full-height */
+    width: 0; /* 0 width - change this with JavaScript */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Stay on top */
+    top: 0; /* Stay at the top */
+    left: 0;
+    background-color: #111; /* Black*/
+    overflow-x: hidden; /* Disable horizontal scroll */
+    padding-top: 60px; /* Place content 60px from the top */
+    transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+  }
+  
+  /* The navigation menu links */
+  .sidenav a {
+    padding: 8px 8px 8px 32px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #818181;
+    display: block;
+    transition: 0.3s;
+  }
+  
+  /* When you mouse over the navigation links, change their color */
+  .sidenav a:hover {
+    color: #f1f1f1;
+  }
+  
+  /* Position and style the close button (top right corner) */
+  .sidenav .closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+  }
+  
+  /* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+  #main {
+    transition: margin-left .5s;
+    padding: 20px;
+  }
+  
+  /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+  @media screen and (max-height: 450px) {
+    .sidenav {padding-top: 15px;}
+    .sidenav a {font-size: 18px;}
+  }
+#hwapp_dropdown {
+  z-index: 999;
+  display: none;
+  position: absolute;
+  background-color: white;
+  height: fit-content;
+  width: 150px;
+  border: 0.1px solid lightgray;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  text-align: center;
+  font-size: 18px;
+  font-weight:normal;
+  border-radius: 1%;
+}
+
+table tr td {
+  font-size: 18px;
+  font-family: sans-serif;
+}
+.menu_item {
+  font-weight: bold;
+}
+.nav_item {
+  color: black;
+}
+.nav_item:hover {
+  background: lightgray;
+}
+#settings_dropdown {
+  z-index: 999;
+  display: none;
+  position: absolute;
+  background-color: white;
+  height: fit-content;
+  width: fit-content;
+  border: 0.1px solid lightgray;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  text-align: center;
+  font-size: 18px;
+  font-weight:normal;
+  border-radius: 1%;
+
+}
+.ics_form {
+  margin-top:5%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+  text-align: center;
+}
+
+.input1 {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  border-bottom: 1px solid black;
+}
+.completed {
+  width: 20px;
+  height:20px;
+  background:white;
+  border-radius:5px;
+  border:2px solid #555;
+
+}
+
