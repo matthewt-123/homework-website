@@ -35,7 +35,6 @@ def schoology_init(request):
         c = Calendar(requests.get(link).text)
         #append new hw to database and calendar
         i=0
-        open(f"{request.user.username}_schoology_temp.ics", 'wb').
         for event in c:
             if "BEGIN:VEVENT" in event:
                 for x in range(20):
