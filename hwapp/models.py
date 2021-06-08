@@ -17,8 +17,8 @@ class Day(models.Model):
 class Class(models.Model):
     class_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='class_owner')
     class_name = models.CharField(max_length=128)
-    period = models.IntegerField()
-    days = models.ManyToManyField(Day)
+    period = models.IntegerField(null=True, blank=True,)
+    days = models.ManyToManyField(Day, null=True, blank=True,)
     time = models.TimeField()
     def __str__(self):
         return f"{self.class_name}"

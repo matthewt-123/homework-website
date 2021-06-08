@@ -191,7 +191,11 @@ def addhw(request):
             ics_date = datetime.combine(date_ics, hw_class.time)
 
             #create ICS entry:
-            if Preferences.objects.get(preferences_user=request.user).calendar_output == True:
+            try:
+                var = Preferences.objects.get(preferences_user=request.user).calendar_output
+            except:
+                var=False
+            if var == True:
                 e = Event()
                 e.name = data['hw_title']
                 e.begin = ics_date
