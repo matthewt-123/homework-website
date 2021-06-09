@@ -1,4 +1,12 @@
 "sendgrid.env" 
+"todo.txt"
+"basics.py"
+".env"
+"todo.txt"
+"tempemail-DONOTUSE.py"
+"changelog.txt"
+"matthewsical.ics"
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,13 +1,20 @@
 {% extends "hwapp/layout.html" %}
+{% block javascript %}
+<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 
+{% endblock %}
 {% block body %}
 
 <h1 style='margin-left: 35%;'>Add Homework</h1>
 <hr>
+
+
     <form action='{% url "addhw" %}' method='POST' class='indented'>
         {% csrf_token %}
         <table style='margin-left: 35%;'>
-          {{form.as_table}}
+          {{form.as_table}}    
+                  </tbody>
+
         </table>
         <button style='margin-left: 35%' type="submit" class="btn btn-primary">Submit</button>
     </form>
@@ -15,3 +22,4 @@
 
 
 {% endblock %}
+

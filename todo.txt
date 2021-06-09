@@ -1,0 +1,12 @@
+1. flexbox->mobile friendly
+2. iOS app
+3. Email implementation
+4. fix ICS implementation for addhw, edit hw
+5. Implement filter option? 
+
+UAT:
+    ideal pagination size
+    classes need individual day/times?
+    checkbox too small? 
+    allhw page- how to paginate?
+

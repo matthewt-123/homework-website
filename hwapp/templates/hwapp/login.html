@@ -1,7 +1,33 @@
 {% extends "hwapp/layout.html" %}
 
 {% block body %}
+<div id="fb-root"></div>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v10.0&appId=2966209323703400&autoLogAppEvents=1" nonce="Hex7OSZz"></script>
+<script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '2966209323703400',
+        cookie     : true,
+        xfbml      : true,
+        version    : 'v10.0'
+      });
+        
+      FB.AppEvents.logPageView();   
+        
+    };
+  
+    (function(d, s, id){
+       var js, fjs = d.getElementsByTagName(s)[0];
+       if (d.getElementById(id)) {return;}
+       js = d.createElement(s); js.id = id;
+       js.src = "https://connect.facebook.net/en_US/sdk.js";
+       fjs.parentNode.insertBefore(js, fjs);
+     }(document, 'script', 'facebook-jssdk'));
 
+     FB.getLoginStatus(function(response) {
+    statusChangeCallback(response);
+});
+  </script>
     <h2>Login</h2>
 
     {% if message %}
@@ -20,5 +46,35 @@
     </form>
 
     Don't have an account? <a href="{% url 'register' %}">Register here.</a>
+    <hr>
 
+    {% if user.is_authenticated %}
+
+    {% else %}
+<div id="g_id_onload"
+     data-client_id="{{CLIENT_ID}}"
+     data-context="signin"
+     data-ux_mode="redirect"
+     data-login_uri="{{ENDPOINT}}">
+</div>
+
+<div style="width:10%"  class="g_id_signin"
+     data-type="standard"
+     data-shape="pill"
+     data-theme="outline"
+     data-text="signin"
+     data-size="large"
+     data-logo_alignment="left">
+</div>
+
+<div style="display:inline;" class="fb-login-button" data-width="" data-size="large" data-button-type="continue_with" data-layout="rounded" data-auto-logout-link="true" data-use-continue-as="false"></div>
+{% endif %}
+
+{% endblock %}
+
+{% block footer %}
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 {% endblock %}

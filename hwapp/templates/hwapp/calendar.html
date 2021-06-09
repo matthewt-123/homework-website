@@ -1,0 +1,18 @@
+{% extends "hwapp/layout.html" %}
+{% load socialaccount %}
+
+
+{% block body %}
+{% if message %}
+<div class="alert alert-danger" role="alert">
+    {{message}}    
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block footer %}
+<script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+{% endblock %}

@@ -16,19 +16,22 @@ priority = []
 def create_connection():
     con = sqlite3.connect('db.sqlite3')
     cur=con.cursor()
-    cur.execute("SELECT * FROM hwapp_homework WHERE hw_user_id = 1 AND completed=False" + 
-        "INNER JOIN hwapp_class ON id = hwapp_homework.class" + 
-        "ORDER BY due_date, hwclass__period, priority")
+    cur.execute("SELECT * FROM hwapp_homework WHERE id = 1")
+    print(cur.fetchall())
+    cur.execute("SELECT * FROM hwapp_homework WHERE hw_user_id = 1 AND completed=False " +  
+        "ORDER BY due_date, priority")
+
     global hw_title
     global priority
     global notes
     global due_date
-    print(cur.fetchall())
     for each in cur.fetchall():
         hw_title.append(each[1])
         priority.append(each[2])
         notes.append(each[3])
-        due_date.append(each[7])
+        due_date.append(each[6])
+        print(each)
+        print(due_date)
         hw_class_temp.append(each[4])
         for class1 in hw_class_temp:
             cur.execute(f"SELECT * FROM hwapp_class WHERE id={class1}")

@@ -1,0 +1,22 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+
+<h1 style="margin-left:35%">Edit {{user.username}}'s Profile</h1>
+{% if message %}
+<div class="alert alert-success" role="alert">
+    {{message}}
+  </div>
+{% endif %}
+<hr>
+    <form action='{% url "profile" %}' method='POST' class='indented'>
+        {% csrf_token %}
+        <table style='margin-left:35%;'>
+            {{form.as_table}} 
+        </table>
+        <button style='margin-left: 35%' type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+
+
+{% endblock %}
