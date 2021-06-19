@@ -234,13 +234,14 @@ def preferences(request):
                     'form': form,
                     'error': "The carrier field is required."
                 })
-            try:
-                int(phone_number)
-            except:
-                return render(request, 'hwapp/preferences.html', {
-                    'form': form,
-                    'error': "Please type in your phone number with numbers only(no dashes or parentheses)."
-                })
+            if phone_number:
+                try:
+                    int(phone_number)
+                except:
+                    return render(request, 'hwapp/preferences.html', {
+                        'form': form,
+                        'error': "Please type in your phone number with numbers only(no dashes or parentheses)."
+                    })
             try:
                 preferences = Preferences.objects.get(preferences_user=request.user)
                 preferences.email_notifications = email_notifications
