@@ -164,6 +164,8 @@ def addhw(request):
             data['priority'] = int(data['priority'])
         except:
             data['priority'] = None
+        
+        #actual code
         try:
             try:
                 hw_class = Class.objects.get(id=data['hw_class'], class_user =request.user)
@@ -176,9 +178,9 @@ def addhw(request):
             new_hw.save()
             date_ics = datetime.strptime(data['due_date'], "%Y-%m-%d").date()
             date = date_ics.strftime("%b. %d, %Y")
-            if data['notes']:
+            try:
                 notes=data['notes']
-            else:
+            except:
                 notes=None
             #create full time entry:
             ics_date = datetime.combine(date_ics, hw_class.time)
@@ -188,6 +190,7 @@ def addhw(request):
                 var = Preferences.objects.get(preferences_user=request.user).calendar_output
             except:
                 var=False
+                
             if var == True:
                 e = Event()
                 e.name = data['hw_title']
