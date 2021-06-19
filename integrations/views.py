@@ -25,7 +25,7 @@ load_dotenv()
 # Create your views here.
 @login_required(login_url='/login')
 def index(request):
-    pass
+    return render(request, 'hwapp/integrations.html')
 
 @login_required(login_url='/login')
 def schoology_init(request):
@@ -103,7 +103,7 @@ def canvas_init(request):
             c = Calendar(requests.get(link).text)
         except:
             return render(request, 'hwapp/error.html', {
-                'error': 'Please copy the full link from Schoology with the instructions below and include the "webcal" portion of the link'
+                'error': 'Please copy the full link from Canvas with the instructions below and include the "webcal" portion of the link'
             })
         #SETUP: create Canvas Class instance if not already existing(since Canvas does not provide class names with HW assignments)
         dt_str = '00:00'
@@ -168,7 +168,7 @@ def other_init(request):
             c = Calendar(requests.get(link).text)
         except:
             return render(request, 'hwapp/error.html', {
-                'error': 'Please copy the full link from Schoology with the instructions below and include the "webcal" portion of the link'
+                'error': 'Please copy the full ICS link from the external integration with the instructions below and include the "webcal" portion of the link'
             })
         #SETUP: create new Class instance if not already existing(since Canvas does not provide class names with HW assignments)
         dt_str = '00:00'

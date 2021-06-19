@@ -383,7 +383,11 @@ def editclass(request, class_id):
     try:
         do_not_edit = Class.objects.get(class_user=request.user, class_name='Schoology Integration', period=999999)
     except:
-        pass
+        do_not_edit=None
+    try:
+        do_not_edit = Class.objects.get(class_user=request.user, class_name='Canvas Integration', period=999999)
+    except:
+        do_not_edit=None
     if request.method == "POST":
         form = AddClassForm(request.POST)
         if form.is_valid():
@@ -392,6 +396,7 @@ def editclass(request, class_id):
             days = form.cleaned_data['days']
             time = form.cleaned_data['time']
             dlist=[]
+            print(do_not_edit)
             if class_id==do_not_edit.id:
                 if int(period) == int(999999):
                     return render(request, 'hwapp/error.html', {

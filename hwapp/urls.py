@@ -20,7 +20,7 @@ urlpatterns = [
     path("profile", views.profile, name="profile"),
     path("calendar/", views.calendar, name="calendar"),
     path("completion/<int:hw_id>", views.completion, name="completion"),
-    path("deleteclass/<int:id>", views.deleteclass, name='delete_a_class')
+    path("deleteclass/<int:id>", views.deleteclass, name='delete_a_class'),
 
 
 ]
