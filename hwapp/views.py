@@ -45,7 +45,6 @@ def refresh(request, hash_value):
     if datetime.today().weekday() == 6 and weekly_email_sent==False:
         send_email('Weekly')
         weekly_email_sent = True
-        print('weekly')
     if datetime.today().weekday() == 0 and weekly_email_sent==True:
         weekly_email_sent=False
     global day
@@ -59,8 +58,6 @@ def refresh(request, hash_value):
 
 @login_required(login_url='/login')
 def index(request):
-    sys_hash = abs(hash(str(os.environ.get('email_hash_val'))))
-    print(sys_hash)
     #index feature
     page_size = request.GET.get('page_size')
     if not page_size:
@@ -162,7 +159,6 @@ def classes(request):
 @login_required(login_url='/login')
 def addhw(request):
     if request.method == 'POST':
-        print(request.body)
         data = json.loads(request.body)
         try:
             data['priority'] = int(data['priority'])
@@ -404,7 +400,6 @@ def editclass(request, class_id):
             days = form.cleaned_data['days']
             time = form.cleaned_data['time']
             dlist=[]
-            print(do_not_edit)
             if class_id==do_not_edit.id:
                 if int(period) == int(999999):
                     return render(request, 'hwapp/error.html', {
@@ -538,7 +533,6 @@ def deleteclass(request, id):
         try:
             class_req = Class.objects.get(class_user=request.user, id=id)
             class_req.delete()
-            print(True)
             return JsonResponse({
                 "message": "Class removed successfully",
                 "status": 200,
