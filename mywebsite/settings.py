@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['matthewshomeworkapp.herokuapp.com', 'localhost']
 
@@ -166,4 +166,5 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'hwapp/static'),
 )
 
+DEFAULT_AUTO_FIELD='django.db.models.AutoField' 
 

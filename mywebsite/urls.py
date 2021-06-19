@@ -22,7 +22,6 @@ urlpatterns = [
 
     path('admin/', admin.site.urls),
     path('', include('hwapp.urls')),
-    path('calendar/', include('calendarapp.urls')),
     path('accounts/', include('allauth.urls')),
     path('integrations/', include('integrations.urls'))
 

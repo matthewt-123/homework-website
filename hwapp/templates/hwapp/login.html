@@ -48,27 +48,9 @@
     Don't have an account? <a href="{% url 'register' %}">Register here.</a>
     <hr>
 
-    {% if user.is_authenticated %}
 
-    {% else %}
-<div id="g_id_onload"
-     data-client_id="{{CLIENT_ID}}"
-     data-context="signin"
-     data-ux_mode="redirect"
-     data-login_uri="{{ENDPOINT}}">
-</div>
 
-<div style="width:10%"  class="g_id_signin"
-     data-type="standard"
-     data-shape="pill"
-     data-theme="outline"
-     data-text="signin"
-     data-size="large"
-     data-logo_alignment="left">
-</div>
 
-<div style="display:inline;" class="fb-login-button" data-width="" data-size="large" data-button-type="continue_with" data-layout="rounded" data-auto-logout-link="true" data-use-continue-as="false"></div>
-{% endif %}
 
 {% endblock %}
 

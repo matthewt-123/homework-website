@@ -7,7 +7,10 @@
         <title>{% block title %}Homework App{% endblock %}</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
-
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name='keywords' content="Homework, Task Manager, To Do">
+        <meta name='description' content='Task Manager for Students'>
+        
         <link href="{% static 'hwapp/styles.css' %}" rel="stylesheet">
         <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -38,8 +41,25 @@
                         </div>
                     </div>
                     </td>
-                    <td width=50% class="nav-item" style="font-weight:bold";><a href='/calendar/'>Calendar</a></td>
-
+                    <td width=10% class="nav-item" style="font-weight:bold;text-align: center;";><a href='/calendar/'>Calendar</a></td>
+                    <!--integrations-->
+                    <td width=10% id="dropdown_all_init" style="font-weight:bold;text-align: center;";>
+                        <div id="dropdown_all_init" class="dropdown_all_init">
+                        <a class="nav-link dropdown_all" href = "/integrations">Homework</a>
+                        <div id="init_dropdown" style='display:none' class="dropdown_all_init">
+                            <a href="{% url 'schoology_init' %}" style="text-decoration: none;"><div class="nav_item">
+                                Schoology
+                            </div></a>
+                            <a href="{% url 'canvas_init' %}" style="text-decoration: none;"><div class="nav_item">
+                                Canvas
+                            </div></a>
+                            <a href="{% url 'other_init' %}" style="text-decoration: none;"><div class="nav_item">
+                                Other
+                            </div></a>
+                        </div>
+                    </div>
+                    </td>
+                    <td width='50%'></td>
                     <td width=10% id="dropdown_all_setting" style="font-weight:bold;text-align: center;";>
                         <div id="dropdown_all_setting" class="dropdown_all_setting">
                         <a class="nav-link dropdown_all_setting" href = "{% url 'classes' %}">Settings</a>
@@ -118,6 +138,15 @@
                 //hide menu on mouse leaving
                 document.getElementById('dropdown_all_setting').onmouseleave = () => {
                     document.getElementById('settings_dropdown').style.display = "none";
+                }
+                //show menu on element hover
+                document.getElementById('dropdown_all_init').onmouseover = () => {
+                    document.getElementById('init_dropdown').style.display = "block";
+
+                }
+                //hide menu on mouse leaving
+                document.getElementById('dropdown_all_init').onmouseleave = () => {
+                    document.getElementById('init_dropdown').style.display = "none";
                 }
             })
         </script>

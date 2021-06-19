@@ -18,7 +18,7 @@ urlpatterns = [
     path("allhw", views.allhw, name="allhw"),
     path("about", views.about, name="about"),
     path("profile", views.profile, name="profile"),
-    path("calendar", views.calendar, name="calendar"),
+    path("calendar/", views.calendar, name="calendar"),
     path("completion/<int:hw_id>", views.completion, name="completion"),
     path("deleteclass/<int:id>", views.deleteclass, name='delete_a_class')
 

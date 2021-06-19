@@ -1,18 +1,25 @@
 {% extends "hwapp/layout.html" %}
-{% load socialaccount %}
+
 
 
 {% block body %}
-{% if message %}
-<div class="alert alert-danger" role="alert">
-    {{message}}    
-    </div>
-{% endif %}
+<h1 style='text-align: center;'>Link to ICS Feed</h1>
+<div style='background-color: rgb(232, 241, 250)' class='ics_form'>{{ics_link}}</div>
+<h3>
+    <b>Important Information:</b>
+</h3>
+
+<ul>
+    <li>
+        This export does NOT contain the Schoology, Canvas, or Other integrated events
+    </li>
+    <li>
+        To add this calendar feed to Outlook, navigate to your calendar, press Add Calendar, and copy and paste the above link into the subscribe from web option
+    </li>
+    <li>
+        To add this calendar feed to Google Calendar, please navigate to your calendar, press the + sign next to "Other Calendars," press "From URL," and copy and paste the above link into the provided field
+    </li>
+</ul>
 
 {% endblock %}
 
-{% block footer %}
-<script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
-<script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
-<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-{% endblock %}

@@ -74,7 +74,7 @@ def login_view(request):
         # Check if authentication successful
         if user is not None:
             login(request, user)
-            return HttpResponseRedirect(reverse("index"))
+            return HttpResponseRedirect(reverse("index"), status=302)
         else:
             return render(request, "hwapp/login.html", {
                 "message": "Invalid username and/or password."
@@ -231,6 +231,7 @@ def preferences(request):
             carrier=form.cleaned_data['carrier']
             text_notifications = form.cleaned_data['text_notifications']
             calendar_output = form.cleaned_data['calendar_output']
+            user_timezone = form.cleaned_data['user_timezone']
             if phone_number and not carrier:
                 return render(request, 'hwapp/preferences.html', {
                     'form': form,
@@ -243,7 +244,8 @@ def preferences(request):
                 preferences.phone_number = phone_number
                 preferences.carrier = carrier    
                 preferences.text_notifications = text_notifications  
-                preferences.calendar_output = calendar_output          
+                preferences.calendar_output = calendar_output      
+                preferences.user_timezone = user_timezone    
                 preferences.save()
             except:
                 new_pref = Preferences(preferences_user=request.user, email_recurrence=email_recurrence, email_notifications=email_notifications, carrier=carrier, phone_number=phone_number, text_notifications=text_notifications)
@@ -264,6 +266,7 @@ def preferences(request):
                 'phone_number': preferences.phone_number,
                 'text_notifications': preferences.text_notifications,
                 'calendar_output': preferences.calendar_output,
+                'user_timezone': preferences.user_timezone
             }
             form = PreferencesForm(initial=initial)
             return render(request, 'hwapp/preferences.html', {
@@ -377,15 +380,23 @@ def addclass(request):
         })
 @login_required(login_url='/login')
 def editclass(request, class_id):
+    try:
+        do_not_edit = Class.objects.get(class_user=request.user, class_name='Schoology Integration', period=999999)
+    except:
+        pass
     if request.method == "POST":
         form = AddClassForm(request.POST)
         if form.is_valid():
-            user = request.user
             class_name = form.cleaned_data['class_name']
             period = form.cleaned_data['period']
             days = form.cleaned_data['days']
             time = form.cleaned_data['time']
             dlist=[]
+            if class_id==do_not_edit.id:
+                if int(period) == int(999999):
+                    return render(request, 'hwapp/error.html', {
+                        'error': "Access Denied: Please do not edit this class"
+                    })
             for day in days.iterator():
                 dlist.append(day)
             try:
@@ -404,6 +415,13 @@ def editclass(request, class_id):
             return HttpResponseRedirect(reverse('classes'))
 
     else:
+        try:
+            if class_id==do_not_edit.id:
+                return render(request, 'hwapp/error.html', {
+                    'error': "Access Denied: Please do not edit this class"
+                })
+        except:
+            pass
         try:
             editclass = Class.objects.get(class_user=request.user, id=class_id)
         except:
@@ -470,10 +488,14 @@ def profile(request):
         })
 @login_required(login_url='/login')
 def calendar(request):
-    if request.is_ajax():
-        pass
+    if request.method == "GET":
+        hash_val = abs(hash(str(request.user.id)))
+        ics_link = f"matthewshomeworkapp.herokuapp.com/integrations/export/{request.user.id}/{hash_val}"
+        return render(request, 'hwapp/calendar.html', {
+            'ics_link': ics_link
+        })
     else:
-        pass
+        return JsonResponse({'error': 'method not supported'}, status=405)
 
 
 @login_required(login_url='/login')
