@@ -21,13 +21,19 @@
     margin-left: 125px;
     width: 42%
 }
-
+#mobile_add_hw { 
+  display:none;
+}
+.django_forms {
+  margin-left:35%;
+}
 @media
 only screen and (max-width: 760px),
 (min-device-width: 0px) and (max-device-width: 1024px) {
     table.index, thead.index, tbody.index, th.index, td.index, tr.index {
         display: block
     }
+    /*remove heading*/
     thead tr.index {
         position: absolute;
         top: -9999px;
@@ -40,6 +46,12 @@ only screen and (max-width: 760px),
         position: relative;
         padding-left: 50%;
     }
+    #index_plus_sign {
+      display:none;
+    }
+    #mobile_add_hw {
+      display:block;
+    }
     td.index:before {
         position: absolute;
         top: 6px;
@@ -47,6 +59,12 @@ only screen and (max-width: 760px),
         width: 45%;
         padding-right: 10px;
         white-space: nowrap;
+    }
+    .mobile_hide {
+      display:none;
+    }
+    .django_forms {
+      margin-left:0;
     }
     td.index:nth-of-type(1):before { content: ""; }
 	td.index:nth-of-type(2):before { content: "Assignment Name"; }
@@ -88,9 +106,10 @@ only screen and (max-width: 760px),
         width: 10%;
     }
     td.classes:nth-of-type(1):before { content: "Class Name"; }
-	td.classes:nth-of-type(2):before { content: "Period"; }
-	td.classes:nth-of-type(3):before { content: "Class Time"; }
-	td.classes:nth-of-type(4):before { content: "Edit"; }
+	td.classes:nth-of-type(3):before { content: "Period"; }
+	td.classes:nth-of-type(4):before { content: "Class Time"; }
+	td.classes:nth-of-type(5):before { content: "Edit"; }
+	td.classes:nth-of-type(6):before { content: "Delete"; }
 
 }
 .logo {
@@ -240,4 +259,52 @@ table tr td {
   font-size: 18px;
   font-weight:normal;
   border-radius: 1%;
+}
+.mobile_nav {
+  display:none;
+}
+@media
+only screen and (max-width: 760px),
+(min-device-width: 0px) and (max-device-width: 1024px) {
+  .nav-item {
+    display:none;
+  }
+.mobile_nav {
+    margin-left: 110%;
+    display:block;
+}
+  .sidenav {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    background-color: #111;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding-top: 60px;
+  }
+  
+  .sidenav a {
+    padding: 8px 8px 8px 32px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #818181;
+    display: block;
+    transition: 0.3s;
+  }
+  
+  .sidenav a:hover {
+    color: #f1f1f1;
+  }
+  
+  .sidenav .closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+  }
+
 }

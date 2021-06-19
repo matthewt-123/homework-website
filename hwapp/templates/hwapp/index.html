@@ -220,8 +220,8 @@ Homework List for {{user.username}}
             </tr>
             {% endfor %}
             <!--blank row-->
-            <tr id="new_hw_0">
-                <td></td>
+            <tr id="new_hw_0" class='index'>
+                <td ></td>
                 <td><a id='new_hw_title_0' class='new_hw_link'></a></td>
                 <td><a id='new_hw_class_0' class='new_hw_link'></a></td>
                 <td><a id='new_due_date_0' class='new_hw_link'></a></td>
@@ -238,24 +238,25 @@ Homework List for {{user.username}}
             <!--New HW Form-->
             <form action='/addhw' method='POST' id='non_functional_form'>
                 {% csrf_token %}
-            <tr>
-                <td style='text-align: center;'>+</td>
-                <td><input id='hw_title' type='text' class='input1' placeholder="Assignment Name"></td>
-                <td><select id='hw_class' class='input1 form-select'>
+            <tr class='index'>
+                <td style='text-align: center;' id='index_plus_sign' class='mobile_hide'>+</td>
+                <td class='mobile_hide'><input id='hw_title' type='text' class='input1' placeholder="Assignment Name"></td>
+                <td class='mobile_hide'><select id='hw_class' class='input1 form-select'>
                     <option disabled selected>Class Name</option>
                     {% for class in class_list %}
                     <option value={{class.id}}>{{class.class_name}}</option>
                     {% endfor %}
                 </select></td>
-                <td><input id='due_date' type='date' class='input1'></td>
-                <td width=5%><input id='priority' type='number' class='input1' min="1" max="100" placeholder="Priority"></td>
-                <td>
+                <td class='mobile_hide'><input id='due_date' type='date' class='input1'></td>
+                <td width=5% class='mobile_hide'><input id='priority' type='number' class='input1' min="1" max="100" placeholder="Priority"></td>
+                <td class='mobile_hide'>
                     <button id='add_hw' hidden type="submit"></button>
                 </td>
             </tr>
             </form>
         </tfoot>
     </table>
+    <a href='/addhw' id='mobile_add_hw'>Add Homework</a>
         {% if completed %}
         <hr>
 <strong>Completed Assignments</strong>

@@ -8,7 +8,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django import forms
 import time, sched
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -19,8 +19,10 @@ from dotenv import load_dotenv
 import json
 from datetime import datetime
 from django.core.paginator import Paginator
-
-
+from .email_helper import send_email
+#set global variable for day, email sent
+day = datetime.strptime('2021-06-18', '%Y-%m-%d')
+weekly_email_sent=False
 
 #allow python to access Calendar data model
 import sys
@@ -28,12 +30,38 @@ sys.path.append("..")
 from integrations.models import CalendarEvent, IntegrationPreference
 
 load_dotenv()
+def user_check(user):
+    return user.username == "Automate"
 
-
-
+@user_passes_test(user_check, login_url='/')
+def refresh(request, hash_value):
+    sys_hash = os.environ.get('email_hash_val')
+    if int(hash_value) == int(sys_hash):
+        pass
+    else:
+        return JsonResponse({'error': 'access denied'}, status=403)
+    #email feature
+    global weekly_email_sent
+    if datetime.today().weekday() == 6 and weekly_email_sent==False:
+        send_email('Weekly')
+        weekly_email_sent = True
+        print('weekly')
+    if datetime.today().weekday() == 0 and weekly_email_sent==True:
+        weekly_email_sent=False
+    global day
+    local_day=day
+    if datetime.now().date() == local_day.date():
+        pass
+    else:
+        send_email('Daily')
+        day = datetime.now().strftime("%Y-%m-%d")
+    return HttpResponseRedirect(reverse('logout'))
 
 @login_required(login_url='/login')
 def index(request):
+    sys_hash = abs(hash(str(os.environ.get('email_hash_val'))))
+    print(sys_hash)
+    #index feature
     page_size = request.GET.get('page_size')
     if not page_size:
         page_size = 10
@@ -124,44 +152,6 @@ def register(request):
         return render(request, "hwapp/register.html")
 # Create your views here.
 
-def hourly_refresh(request):
-    user = request.user
-    hw =  Homework.objects.filter(hw_user=user, completed=False)
-    listed= f'Homework email for {user.username}.'
-    for each in hw:
-        listed = listed + f"<li>{each.hw_title}({each.hw_class}) is due at {each.due_date}</li>"
-    message = Mail(
-        from_email = basics.from_email,
-        to_emails= basics.to_emails,
-        subject = f"{user.username} Homework Email",
-        html_content=listed
-    )
-    try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        response = sg.send(message)
-    except Exception as e:
-        print(e.details)
-    pass
-
-def weekly_refresh(request):
-    user = request.user
-    hw =  Homework.objects.filter(hw_user=user, completed=False)
-    listed= f'Homework email for {user.username}.'
-    for each in hw:
-        listed = listed + f"<li>{each.hw_title}({each.hw_class}) is due at {each.due_date}</li>"
-    message = Mail(
-        from_email = basics.from_email,
-        to_emails= basics.to_emails,
-        subject = f"{user.username} Homework Email",
-        html_content=listed
-    )
-    try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        response = sg.send(message)
-    except Exception as e:
-        print(e.details)
-    pass
-
 @login_required(login_url='/login')
 def classes(request):
     classes = Class.objects.filter(class_user=request.user).order_by('period')
@@ -172,8 +162,12 @@ def classes(request):
 @login_required(login_url='/login')
 def addhw(request):
     if request.method == 'POST':
+        print(request.body)
         data = json.loads(request.body)
-        data['priority'] = int(data['priority'])
+        try:
+            data['priority'] = int(data['priority'])
+        except:
+            data['priority'] = None
         try:
             try:
                 hw_class = Class.objects.get(id=data['hw_class'], class_user =request.user)
@@ -186,7 +180,10 @@ def addhw(request):
             new_hw.save()
             date_ics = datetime.strptime(data['due_date'], "%Y-%m-%d").date()
             date = date_ics.strftime("%b. %d, %Y")
-            
+            if data['notes']:
+                notes=data['notes']
+            else:
+                notes=None
             #create full time entry:
             ics_date = datetime.combine(date_ics, hw_class.time)
 
@@ -199,7 +196,7 @@ def addhw(request):
                 e = Event()
                 e.name = data['hw_title']
                 e.begin = ics_date
-                e.description = f"Class: {hw_class.class_name}"
+                e.description = f"Class: {hw_class.class_name}; Notes: {notes}"
                 #enter new event into database:
                 new_calevent = CalendarEvent(calendar_user = request.user, homework_event=new_hw, ics=e)
                 new_calevent.save()
@@ -216,8 +213,12 @@ def addhw(request):
                 "status": 400,
             }, status=400)
     else:
-        return JsonResponse({
-            "message": "method GET not allowed"
+        try:
+            classes = Class.objects.filter(class_user=request.user)
+        except:
+            return HttpResponseRedirect(reverse('classes'))
+        return render(request, 'hwapp/addhw.html', {
+            'classes':classes
         })
 
 @login_required(login_url='/login')
@@ -236,6 +237,13 @@ def preferences(request):
                 return render(request, 'hwapp/preferences.html', {
                     'form': form,
                     'error': "The carrier field is required."
+                })
+            try:
+                int(phone_number)
+            except:
+                return render(request, 'hwapp/preferences.html', {
+                    'form': form,
+                    'error': "Please type in your phone number with numbers only(no dashes or parentheses)."
                 })
             try:
                 preferences = Preferences.objects.get(preferences_user=request.user)

@@ -46,7 +46,7 @@ class Preferences(models.Model):
     email_notifications = models.BooleanField(default=False)
     email_recurrence = models.ForeignKey(Recurrence, null=True, blank=True, on_delete=models.CASCADE, related_name="recurrence")
     text_notifications = models.BooleanField(default=False)
-    phone_number = PhoneField(blank=True, null=True )
+    phone_number = models.IntegerField(blank=True, null=True )
     carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE, null=True, blank=True)
     calendar_output = models.BooleanField(default=False)
     user_timezone = models.ForeignKey(Timezone, null=True, blank=True, on_delete=models.CASCADE)
