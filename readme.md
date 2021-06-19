@@ -14,7 +14,7 @@ App 1: HW App(Homework dropdown):
     8. View homework for each class:
         Click on the class name on the class page from the previous step. This may also be accomplished via the filters on the home page
 App 2: Calendar/Task Integrations:
-    1. 
+    1. Under the Calendar tab, the link to an ICS feed may be found. This does not include the Schoology or Canvas events. This link may be used to add the homework events to the user's personal calendar
 System Settings:
     Profile: add/update name, email address
     Preferences: add/update email/text preferences
