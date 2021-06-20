@@ -1,3 +1,4 @@
+from io import StringIO
 from django.contrib.auth import login
 from django.http.request import RAISE_ERROR
 from django.shortcuts import render
@@ -15,6 +16,10 @@ import arrow
 import json
 import requests
 from ics import Calendar, Event
+from django.http import HttpResponse
+from wsgiref.util import FileWrapper
+
+
 
 #import hwapp models
 import sys
@@ -60,7 +65,6 @@ def schoology_init(request):
                     'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
                 })
         except:
-            print(False)
             return render(request, 'hwapp/error.html', {
                 'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
             })  
@@ -126,7 +130,6 @@ def canvas_init(request):
                     'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
                 })
         except:
-            print(False)
             return render(request, 'hwapp/error.html', {
                 'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
             })  
@@ -192,7 +195,6 @@ def other_init(request):
                     'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
                 })
         except:
-            print(False)
             return render(request, 'hwapp/error.html', {
                 'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
             })  
@@ -230,9 +232,7 @@ def export(request, user_id, hash_value):
     if request.method == 'GET':
         #setup hashing functions:
         sys_val = abs(hash(str(user_id)))
-        print(sys_val)
         prov_val = abs(hash_value)
-        print(f"prov_val: {prov_val}")
         if prov_val == sys_val:
             pass
         else:
@@ -243,6 +243,7 @@ def export(request, user_id, hash_value):
         c=Calendar()
         for hw in allhw:
             c.events.add(hw.ics)
+
         return render(request, 'hwapp/export.html', {
             'ics': c
         })
