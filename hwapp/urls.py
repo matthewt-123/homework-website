@@ -21,7 +21,7 @@ urlpatterns = [
     path("calendar/", views.calendar, name="calendar"),
     path("completion/<int:hw_id>", views.completion, name="completion"),
     path("deleteclass/<int:id>", views.deleteclass, name='delete_a_class'),
-    path("refresh/<int:hash_value>", views.refresh, name='refresh'),
+    path("refresh/<str:hash_value>", views.refresh, name='refresh'),
 
 
 ]

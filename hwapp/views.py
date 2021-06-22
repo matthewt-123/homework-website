@@ -36,7 +36,7 @@ def user_check(user):
 @user_passes_test(user_check, login_url='/')
 def refresh(request, hash_value):
     sys_hash = os.environ.get('email_hash_val')
-    if int(hash_value) == int(sys_hash):
+    if str(hash_value) == str(sys_hash):
         pass
     else:
         return JsonResponse({'error': 'access denied'}, status=403)
