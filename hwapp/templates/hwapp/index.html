@@ -22,6 +22,36 @@ Homework List for {{user.username}}
     document.addEventListener('DOMContentLoaded', () => {
         row_id = 0
         document.getElementById('non_functional_form').addEventListener('submit', () => {
+            tz=new Date().getTimezoneOffset()
+            if(tz > 0){
+                var m = tz % 60;
+                var h = (tz-m) / 60;
+                if(m == 0) {
+                    m = '00';
+                } else if(0 < m < 10) {
+                    m = `0${m}`;
+                }
+                if(h == 0) {
+                    h = '00';
+                } else if(0<h<10) {
+                    h = `0${h}`;
+                }
+                tz = `+${h}${m}`
+            } else {
+                var m = tz % 60;
+                var h = (tz-m) / 60;
+                if(m == 0) {
+                    m = '00';
+                } else if(0 < m < 10) {
+                    m = `0${m}`;
+                }
+                if(h == 0) {
+                    h = '00';
+                } else if(0<h<10) {
+                    h = `0${h}`;
+                }
+                tz = `-${m}${h}`
+            }
             fetch(`/addhw`, {
             method: 'POST',
             headers: {
@@ -31,7 +61,7 @@ Homework List for {{user.username}}
             body: JSON.stringify({
                 hw_class: document.getElementById('hw_class').value,
                 hw_title: document.getElementById('hw_title').value,
-                due_date: document.getElementById('due_date').value,
+                due_date: `${document.getElementById('due_date').value}${tz}`,
                 priority: document.getElementById('priority').value,
             })
         })
@@ -110,6 +140,23 @@ Homework List for {{user.username}}
         })
         return false
     })})
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('hw_class').onchange = () => {
+            const class_ins = document.getElementById('hw_class')
+            fetch(`/getclasstime/${class_ins.value}`, {
+                method: 'GET',
+                credentials: 'same-origin',
+            })
+            .then(response=>response.json())
+            .then(result => {
+                if(result['status'] == 200){
+                    document.getElementById('due_date').value = result['class_time']
+                } else {
+                    console.log(result['message'])
+                }
+            })
+        }
+    })
     function completioncall(id) {
         fetch(`/completion/${id}`, {
             method: 'POST',
@@ -247,7 +294,7 @@ Homework List for {{user.username}}
                     <option value={{class.id}}>{{class.class_name}}</option>
                     {% endfor %}
                 </select></td>
-                <td class='mobile_hide'><input id='due_date' type='date' class='input1'></td>
+                <td class='mobile_hide'><input id='due_date' type='datetime-local' class='input1'></td>
                 <td width=5% class='mobile_hide'><input id='priority' type='number' class='input1' min="1" max="100" placeholder="Priority"></td>
                 <td class='mobile_hide'>
                     <button id='add_hw' hidden type="submit"></button>

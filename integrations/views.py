@@ -243,7 +243,6 @@ def export(request, user_id, hash_value):
         c=Calendar()
         for hw in allhw:
             c.events.add(hw.ics)
-
         return render(request, 'hwapp/export.html', {
             'ics': c
         })

@@ -60,7 +60,7 @@
                     </div>
                     </td>
                     
-                    <td width=10% id="dropdown_all_setting" style="font-weight:bold;text-align: center;"; class="nav-item" >
+                    <td width=10% id="dropdown_all_setting" style="font-weight:bold;text-align: center;" class="nav-item" >
                         <div id="dropdown_all_setting" class="dropdown_all_setting">
                         <a class="nav-link dropdown_all_setting" href = "#">Settings</a>
                         <div id="settings_dropdown" class="dropdown_all_setting">
@@ -79,7 +79,27 @@
                         </div>
                     </div>
                     </td>
+                    {% if user.id == 1 %}
+                    <td width='10%' style="font-weight:bold;text-align: center;" class="nav-item" >
+                        <div id="admin_all" class="admin_all">
+                            <a class="nav-link admin_all" href = "#">Administration</a>
+                            <div id="admin_dropdown" class="admin_all">
+                                <a href="/admin" style="text-decoration: none;"><div class="nav_item">
+                                    &nbsp Admin Console &nbsp
+                                </div></a>
+                                <a href="/matthew/schoology_grades" style="text-decoration: none;"><div class="nav_item">
+                                    &nbsp Schoology Grades &nbsp
+                                </div></a>
+                 
+                            </div>
+                        </div>
+                    </td>
+                    <td width='30%' style='display: none;'></td>
+                    {% else %}
                     <td width='40%' style='display: none;'></td>
+
+                    {% endif %}
+
                     <td width='10%' class="mobile_nav" >
                         <!-- from W3 Schools, sidenav for MOBILE ONLY-->
                         <div id="mySidenav" class="sidenav" >
@@ -129,7 +149,24 @@
                                 </ul>
 
                             </div>
-                          </div>
+                            {% if user.id == 1 %}
+                            <a href='#' onclick = 'show_item("admin_block")'>Administration &#9660;</a>
+                            <div id='admin_block' style='display:none;'>
+                            <ul style='list-style-type:none;'>
+                                <li>
+                                    <a style='font-size:20px' href='/admin'>
+                                        Admin Console
+                                    </a>
+                                </li>
+                                <li>
+                                    <a style='font-size:20px' href='/matthew/schoology_grades'>
+                                        Schoology Grades
+                                    </a>
+                                </li></ul>
+                            </div>
+                              {% endif %}
+                        </div>
+
                           <span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776;</span>
                     </td>
 
@@ -137,6 +174,8 @@
 
                 </td>
                 </td>
+
+
             {% else %}
                 <td width=10% class="nav-item" style="font-weight:bold";>
                     <a class="nav-link" href="{% url 'login' %}" style="font-weight:bold";>Log In</a>
@@ -172,11 +211,19 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.39.0/js/tempusdominus-bootstrap-4.min.js" integrity="sha512-k6/Bkb8Fxf/c1Tkyl39yJwcOZ1P4cRrJu77p83zJjN2Z55prbFHxPs9vN7q3l3+tSMGPDdoH51AEU8Vgo1cgAA==" crossorigin="anonymous"></script>
         {% block footer %}{% endblock %}
         <script>
+            function nav_bar_elem(menu, to_show) {
+                document.getElementById(menu).onmouseover = () => {
+                    document.getElementById(to_show).style.display = "block";
+                }
+                //hide menu on mouse leaving
+                document.getElementById(menu).onmouseleave = () => {
+                    document.getElementById(to_show).style.display = "none";
+                }
+            }
             document.addEventListener('DOMContentLoaded', function() {
                 //show menu on element hover
                 document.getElementById('dropdown_all').onmouseover = () => {
                     document.getElementById('hwapp_dropdown').style.display = "block";
-
                 }
                 //hide menu on mouse leaving
                 document.getElementById('dropdown_all').onmouseleave = () => {
@@ -199,6 +246,13 @@
                 //hide menu on mouse leaving
                 document.getElementById('dropdown_all_init').onmouseleave = () => {
                     document.getElementById('init_dropdown').style.display = "none";
+                }
+                document.getElementById('admin_all').onmouseover = () => {
+                    document.getElementById('admin_dropdown').style.display = "block";
+                }
+                //hide menu on mouse leaving
+                document.getElementById('admin_all').onmouseleave = () => {
+                    document.getElementById('admin_dropdown').style.display = "none";
                 }
             })
         </script>

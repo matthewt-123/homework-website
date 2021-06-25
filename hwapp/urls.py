@@ -22,6 +22,8 @@ urlpatterns = [
     path("completion/<int:hw_id>", views.completion, name="completion"),
     path("deleteclass/<int:id>", views.deleteclass, name='delete_a_class'),
     path("refresh/<str:hash_value>", views.refresh, name='refresh'),
+    path("getclasstime/<int:class_id>", views.getclasstime, name='getclasstime'),
+    path("reset_password", views.reset_password, name='reset_password'),
 
 
 ]

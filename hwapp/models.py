@@ -25,7 +25,7 @@ class Homework(models.Model):
     hw_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hw_user')
     hw_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='hw_class1')
     hw_title = models.CharField(max_length=256)
-    due_date = models.DateField()
+    due_date = models.DateTimeField()
     priority = models.IntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     completed = models.BooleanField(default=True)
@@ -49,3 +49,8 @@ class Preferences(models.Model):
     carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE, null=True, blank=True)
     calendar_output = models.BooleanField(default=False)
     user_timezone = models.ForeignKey(Timezone, null=True, blank=True, on_delete=models.CASCADE)
+class PWReset(models.Model):
+    reset_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pw_reset_user')
+    hash_val = models.CharField(max_length=256)
+    expires = models.DateTimeField()
+    active = models.BooleanField(default=True)

@@ -64,7 +64,7 @@ def send_email(interval):
                 auth=("api", f"{os.environ.get('mailgun_api_key')}"),
                 data={
                     "from": "Homework App <noreply@mail.matthewtsai.games>",
-                    "to": [recipient.preferences_user.phone_number],
+                    "to": [f"{phone_number}{email_base}"],
                     "subject": f"{recipient.preferences_user.username}'s Homework Email for {todays}",
                     "html": listed 
                 }
@@ -72,3 +72,16 @@ def send_email(interval):
     except:
         #pass if no recipients matching preference query
         pass
+
+def pw_reset_email(user, hash_val, expires, email):
+    listed = f"<h1>Password Reset Email for {user.username}:</h1><br>Please navigate to the below link to reset your password. Please note that this link expires at {expires}: <br><a href='{os.environ.get('website_root')}/reset_password?hash={hash_val}'>{os.environ.get('website_root')}/reset_password?hash={hash_val}</a>"
+    send = requests.post(
+        f"{os.environ.get('API_BASE_URL')}/messages",
+            auth=("api", f"{os.environ.get('mailgun_api_key')}"),
+            data={
+                "from": "Homework App <noreply@mail.matthewtsai.games>",
+                "to": [email],
+                "subject": f"{user}'s Password Reset Email",
+                "html": listed 
+            }      
+    )

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Recurrence, Day, Class, Homework, Preferences, Carrier, Timezone
+from .models import User, Recurrence, Day, Class, Homework, Preferences, Carrier, Timezone, PWReset
 
 # Register your models here.
 class ClassAdmin(admin.ModelAdmin):
@@ -16,3 +16,4 @@ admin.site.register(Homework, HomeworkAdmin)
 admin.site.register(Preferences, PreferencesAdmin)
 admin.site.register(Carrier)
 admin.site.register(Timezone)
+admin.site.register(PWReset)

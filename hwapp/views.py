@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError, connection
 from django.forms import ModelForm
-from .models import User, Recurrence, Day, Class, Homework, Preferences
+from .models import User, Class, Homework, Preferences, PWReset
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django import forms
@@ -17,9 +17,12 @@ from ics import Calendar, Event
 from .forms import HomeworkForm, PreferencesForm, AddClassForm
 from dotenv import load_dotenv
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.utils import timezone
 from django.core.paginator import Paginator
-from .email_helper import send_email
+from .email_helper import pw_reset_email, send_email
+import arrow
+from . import helpers
 #set global variable for day, email sent
 day = datetime.strptime('2021-06-18', '%Y-%m-%d')
 weekly_email_sent=False
@@ -32,7 +35,8 @@ from integrations.models import CalendarEvent, IntegrationPreference
 load_dotenv()
 def user_check(user):
     return user.username == "Automate"
-
+def matthew_check(user):
+    return user.id == 1
 @user_passes_test(user_check, login_url='/')
 def refresh(request, hash_value):
     sys_hash = os.environ.get('email_hash_val')
@@ -164,7 +168,6 @@ def addhw(request):
             data['priority'] = int(data['priority'])
         except:
             data['priority'] = None
-        
         #actual code
         try:
             try:
@@ -174,27 +177,25 @@ def addhw(request):
                     "message": "error: not authorized",
                     "status": 400
                 }, 403)
+            data['due_date'] = datetime.strptime(data['due_date'], "%Y-%m-%dT%H:%M%z")
             new_hw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=data['hw_title'], due_date=data['due_date'], priority=data['priority'], completed=False)   
             new_hw.save()
-            date_ics = datetime.strptime(data['due_date'], "%Y-%m-%d").date()
+            date_ics = data['due_date']
             date = date_ics.strftime("%b. %d, %Y")
             try:
                 notes=data['notes']
             except:
                 notes=None
-            #create full time entry:
-            ics_date = datetime.combine(date_ics, hw_class.time)
-
-            #create ICS entry:
+            #create ICS entry if calendar_output is true:
             try:
                 var = Preferences.objects.get(preferences_user=request.user).calendar_output
             except:
                 var=False
-                
+            
             if var == True:
                 e = Event()
                 e.name = data['hw_title']
-                e.begin = ics_date
+                e.begin = arrow.get(data['due_date'])
                 e.description = f"Class: {hw_class.class_name}; Notes: {notes}"
                 #enter new event into database:
                 new_calevent = CalendarEvent(calendar_user = request.user, homework_event=new_hw, ics=e)
@@ -287,6 +288,7 @@ def preferences(request):
             })
 @login_required(login_url='/login')
 def edit_hw(request, hw_id):
+    forms.DateTimeInput.input_type="datetime-local" 
     class EditHwForm(ModelForm):
         class Meta:
             model = Homework
@@ -348,6 +350,7 @@ def edit_hw(request, hw_id):
                 'due_date': hw.due_date
             }   
             form = EditHwForm(initial=values)
+            print(form)
             return render(request, 'hwapp/edit_hw.html', {
                 'form': form,
                 'hw_id': hw_id
@@ -550,3 +553,109 @@ def deleteclass(request, id):
         return JsonResponse({
             'message': 'method not allowed'
         }, status=405)
+
+@login_required(login_url='/login')
+def getclasstime(request, class_id):
+    if request.method == "GET":
+        try:
+            class_instance = Class.objects.get(id=class_id, class_user=request.user)
+        except:
+            return JsonResponse({
+                'message': 'Access Denied',
+                'status': 403,
+            }, message=403)
+        date_def = datetime.now()
+        dt = datetime.combine(date_def, class_instance.time)
+        dt = dt.strftime('%Y-%m-%dT%H:%M')
+        return JsonResponse({
+            'class_time': dt,
+            'status': 200,
+        }, status=200)
+    else:
+        return JsonResponse({
+            'message': 'method not allowed',
+            'status': 405,
+        }, status=405)
+
+def reset_password(request):
+    if request.method == "GET":
+        hash_val = request.GET.get('hash')
+        if hash_val == None:
+            return render(request, 'hwapp/reset_password.html')
+        else:
+            #check hash against database
+            try:
+                hash_val_db = PWReset.objects.get(hash_val=hash_val, active=True)
+            except:
+                return render(request, 'hwapp/error.html', {
+                    'error': 'Invalid link. Please request a new one <a href="/reset_password">here</a>'
+                })
+            if hash_val_db.expires < timezone.now():
+                return render(request, 'hwapp/error.html', {
+                    'error': 'This link has expired. Please request a new one <a href="/reset_password">here</a>'
+                })
+            else:
+                return render(request, 'hwapp/newpw.html', {
+                    'hash_val': hash_val
+                })
+            
+    if request.method == "POST":
+            try:
+                request.POST['form_email']
+                try:
+                    user = User.objects.get(email = request.POST['form_email'])
+                    hash_val = hash(f"{user.username}{user.id}{datetime.now()}")
+                    now_plus_10 = timezone.now() + timedelta(minutes = 10)
+                    PWReset.objects.create(reset_user=user, hash_val=hash_val, expires=now_plus_10)
+                    pw_reset_email(user=user, hash_val=hash_val, expires=now_plus_10, email=user.email)
+                    return HttpResponseRedirect(reverse('index'))
+                except:
+                    return HttpResponseRedirect(reverse('index'))
+            except:
+                try:
+                    pw = request.POST['pw']
+                    confirm = request.POST['pw_confirmation']
+                    hash_val=request.POST['hash_val']
+                    #check PW confirmation
+                    if pw != confirm:
+                        return render(request, 'hwapp/newpw.html', {
+                            'message': 'Please make sure that your passwords match',
+                            'hash_val': request.POST['hash_val']
+                        })
+                    else:
+                        #check hash again
+                        try:
+                            hash_val_db = PWReset.objects.get(hash_val=hash_val)
+                        except:
+                            return render(request, 'hwapp/error.html', {
+                                'error': 'Invalid link. Please request a new one <a href="/reset_password">here</a>'
+                            })
+                        if hash_val_db.expires < timezone.now():
+                            return render(request, 'hwapp/error.html', {
+                                'error': 'This link has expired. Please request a new one <a href="/reset_password">here</a>'
+                            })
+                        #check PW strength:
+                        if helpers.check_pw(pw) != True:
+                            return render(request, 'hwapp/newpw.html', {
+                                'message': helpers.check_pw(pw),
+                                'hash_val': request.POST['hash_val']
+                            })                            
+                        
+                        else:
+                            u = hash_val_db.reset_user
+                            print(u)
+                            u.set_password(pw)
+                            u.save()
+                            #invalidate link
+                            hash_val_db.expires=timezone.now()
+                            hash_val_db.active = False
+                            return render(request, 'hwapp/newpw.html', {
+                                'success': 'Success! Your password has been updated. Please click <a href="/login">here</a> to login.',
+                                'hash_val': request.POST['hash_val']
+                        })
+
+                except:
+                    return HttpResponseRedirect(reverse('index'))
+@user_passes_test(matthew_check, login_url='/login')
+def matthew_schoology_grades(request):
+    pass
