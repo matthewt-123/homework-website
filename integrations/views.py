@@ -9,7 +9,7 @@ from django.forms import ModelForm
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 import os
-from .models import IntegrationOption, Cookie, CalendarEvent
+from .models import IntegrationOption, CalendarEvent
 from dotenv import load_dotenv
 import datetime
 import arrow

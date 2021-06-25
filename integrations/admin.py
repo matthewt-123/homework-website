@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import IntegrationOption, AdminOnly, CalendarEvent, Cookie, IdioticClass
+from .models import IntegrationOption, AdminOnly, CalendarEvent, IdioticClass
 
 # Register your models here.
 
