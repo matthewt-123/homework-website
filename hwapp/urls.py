@@ -24,6 +24,7 @@ urlpatterns = [
     path("refresh/<str:hash_value>", views.refresh, name='refresh'),
     path("getclasstime/<int:class_id>", views.getclasstime, name='getclasstime'),
     path("reset_password", views.reset_password, name='reset_password'),
+    path('matthew/schoology_grades', views.matthew_schoology_grades, name='matthew_schoology_grades'),
 
 
 ]

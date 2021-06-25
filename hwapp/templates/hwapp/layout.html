@@ -149,7 +149,7 @@
                                 </ul>
 
                             </div>
-                            {% if user.id == 1 %}
+                            {% if user.is_superuser %}
                             <a href='#' onclick = 'show_item("admin_block")'>Administration &#9660;</a>
                             <div id='admin_block' style='display:none;'>
                             <ul style='list-style-type:none;'>

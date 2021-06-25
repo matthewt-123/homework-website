@@ -5,6 +5,7 @@ from django.db import IntegrityError, connection
 from django.forms import ModelForm
 from .models import User, Class, Homework, Preferences, PWReset
 from django.http import HttpResponseRedirect
+import requests
 from django.urls import reverse
 from django import forms
 import time, sched
@@ -87,7 +88,8 @@ def index(request):
         'hwlist': page_obj,
         'class_list': class_list,
         'page_obj': page_obj,
-        'length': list(h.page_range)
+        'length': list(h.page_range),
+        'website_root': os.environ.get('website_root')
     })
 
 
@@ -143,11 +145,7 @@ def register(request):
                 "message": "Username already taken."
             })
         login(request, user)
-        #create integration profile
-        integration_profile = IntegrationPreference(integrations_user=request.user)
-        calendar = CalendarEvent(calendar_user=request.user)
-        calendar.save()
-        integration_profile.save()
+
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "hwapp/register.html")
@@ -347,7 +345,7 @@ def edit_hw(request, hw_id):
                 'hw_title': hw.hw_title,
                 'notes': hw.notes,
                 'priority': hw.priority,
-                'due_date': hw.due_date
+                'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M")
             }   
             form = EditHwForm(initial=values)
             print(form)
@@ -471,6 +469,7 @@ def allhw(request):
         'hwlist': hwlist,
         'completed': completed,
         'class_list': class_list,
+        'website_root': os.environ.get('website_root')
     })
 def about(request):
     return render(request, 'hwapp/aboutme.html')
@@ -505,7 +504,7 @@ def profile(request):
 def calendar(request):
     if request.method == "GET":
         hash_val = abs(hash(str(request.user.id)))
-        ics_link = f"matthewshomeworkapp.herokuapp.com/integrations/export/{request.user.id}/{hash_val}"
+        ics_link = f"{os.environ.get('website_root')}/integrations/export/{request.user.id}/{hash_val}"
         return render(request, 'hwapp/calendar.html', {
             'ics_link': ics_link
         })
@@ -658,4 +657,30 @@ def reset_password(request):
                     return HttpResponseRedirect(reverse('index'))
 @user_passes_test(matthew_check, login_url='/login')
 def matthew_schoology_grades(request):
-    pass
+    url = 'https://fuhsd.schoology.com/grades/grades'
+    headers = {
+        'authority': 'fuhsd.schoology.com',
+'method':'GET',
+'path':'/grades/grades',
+'scheme':'https',
+'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+'accept-encoding':'gzip, deflate, br',
+'accept-language':'en-US,en;q=0.9',
+'cache-control':'no-cache',
+'cookie': IntegrationPreference.objects.get(integrations_user=request.user).admin_cookie,
+'dnt':'1',
+'pragma':'no-cache',
+'referer':'https://fuhsd.schoology.com/home',
+'sec-ch-ua':'"Not;A Brand";v="99", "Google Chrome";v="91", "Chromium";v="91"',
+'sec-ch-ua-mobile':'?0',
+'sec-fetch-dest':'document',
+'sec-fetch-mode':'navigate',
+'sec-fetch-site':'same-origin',
+'sec-fetch-user':'?1',
+'upgrade-insecure-requests': '1',
+'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
+    }
+    grades = requests.get(url, headers=headers)
+    return render(request, 'hwapp/matthew-schoology.html', {
+        'html': grades.text,
+    })

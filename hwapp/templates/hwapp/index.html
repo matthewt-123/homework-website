@@ -140,21 +140,27 @@ Homework List for {{user.username}}
         })
         return false
     })})
+
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('hw_class').onchange = () => {
             const class_ins = document.getElementById('hw_class')
-            fetch(`/getclasstime/${class_ins.value}`, {
-                method: 'GET',
-                credentials: 'same-origin',
-            })
-            .then(response=>response.json())
-            .then(result => {
-                if(result['status'] == 200){
-                    document.getElementById('due_date').value = result['class_time']
-                } else {
-                    console.log(result['message'])
-                }
-            })
+            if(document.getElementById('hw_class').value == 'add_new_class') {
+                window.location.href='https://{{website_root}}/addclass'
+            } else {
+                    fetch(`/getclasstime/${class_ins.value}`, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                })
+                .then(response=>response.json())
+                .then(result => {
+                    if(result['status'] == 200){
+                        document.getElementById('due_date').value = result['class_time']
+                    } else {
+                        console.log(result['message'])
+                    }
+                })
+            }
+
         }
     })
     function completioncall(id) {
@@ -293,6 +299,7 @@ Homework List for {{user.username}}
                     {% for class in class_list %}
                     <option value={{class.id}}>{{class.class_name}}</option>
                     {% endfor %}
+                    <option value='add_new_class'>Add New Class</option>
                 </select></td>
                 <td class='mobile_hide'><input id='due_date' type='datetime-local' class='input1'></td>
                 <td width=5% class='mobile_hide'><input id='priority' type='number' class='input1' min="1" max="100" placeholder="Priority"></td>
