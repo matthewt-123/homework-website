@@ -13,6 +13,7 @@ class AdminOnly(models.Model):
     admin_user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
     admin_cookie = models.TextField(default=None)
     
+    
 class CalendarEvent(models.Model):
     calendar_user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
     homework_event = models.ForeignKey('hwapp.Homework', on_delete=models.CASCADE, blank=True, null=True)

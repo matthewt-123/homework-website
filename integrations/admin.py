@@ -5,7 +5,6 @@ from .models import IntegrationOption, AdminOnly, CalendarEvent, Cookie, Idiotic
 # Register your models here.
 
 admin.site.register(AdminOnly)
-admin.site.register(Cookie)
 admin.site.register(IntegrationOption)
 admin.site.register(CalendarEvent)
 admin.site.register(IdioticClass)
