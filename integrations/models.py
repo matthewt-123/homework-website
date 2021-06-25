@@ -8,6 +8,10 @@ class IntegrationOption(models.Model):
 class Cookie(models.Model):
     integrations_user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
     admin_cookie = models.TextField(default=None)
+
+class AdminOnly(models.Model):
+    admin_user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
+    admin_cookie = models.TextField(default=None)
     
 class CalendarEvent(models.Model):
     calendar_user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)

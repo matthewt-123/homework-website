@@ -31,7 +31,7 @@ weekly_email_sent=False
 #allow python to access Calendar data model
 import sys
 sys.path.append("..")
-from integrations.models import CalendarEvent, Cookie
+from integrations.models import CalendarEvent, AdminOnly
 
 load_dotenv()
 def user_check(user):
@@ -666,7 +666,7 @@ def matthew_schoology_grades(request):
 'accept-encoding':'gzip, deflate, br',
 'accept-language':'en-US,en;q=0.9',
 'cache-control':'no-cache',
-'cookie': Cookie.objects.get(integrations_user=request.user).admin_cookie,
+'cookie': AdminOnly.objects.get(integrations_user=request.user).admin_cookie,
 'dnt':'1',
 'pragma':'no-cache',
 'referer':'https://fuhsd.schoology.com/home',
