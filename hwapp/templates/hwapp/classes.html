@@ -4,7 +4,7 @@
     function delete_class(class_id){
         name_data = document.getElementById(`class_name_${class_id}`)
         name = name_data.dataset.value
-        if(confirm(`Are you sure you want to delete ${name}`)) {
+        if(confirm(`Are you sure you want to delete ${name}?`)) {
             fetch(`/deleteclass/${class_id}`, {
                 method: 'DELETE',
                 headers: {

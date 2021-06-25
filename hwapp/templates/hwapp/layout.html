@@ -7,7 +7,10 @@
         <title>{% block title %}Homework App{% endblock %}</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
-
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name='keywords' content="Homework, Task Manager, To Do">
+        <meta name='description' content='Task Manager for Students'>
+        
         <link href="{% static 'hwapp/styles.css' %}" rel="stylesheet">
         <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
         <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
@@ -25,7 +28,7 @@
                     <td width=10% class="nav-item" style="font-weight:bold;text-align: center;";>
                         <a class="nav-link" href="{% url 'index' %}">Home</a>
                     </td>
-                    <td width=10% id="dropdown_all" style="font-weight:bold;text-align: center;";>
+                    <td width=10% id="dropdown_all" style="font-weight:bold;text-align: center;"; class="nav-item" >
                         <div id="dropdown_all" class="dropdown_all">
                         <a class="nav-link dropdown_all" href = "{% url 'classes' %}">Homework</a>
                         <div id="hwapp_dropdown" class="dropdown_all">
@@ -38,11 +41,28 @@
                         </div>
                     </div>
                     </td>
-                    <td width=50% class="nav-item" style="font-weight:bold";><a href='/calendar/'>Calendar</a></td>
-
-                    <td width=10% id="dropdown_all_setting" style="font-weight:bold;text-align: center;";>
+                    <td width=10% class="nav-item" style="font-weight:bold;text-align: center;";><a href='/calendar/'>Calendar</a></td>
+                    <!--integrations-->
+                    <td width=10% id="dropdown_all_init" style="font-weight:bold;text-align: center;" class="nav-item" >
+                        <div id="dropdown_all_init" class="dropdown_all_init">
+                        <a class="nav-link dropdown_all" href = "/integrations">Integrations</a>
+                        <div id="init_dropdown" style='display:none' class="dropdown_all_init">
+                            <a href="{% url 'schoology_init' %}" style="text-decoration: none;"><div class="nav_item">
+                                Schoology
+                            </div></a>
+                            <a href="{% url 'canvas_init' %}" style="text-decoration: none;"><div class="nav_item">
+                                Canvas
+                            </div></a>
+                            <a href="{% url 'other_init' %}" style="text-decoration: none;"><div class="nav_item">
+                                Other
+                            </div></a>
+                        </div>
+                    </div>
+                    </td>
+                    
+                    <td width=10% id="dropdown_all_setting" style="font-weight:bold;text-align: center;" class="nav-item" >
                         <div id="dropdown_all_setting" class="dropdown_all_setting">
-                        <a class="nav-link dropdown_all_setting" href = "{% url 'classes' %}">Settings</a>
+                        <a class="nav-link dropdown_all_setting" href = "#">Settings</a>
                         <div id="settings_dropdown" class="dropdown_all_setting">
                             <a href="{% url 'profile' %}" style="text-decoration: none;"><div class="nav_item">
                                 Profile
@@ -59,12 +79,103 @@
                         </div>
                     </div>
                     </td>
+                    {% if user.id == 1 %}
+                    <td width='10%' style="font-weight:bold;text-align: center;" class="nav-item" >
+                        <div id="admin_all" class="admin_all">
+                            <a class="nav-link admin_all" href = "#">Administration</a>
+                            <div id="admin_dropdown" class="admin_all">
+                                <a href="/admin" style="text-decoration: none;"><div class="nav_item">
+                                    &nbsp Admin Console &nbsp
+                                </div></a>
+                                <a href="/matthew/schoology_grades" style="text-decoration: none;"><div class="nav_item">
+                                    &nbsp Schoology Grades &nbsp
+                                </div></a>
+                 
+                            </div>
+                        </div>
+                    </td>
+                    <td width='30%' style='display: none;'></td>
+                    {% else %}
+                    <td width='40%' style='display: none;'></td>
 
+                    {% endif %}
+
+                    <td width='10%' class="mobile_nav" >
+                        <!-- from W3 Schools, sidenav for MOBILE ONLY-->
+                        <div id="mySidenav" class="sidenav" >
+                            <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+                            <a href="/">Home</a>
+                            <a href="#" onclick='show_item("homework_block")'>Homework &#9660;</a>
+                            <div id='homework_block' style='display:none;'>
+                                <ul style="list-style-type:none;">
+                                    <li>
+                                        <a style='font-size:20px' href='/classes'>
+                                            Classes
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a style='font-size:20px' href='/'>
+                                            Homework
+                                        </a>
+                                    </li>
+                                </ul>
+
+                            </div>
+                            <a href="/calendar">Calendar</a>
+                            <a href="/integrations">Integrations</a>
+                            <a href="#" onclick='show_item("settings_block")'>Settings &#9660;</a>
+                            <div id='settings_block' style='display:none;'>
+                                <ul style="list-style-type:none;">
+                                    <li>
+                                        <a style='font-size:20px' href='/classes'>
+                                            Profile
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a style='font-size:20px' href='/preferences'>
+                                            Preferences
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a style='font-size:20px' href='/about'>
+                                            About This Website
+                                        </a>
+                                    </li>                                    
+                                    <li>
+                                        <a style='font-size:20px' href='/logout'>
+                                            Log Out
+                                        </a>
+                                    </li>
+                                </ul>
+
+                            </div>
+                            {% if user.is_superuser %}
+                            <a href='#' onclick = 'show_item("admin_block")'>Administration &#9660;</a>
+                            <div id='admin_block' style='display:none;'>
+                            <ul style='list-style-type:none;'>
+                                <li>
+                                    <a style='font-size:20px' href='/admin'>
+                                        Admin Console
+                                    </a>
+                                </li>
+                                <li>
+                                    <a style='font-size:20px' href='/matthew/schoology_grades'>
+                                        Schoology Grades
+                                    </a>
+                                </li></ul>
+                            </div>
+                              {% endif %}
+                        </div>
+
+                          <span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776;</span>
+                    </td>
 
 
 
                 </td>
                 </td>
+
+
             {% else %}
                 <td width=10% class="nav-item" style="font-weight:bold";>
                     <a class="nav-link" href="{% url 'login' %}" style="font-weight:bold";>Log In</a>
@@ -100,11 +211,19 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.39.0/js/tempusdominus-bootstrap-4.min.js" integrity="sha512-k6/Bkb8Fxf/c1Tkyl39yJwcOZ1P4cRrJu77p83zJjN2Z55prbFHxPs9vN7q3l3+tSMGPDdoH51AEU8Vgo1cgAA==" crossorigin="anonymous"></script>
         {% block footer %}{% endblock %}
         <script>
+            function nav_bar_elem(menu, to_show) {
+                document.getElementById(menu).onmouseover = () => {
+                    document.getElementById(to_show).style.display = "block";
+                }
+                //hide menu on mouse leaving
+                document.getElementById(menu).onmouseleave = () => {
+                    document.getElementById(to_show).style.display = "none";
+                }
+            }
             document.addEventListener('DOMContentLoaded', function() {
                 //show menu on element hover
                 document.getElementById('dropdown_all').onmouseover = () => {
                     document.getElementById('hwapp_dropdown').style.display = "block";
-
                 }
                 //hide menu on mouse leaving
                 document.getElementById('dropdown_all').onmouseleave = () => {
@@ -118,6 +237,22 @@
                 //hide menu on mouse leaving
                 document.getElementById('dropdown_all_setting').onmouseleave = () => {
                     document.getElementById('settings_dropdown').style.display = "none";
+                }
+                //show menu on element hover
+                document.getElementById('dropdown_all_init').onmouseover = () => {
+                    document.getElementById('init_dropdown').style.display = "block";
+
+                }
+                //hide menu on mouse leaving
+                document.getElementById('dropdown_all_init').onmouseleave = () => {
+                    document.getElementById('init_dropdown').style.display = "none";
+                }
+                document.getElementById('admin_all').onmouseover = () => {
+                    document.getElementById('admin_dropdown').style.display = "block";
+                }
+                //hide menu on mouse leaving
+                document.getElementById('admin_all').onmouseleave = () => {
+                    document.getElementById('admin_dropdown').style.display = "none";
                 }
             })
         </script>

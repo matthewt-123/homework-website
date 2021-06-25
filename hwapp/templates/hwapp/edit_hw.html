@@ -2,11 +2,11 @@
 
 {% block body %}
 
-<h1 style="margin-left:35%">Edit Homework</h1>
+<h1 class='django_forms'>Edit Homework</h1>
 <hr>
     <form action='{% url "edit_hw" hw_id %}' method='POST' class='indented'>
         {% csrf_token %}
-        <table style='margin-left:35%;'>
+        <table class='django_forms'>
             {{form.as_table}} 
         </table>
         <button style='margin-left: 35%' type="submit" class="btn btn-primary">Submit</button>

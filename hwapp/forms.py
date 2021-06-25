@@ -16,7 +16,7 @@ class HomeworkForm(ModelForm):
 class PreferencesForm(ModelForm):
     class Meta:
         model = Preferences
-        fields = ['email_notifications', 'email_recurrence', 'text_notifications', 'phone_number', 'carrier', 'calendar_output']
+        fields = ['email_notifications', 'email_recurrence', 'text_notifications', 'phone_number', 'carrier', 'calendar_output', 'user_timezone']
 
 class AddClassForm(ModelForm):
     class Meta:
