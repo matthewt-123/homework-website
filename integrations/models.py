@@ -20,3 +20,6 @@ class CalendarEvent(models.Model):
     ics = models.TextField(blank=True, null=True)
     def __str__(self):
         return f"{self.calendar_user}"
+def IdioticClass(models.Model):
+    useless = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
+    stupid = models.TextField(default=None)
