@@ -348,7 +348,6 @@ def edit_hw(request, hw_id):
                 'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M")
             }   
             form = EditHwForm(initial=values)
-            print(form)
             return render(request, 'hwapp/edit_hw.html', {
                 'form': form,
                 'hw_id': hw_id

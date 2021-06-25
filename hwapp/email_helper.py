@@ -20,7 +20,7 @@ def send_email(interval):
             #iterate over each hw item, adding it to the email in HTML format
             listed = "<ul>"
             for each in hw_list:
-                if each.notes is not None and each.notes is not "None":
+                if each.notes != None and each.notes != "None":
                     listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li><ul><li>Notes: {each.notes}</li></ul>"
                 else:
                     listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li>"
