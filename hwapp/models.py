@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from phone_field import PhoneField
 
 # Create your models here.
 class User(AbstractUser):
@@ -26,8 +25,8 @@ class Homework(models.Model):
     hw_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hw_user')
     hw_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='hw_class1')
     hw_title = models.CharField(max_length=256)
-    due_date = models.DateField()
-    priority = models.IntegerField()
+    due_date = models.DateTimeField()
+    priority = models.IntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     completed = models.BooleanField(default=True)
     def __str__(self):
@@ -37,11 +36,21 @@ class Carrier(models.Model):
     email = models.CharField(max_length = 128)
     def __str__(self):
         return f"{self.carrier}"
+class Timezone(models.Model):
+    timezone = models.CharField(max_length=256)
+    def __str__(self):
+        return f"{self.timezone}"
 class Preferences(models.Model):
     preferences_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='preferences_user')
     email_notifications = models.BooleanField(default=False)
     email_recurrence = models.ForeignKey(Recurrence, null=True, blank=True, on_delete=models.CASCADE, related_name="recurrence")
     text_notifications = models.BooleanField(default=False)
-    phone_number = PhoneField(blank=True, null=True )
+    phone_number = models.IntegerField(blank=True, null=True )
     carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE, null=True, blank=True)
     calendar_output = models.BooleanField(default=False)
+    user_timezone = models.ForeignKey(Timezone, null=True, blank=True, on_delete=models.CASCADE)
+class PWReset(models.Model):
+    reset_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pw_reset_user')
+    hash_val = models.CharField(max_length=256)
+    expires = models.DateTimeField()
+    active = models.BooleanField(default=True)

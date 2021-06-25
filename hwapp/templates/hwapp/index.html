@@ -7,7 +7,7 @@
 Homework List for {{user.username}}
 </h1>
 
-<img id='page_size_button' class='btn btn-default dropdown-toggle' data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style='height:6%;width:6%;position:relative;margin-top:-4%;float:right;margin-right:5%;' src="{% static 'hwapp/filter.png' %}">
+<img id='page_size_button' class='btn btn-default dropdown-toggle index_filter' data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style='height:6%;width:6%;position:relative;margin-top:-4%;float:right;margin-right:5%;' src="{% static 'hwapp/filter.png' %}">
 <div class='dropdown-menu' id='class_filter' aria-labelledby="page_size_label">
     <b>Class Filter</b>
     <a onclick='class_filters()' class="dropdown-item class_filter_items" href='/' >All Classes</a>
@@ -22,6 +22,36 @@ Homework List for {{user.username}}
     document.addEventListener('DOMContentLoaded', () => {
         row_id = 0
         document.getElementById('non_functional_form').addEventListener('submit', () => {
+            tz=new Date().getTimezoneOffset()
+            if(tz > 0){
+                var m = tz % 60;
+                var h = (tz-m) / 60;
+                if(m == 0) {
+                    m = '00';
+                } else if(0 < m < 10) {
+                    m = `0${m}`;
+                }
+                if(h == 0) {
+                    h = '00';
+                } else if(0<h<10) {
+                    h = `0${h}`;
+                }
+                tz = `+${h}${m}`
+            } else {
+                var m = tz % 60;
+                var h = (tz-m) / 60;
+                if(m == 0) {
+                    m = '00';
+                } else if(0 < m < 10) {
+                    m = `0${m}`;
+                }
+                if(h == 0) {
+                    h = '00';
+                } else if(0<h<10) {
+                    h = `0${h}`;
+                }
+                tz = `-${m}${h}`
+            }
             fetch(`/addhw`, {
             method: 'POST',
             headers: {
@@ -31,7 +61,7 @@ Homework List for {{user.username}}
             body: JSON.stringify({
                 hw_class: document.getElementById('hw_class').value,
                 hw_title: document.getElementById('hw_title').value,
-                due_date: document.getElementById('due_date').value,
+                due_date: `${document.getElementById('due_date').value}${tz}`,
                 priority: document.getElementById('priority').value,
             })
         })
@@ -110,6 +140,29 @@ Homework List for {{user.username}}
         })
         return false
     })})
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('hw_class').onchange = () => {
+            const class_ins = document.getElementById('hw_class')
+            if(document.getElementById('hw_class').value == 'add_new_class') {
+                window.location.href='https://{{website_root}}/addclass'
+            } else {
+                    fetch(`/getclasstime/${class_ins.value}`, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                })
+                .then(response=>response.json())
+                .then(result => {
+                    if(result['status'] == 200){
+                        document.getElementById('due_date').value = result['class_time']
+                    } else {
+                        console.log(result['message'])
+                    }
+                })
+            }
+
+        }
+    })
     function completioncall(id) {
         fetch(`/completion/${id}`, {
             method: 'POST',
@@ -220,8 +273,8 @@ Homework List for {{user.username}}
             </tr>
             {% endfor %}
             <!--blank row-->
-            <tr id="new_hw_0">
-                <td></td>
+            <tr id="new_hw_0" class='index'>
+                <td ></td>
                 <td><a id='new_hw_title_0' class='new_hw_link'></a></td>
                 <td><a id='new_hw_class_0' class='new_hw_link'></a></td>
                 <td><a id='new_due_date_0' class='new_hw_link'></a></td>
@@ -238,24 +291,26 @@ Homework List for {{user.username}}
             <!--New HW Form-->
             <form action='/addhw' method='POST' id='non_functional_form'>
                 {% csrf_token %}
-            <tr>
-                <td style='text-align: center;'>+</td>
-                <td><input id='hw_title' type='text' class='input1' placeholder="Assignment Name"></td>
-                <td><select id='hw_class' class='input1 form-select'>
+            <tr class='index'>
+                <td style='text-align: center;' id='index_plus_sign' class='mobile_hide'>+</td>
+                <td class='mobile_hide'><input id='hw_title' type='text' class='input1' placeholder="Assignment Name"></td>
+                <td class='mobile_hide'><select id='hw_class' class='input1 form-select'>
                     <option disabled selected>Class Name</option>
                     {% for class in class_list %}
                     <option value={{class.id}}>{{class.class_name}}</option>
                     {% endfor %}
+                    <option value='add_new_class'>Add New Class</option>
                 </select></td>
-                <td><input id='due_date' type='date' class='input1'></td>
-                <td width=5%><input id='priority' type='number' class='input1' min="1" max="100" placeholder="Priority"></td>
-                <td>
+                <td class='mobile_hide'><input id='due_date' type='datetime-local' class='input1'></td>
+                <td width=5% class='mobile_hide'><input id='priority' type='number' class='input1' min="1" max="100" placeholder="Priority"></td>
+                <td class='mobile_hide'>
                     <button id='add_hw' hidden type="submit"></button>
                 </td>
             </tr>
             </form>
         </tfoot>
     </table>
+    <a href='/addhw' id='mobile_add_hw'>Add Homework</a>
         {% if completed %}
         <hr>
 <strong>Completed Assignments</strong>

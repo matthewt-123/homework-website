@@ -3,12 +3,13 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError, connection
 from django.forms import ModelForm
-from .models import User, Recurrence, Day, Class, Homework, Preferences
+from .models import User, Class, Homework, Preferences, PWReset
 from django.http import HttpResponseRedirect
+import requests
 from django.urls import reverse
 from django import forms
 import time, sched
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -17,10 +18,15 @@ from ics import Calendar, Event
 from .forms import HomeworkForm, PreferencesForm, AddClassForm
 from dotenv import load_dotenv
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.utils import timezone
 from django.core.paginator import Paginator
-
-
+from .email_helper import pw_reset_email, send_email
+import arrow
+from . import helpers
+#set global variable for day, email sent
+day = datetime.strptime('2021-06-18', '%Y-%m-%d')
+weekly_email_sent=False
 
 #allow python to access Calendar data model
 import sys
@@ -28,12 +34,36 @@ sys.path.append("..")
 from integrations.models import CalendarEvent, IntegrationPreference
 
 load_dotenv()
-
-
-
+def user_check(user):
+    return user.username == "Automate"
+def matthew_check(user):
+    return user.id == 1
+@user_passes_test(user_check, login_url='/')
+def refresh(request, hash_value):
+    sys_hash = os.environ.get('email_hash_val')
+    if str(hash_value) == str(sys_hash):
+        pass
+    else:
+        return JsonResponse({'error': 'access denied'}, status=403)
+    #email feature
+    global weekly_email_sent
+    if datetime.today().weekday() == 6 and weekly_email_sent==False:
+        send_email('Weekly')
+        weekly_email_sent = True
+    if datetime.today().weekday() == 0 and weekly_email_sent==True:
+        weekly_email_sent=False
+    global day
+    local_day=day
+    if datetime.now().date() == local_day.date():
+        pass
+    else:
+        send_email('Daily')
+        day = datetime.now().strftime("%Y-%m-%d")
+    return HttpResponseRedirect(reverse('logout'))
 
 @login_required(login_url='/login')
 def index(request):
+    #index feature
     page_size = request.GET.get('page_size')
     if not page_size:
         page_size = 10
@@ -58,7 +88,8 @@ def index(request):
         'hwlist': page_obj,
         'class_list': class_list,
         'page_obj': page_obj,
-        'length': list(h.page_range)
+        'length': list(h.page_range),
+        'website_root': os.environ.get('website_root')
     })
 
 
@@ -74,7 +105,7 @@ def login_view(request):
         # Check if authentication successful
         if user is not None:
             login(request, user)
-            return HttpResponseRedirect(reverse("index"))
+            return HttpResponseRedirect(reverse("index"), status=302)
         else:
             return render(request, "hwapp/login.html", {
                 "message": "Invalid username and/or password."
@@ -114,53 +145,11 @@ def register(request):
                 "message": "Username already taken."
             })
         login(request, user)
-        #create integration profile
-        integration_profile = IntegrationPreference(integrations_user=request.user)
-        calendar = CalendarEvent(calendar_user=request.user)
-        calendar.save()
-        integration_profile.save()
+
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "hwapp/register.html")
 # Create your views here.
-
-def hourly_refresh(request):
-    user = request.user
-    hw =  Homework.objects.filter(hw_user=user, completed=False)
-    listed= f'Homework email for {user.username}.'
-    for each in hw:
-        listed = listed + f"<li>{each.hw_title}({each.hw_class}) is due at {each.due_date}</li>"
-    message = Mail(
-        from_email = basics.from_email,
-        to_emails= basics.to_emails,
-        subject = f"{user.username} Homework Email",
-        html_content=listed
-    )
-    try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        response = sg.send(message)
-    except Exception as e:
-        print(e.details)
-    pass
-
-def weekly_refresh(request):
-    user = request.user
-    hw =  Homework.objects.filter(hw_user=user, completed=False)
-    listed= f'Homework email for {user.username}.'
-    for each in hw:
-        listed = listed + f"<li>{each.hw_title}({each.hw_class}) is due at {each.due_date}</li>"
-    message = Mail(
-        from_email = basics.from_email,
-        to_emails= basics.to_emails,
-        subject = f"{user.username} Homework Email",
-        html_content=listed
-    )
-    try:
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        response = sg.send(message)
-    except Exception as e:
-        print(e.details)
-    pass
 
 @login_required(login_url='/login')
 def classes(request):
@@ -173,7 +162,11 @@ def classes(request):
 def addhw(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-        data['priority'] = int(data['priority'])
+        try:
+            data['priority'] = int(data['priority'])
+        except:
+            data['priority'] = None
+        #actual code
         try:
             try:
                 hw_class = Class.objects.get(id=data['hw_class'], class_user =request.user)
@@ -182,24 +175,26 @@ def addhw(request):
                     "message": "error: not authorized",
                     "status": 400
                 }, 403)
+            data['due_date'] = datetime.strptime(data['due_date'], "%Y-%m-%dT%H:%M%z")
             new_hw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=data['hw_title'], due_date=data['due_date'], priority=data['priority'], completed=False)   
             new_hw.save()
-            date_ics = datetime.strptime(data['due_date'], "%Y-%m-%d").date()
+            date_ics = data['due_date']
             date = date_ics.strftime("%b. %d, %Y")
-            
-            #create full time entry:
-            ics_date = datetime.combine(date_ics, hw_class.time)
-
-            #create ICS entry:
+            try:
+                notes=data['notes']
+            except:
+                notes=None
+            #create ICS entry if calendar_output is true:
             try:
                 var = Preferences.objects.get(preferences_user=request.user).calendar_output
             except:
                 var=False
+            
             if var == True:
                 e = Event()
                 e.name = data['hw_title']
-                e.begin = ics_date
-                e.description = f"Class: {hw_class.class_name}"
+                e.begin = arrow.get(data['due_date'])
+                e.description = f"Class: {hw_class.class_name}; Notes: {notes}"
                 #enter new event into database:
                 new_calevent = CalendarEvent(calendar_user = request.user, homework_event=new_hw, ics=e)
                 new_calevent.save()
@@ -216,8 +211,12 @@ def addhw(request):
                 "status": 400,
             }, status=400)
     else:
-        return JsonResponse({
-            "message": "method GET not allowed"
+        try:
+            classes = Class.objects.filter(class_user=request.user)
+        except:
+            return HttpResponseRedirect(reverse('classes'))
+        return render(request, 'hwapp/addhw.html', {
+            'classes':classes
         })
 
 @login_required(login_url='/login')
@@ -231,11 +230,20 @@ def preferences(request):
             carrier=form.cleaned_data['carrier']
             text_notifications = form.cleaned_data['text_notifications']
             calendar_output = form.cleaned_data['calendar_output']
+            user_timezone = form.cleaned_data['user_timezone']
             if phone_number and not carrier:
                 return render(request, 'hwapp/preferences.html', {
                     'form': form,
                     'error': "The carrier field is required."
                 })
+            if phone_number:
+                try:
+                    int(phone_number)
+                except:
+                    return render(request, 'hwapp/preferences.html', {
+                        'form': form,
+                        'error': "Please type in your phone number with numbers only(no dashes or parentheses)."
+                    })
             try:
                 preferences = Preferences.objects.get(preferences_user=request.user)
                 preferences.email_notifications = email_notifications
@@ -243,7 +251,8 @@ def preferences(request):
                 preferences.phone_number = phone_number
                 preferences.carrier = carrier    
                 preferences.text_notifications = text_notifications  
-                preferences.calendar_output = calendar_output          
+                preferences.calendar_output = calendar_output      
+                preferences.user_timezone = user_timezone    
                 preferences.save()
             except:
                 new_pref = Preferences(preferences_user=request.user, email_recurrence=email_recurrence, email_notifications=email_notifications, carrier=carrier, phone_number=phone_number, text_notifications=text_notifications)
@@ -264,6 +273,7 @@ def preferences(request):
                 'phone_number': preferences.phone_number,
                 'text_notifications': preferences.text_notifications,
                 'calendar_output': preferences.calendar_output,
+                'user_timezone': preferences.user_timezone
             }
             form = PreferencesForm(initial=initial)
             return render(request, 'hwapp/preferences.html', {
@@ -276,6 +286,7 @@ def preferences(request):
             })
 @login_required(login_url='/login')
 def edit_hw(request, hw_id):
+    forms.DateTimeInput.input_type="datetime-local" 
     class EditHwForm(ModelForm):
         class Meta:
             model = Homework
@@ -334,9 +345,10 @@ def edit_hw(request, hw_id):
                 'hw_title': hw.hw_title,
                 'notes': hw.notes,
                 'priority': hw.priority,
-                'due_date': hw.due_date
+                'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M")
             }   
             form = EditHwForm(initial=values)
+            print(form)
             return render(request, 'hwapp/edit_hw.html', {
                 'form': form,
                 'hw_id': hw_id
@@ -377,15 +389,27 @@ def addclass(request):
         })
 @login_required(login_url='/login')
 def editclass(request, class_id):
+    try:
+        do_not_edit = Class.objects.get(class_user=request.user, class_name='Schoology Integration', period=999999)
+    except:
+        do_not_edit=None
+    try:
+        do_not_edit = Class.objects.get(class_user=request.user, class_name='Canvas Integration', period=999999)
+    except:
+        do_not_edit=None
     if request.method == "POST":
         form = AddClassForm(request.POST)
         if form.is_valid():
-            user = request.user
             class_name = form.cleaned_data['class_name']
             period = form.cleaned_data['period']
             days = form.cleaned_data['days']
             time = form.cleaned_data['time']
             dlist=[]
+            if class_id==do_not_edit.id:
+                if int(period) == int(999999):
+                    return render(request, 'hwapp/error.html', {
+                        'error': "Access Denied: Please do not edit this class"
+                    })
             for day in days.iterator():
                 dlist.append(day)
             try:
@@ -404,6 +428,13 @@ def editclass(request, class_id):
             return HttpResponseRedirect(reverse('classes'))
 
     else:
+        try:
+            if class_id==do_not_edit.id:
+                return render(request, 'hwapp/error.html', {
+                    'error': "Access Denied: Please do not edit this class"
+                })
+        except:
+            pass
         try:
             editclass = Class.objects.get(class_user=request.user, id=class_id)
         except:
@@ -438,6 +469,7 @@ def allhw(request):
         'hwlist': hwlist,
         'completed': completed,
         'class_list': class_list,
+        'website_root': os.environ.get('website_root')
     })
 def about(request):
     return render(request, 'hwapp/aboutme.html')
@@ -470,10 +502,14 @@ def profile(request):
         })
 @login_required(login_url='/login')
 def calendar(request):
-    if request.is_ajax():
-        pass
+    if request.method == "GET":
+        hash_val = abs(hash(str(request.user.id)))
+        ics_link = f"{os.environ.get('website_root')}/integrations/export/{request.user.id}/{hash_val}"
+        return render(request, 'hwapp/calendar.html', {
+            'ics_link': ics_link
+        })
     else:
-        pass
+        return JsonResponse({'error': 'method not supported'}, status=405)
 
 
 @login_required(login_url='/login')
@@ -503,7 +539,6 @@ def deleteclass(request, id):
         try:
             class_req = Class.objects.get(class_user=request.user, id=id)
             class_req.delete()
-            print(True)
             return JsonResponse({
                 "message": "Class removed successfully",
                 "status": 200,
@@ -517,3 +552,135 @@ def deleteclass(request, id):
         return JsonResponse({
             'message': 'method not allowed'
         }, status=405)
+
+@login_required(login_url='/login')
+def getclasstime(request, class_id):
+    if request.method == "GET":
+        try:
+            class_instance = Class.objects.get(id=class_id, class_user=request.user)
+        except:
+            return JsonResponse({
+                'message': 'Access Denied',
+                'status': 403,
+            }, message=403)
+        date_def = datetime.now()
+        dt = datetime.combine(date_def, class_instance.time)
+        dt = dt.strftime('%Y-%m-%dT%H:%M')
+        return JsonResponse({
+            'class_time': dt,
+            'status': 200,
+        }, status=200)
+    else:
+        return JsonResponse({
+            'message': 'method not allowed',
+            'status': 405,
+        }, status=405)
+
+def reset_password(request):
+    if request.method == "GET":
+        hash_val = request.GET.get('hash')
+        if hash_val == None:
+            return render(request, 'hwapp/reset_password.html')
+        else:
+            #check hash against database
+            try:
+                hash_val_db = PWReset.objects.get(hash_val=hash_val, active=True)
+            except:
+                return render(request, 'hwapp/error.html', {
+                    'error': 'Invalid link. Please request a new one <a href="/reset_password">here</a>'
+                })
+            if hash_val_db.expires < timezone.now():
+                return render(request, 'hwapp/error.html', {
+                    'error': 'This link has expired. Please request a new one <a href="/reset_password">here</a>'
+                })
+            else:
+                return render(request, 'hwapp/newpw.html', {
+                    'hash_val': hash_val
+                })
+            
+    if request.method == "POST":
+            try:
+                request.POST['form_email']
+                try:
+                    user = User.objects.get(email = request.POST['form_email'])
+                    hash_val = hash(f"{user.username}{user.id}{datetime.now()}")
+                    now_plus_10 = timezone.now() + timedelta(minutes = 10)
+                    PWReset.objects.create(reset_user=user, hash_val=hash_val, expires=now_plus_10)
+                    pw_reset_email(user=user, hash_val=hash_val, expires=now_plus_10, email=user.email)
+                    return HttpResponseRedirect(reverse('index'))
+                except:
+                    return HttpResponseRedirect(reverse('index'))
+            except:
+                try:
+                    pw = request.POST['pw']
+                    confirm = request.POST['pw_confirmation']
+                    hash_val=request.POST['hash_val']
+                    #check PW confirmation
+                    if pw != confirm:
+                        return render(request, 'hwapp/newpw.html', {
+                            'message': 'Please make sure that your passwords match',
+                            'hash_val': request.POST['hash_val']
+                        })
+                    else:
+                        #check hash again
+                        try:
+                            hash_val_db = PWReset.objects.get(hash_val=hash_val)
+                        except:
+                            return render(request, 'hwapp/error.html', {
+                                'error': 'Invalid link. Please request a new one <a href="/reset_password">here</a>'
+                            })
+                        if hash_val_db.expires < timezone.now():
+                            return render(request, 'hwapp/error.html', {
+                                'error': 'This link has expired. Please request a new one <a href="/reset_password">here</a>'
+                            })
+                        #check PW strength:
+                        if helpers.check_pw(pw) != True:
+                            return render(request, 'hwapp/newpw.html', {
+                                'message': helpers.check_pw(pw),
+                                'hash_val': request.POST['hash_val']
+                            })                            
+                        
+                        else:
+                            u = hash_val_db.reset_user
+                            print(u)
+                            u.set_password(pw)
+                            u.save()
+                            #invalidate link
+                            hash_val_db.expires=timezone.now()
+                            hash_val_db.active = False
+                            return render(request, 'hwapp/newpw.html', {
+                                'success': 'Success! Your password has been updated. Please click <a href="/login">here</a> to login.',
+                                'hash_val': request.POST['hash_val']
+                        })
+
+                except:
+                    return HttpResponseRedirect(reverse('index'))
+@user_passes_test(matthew_check, login_url='/login')
+def matthew_schoology_grades(request):
+    url = 'https://fuhsd.schoology.com/grades/grades'
+    headers = {
+        'authority': 'fuhsd.schoology.com',
+'method':'GET',
+'path':'/grades/grades',
+'scheme':'https',
+'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+'accept-encoding':'gzip, deflate, br',
+'accept-language':'en-US,en;q=0.9',
+'cache-control':'no-cache',
+'cookie': IntegrationPreference.objects.get(integrations_user=request.user).admin_cookie,
+'dnt':'1',
+'pragma':'no-cache',
+'referer':'https://fuhsd.schoology.com/home',
+'sec-ch-ua':'"Not;A Brand";v="99", "Google Chrome";v="91", "Chromium";v="91"',
+'sec-ch-ua-mobile':'?0',
+'sec-fetch-dest':'document',
+'sec-fetch-mode':'navigate',
+'sec-fetch-site':'same-origin',
+'sec-fetch-user':'?1',
+'upgrade-insecure-requests': '1',
+'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
+    }
+    grades = requests.get(url, headers=headers)
+    return render(request, 'hwapp/matthew-schoology.html', {
+        'html': grades.text,
+    })

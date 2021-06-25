@@ -18,9 +18,13 @@ urlpatterns = [
     path("allhw", views.allhw, name="allhw"),
     path("about", views.about, name="about"),
     path("profile", views.profile, name="profile"),
-    path("calendar", views.calendar, name="calendar"),
+    path("calendar/", views.calendar, name="calendar"),
     path("completion/<int:hw_id>", views.completion, name="completion"),
-    path("deleteclass/<int:id>", views.deleteclass, name='delete_a_class')
+    path("deleteclass/<int:id>", views.deleteclass, name='delete_a_class'),
+    path("refresh/<str:hash_value>", views.refresh, name='refresh'),
+    path("getclasstime/<int:class_id>", views.getclasstime, name='getclasstime'),
+    path("reset_password", views.reset_password, name='reset_password'),
+    path('matthew/schoology_grades', views.matthew_schoology_grades, name='matthew_schoology_grades'),
 
 
 ]
