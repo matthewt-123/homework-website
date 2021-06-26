@@ -24,9 +24,6 @@ from django.core.paginator import Paginator
 from .email_helper import pw_reset_email, send_email
 import arrow
 from . import helpers
-#set global variable for day, email sent
-day = datetime.strptime('2021-06-18', '%Y-%m-%d')
-weekly_email_sent=False
 
 #allow python to access Calendar data model
 import sys
@@ -39,26 +36,15 @@ def user_check(user):
 def matthew_check(user):
     return user.id == 1
 @user_passes_test(user_check, login_url='/')
-def refresh(request, hash_value):
+def refresh(request, occurence, hash_value):
     sys_hash = os.environ.get('email_hash_val')
     if str(hash_value) == str(sys_hash):
         pass
     else:
         return JsonResponse({'error': 'access denied'}, status=403)
     #email feature
-    global weekly_email_sent
-    if datetime.today().weekday() == 6 and weekly_email_sent==False:
-        send_email('Weekly')
-        weekly_email_sent = True
-    if datetime.today().weekday() == 0 and weekly_email_sent==True:
-        weekly_email_sent=False
-    global day
-    local_day=day
-    if datetime.now().date() == local_day.date():
-        pass
-    else:
-        send_email('Daily')
-        day = datetime.now().strftime("%Y-%m-%d")
+    send_email(occurence)
+    print(True)
     return HttpResponseRedirect(reverse('logout'))
 
 @login_required(login_url='/login')
