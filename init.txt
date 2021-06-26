@@ -1,0 +1,13 @@
+Carriers:
+    T-mobile- @tmomail.net
+    Xfinity- @vtext.com
+    Verizon- @vtext.com
+    AT&T- @txt.att.net
+    Cricket- @sms.cricketwireless.net
+Days:
+    M-F
+Recurrences:
+    Daily, weekly, hourly, never
+Timezones:
+    US/: Eastern, central, mountain, pacific
+Create superuser

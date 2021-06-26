@@ -666,7 +666,7 @@ def matthew_schoology_grades(request):
 'accept-encoding':'gzip, deflate, br',
 'accept-language':'en-US,en;q=0.9',
 'cache-control':'no-cache',
-'cookie': AdminOnly.objects.get(integrations_user=request.user).admin_cookie,
+'cookie': AdminOnly.objects.get(admin_user=request.user).admin_cookie,
 'dnt':'1',
 'pragma':'no-cache',
 'referer':'https://fuhsd.schoology.com/home',
