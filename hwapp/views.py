@@ -44,7 +44,6 @@ def refresh(request, occurence, hash_value):
         return JsonResponse({'error': 'access denied'}, status=403)
     #email feature
     send_email(occurence)
-    print(True)
     return HttpResponseRedirect(reverse('logout'))
 
 @login_required(login_url='/login')
