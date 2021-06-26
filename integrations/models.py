@@ -5,9 +5,7 @@ class IntegrationOption(models.Model):
     integration = models.CharField(max_length=128)
     def __str__(self):
         return self.integration
-class IntegrationPreference(models.Model):
-    integrations_user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
-    admin_cookie = models.TextField(default=None)
+
 
 class AdminOnly(models.Model):
     admin_user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
