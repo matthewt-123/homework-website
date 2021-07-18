@@ -55,8 +55,11 @@ def schoology_init(request):
             class1.save()
             class1.days.add(day)
             class1.save()
-        #CLEAR prior integrated events:
-        Homework.objects.filter(hw_class=class1, hw_user=request.user).delete()
+        #pull prior integrated events:
+        uids = Homework.objects.filter(hw_class=class1, hw_user=request.user)
+        uid_list = []
+        for uid in uids:
+            uid_list.append(uid.ics_uid)
         #pull timezone, default to Pacific if necessary:
         try:
             timezone = Preferences.objects.get(preferences_user=request.user).user_timezone
@@ -89,11 +92,18 @@ def schoology_init(request):
                 notes = str(event.description)
             except:
                 notes=None
-
-            Homework.objects.create(hw_user=request.user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)        
-            return render(request, 'hwapp/success.html', {
-                'message': "Schoology feed integrated successfully. Please <a href='/'>return home</a>"
-            })    
+            try:
+                ics_uid = event.uid
+            except:
+                ics_uid = None
+            #check if uid exists. If so, do not create the event
+            if ics_uid in uid_list:
+                pass
+            else:
+                Homework.objects.create(hw_user=request.user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False, ics_uid=ics_uid)        
+        return render(request, 'hwapp/success.html', {
+            'message': "Schoology feed integrated successfully. Please <a href='/'>return home</a>"
+        })    
     else:
         return render(request, 'hwapp/schoology_ics.html')
 
@@ -120,8 +130,11 @@ def canvas_init(request):
             class2.save()
             class2.days.add(day)
             class2.save()
-        #CLEAR prior integrated events:
-        Homework.objects.filter(hw_class=class2, hw_user=request.user).delete()
+        #pull prior integrated events:
+        uids = Homework.objects.filter(hw_class=class2, hw_user=request.user)
+        uid_list = []
+        for uid in uids:
+            uid_list.append(uid.ics_uid)
         #pull timezone, default to Pacific if necessary:
         try:
             timezone = Preferences.objects.get(preferences_user=request.user).user_timezone
@@ -154,8 +167,15 @@ def canvas_init(request):
                 notes = str(event.description)
             except:
                 notes=None
-
-            Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)        
+            try:
+                ics_uid = event.uid
+            except:
+                ics_uid = None
+            #check if uid exists. If so, do not create the event
+            if ics_uid in uid_list:
+                pass
+            else:
+                Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False, ics_uid=ics_uid)
         return render(request, 'hwapp/success.html', {
             'message': "Canvas feed integrated successfully. Please <a href='/'>return home</a>"
         })        
@@ -185,8 +205,11 @@ def other_init(request):
             class2.save()
             class2.days.add(day)
             class2.save()
-        #CLEAR prior integrated events:
-        Homework.objects.filter(hw_class=class2, hw_user=request.user).delete()
+        #pull prior integrated events:
+        uids = Homework.objects.filter(hw_class=class2, hw_user=request.user)
+        uid_list = []
+        for uid in uids:
+            uid_list.append(uid.ics_uid)
         #pull timezone, default to Pacific if necessary:
         try:
             timezone = Preferences.objects.get(preferences_user=request.user).user_timezone
@@ -219,8 +242,15 @@ def other_init(request):
                 notes = str(event.description)
             except:
                 notes=None
-
-            Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)        
+            try:
+                ics_uid = event.uid
+            except:
+                ics_uid = None
+                        #check if uid exists. If so, do not create the event
+            if ics_uid in uid_list:
+                pass
+            else:
+                Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False, ics_uid=ics_uid)
         return render(request, 'hwapp/success.html', {
             'message': "Feed integrated successfully. Please <a href='/'>return home</a>"
         })        

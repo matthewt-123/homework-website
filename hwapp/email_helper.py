@@ -2,6 +2,7 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 import os
 from datetime import date
+import datetime
 from .models import Recurrence, User, Homework, Class, Preferences, Carrier
 import requests
 from dotenv import load_dotenv
@@ -20,10 +21,15 @@ def send_email(interval):
             #iterate over each hw item, adding it to the email in HTML format
             listed = "<ul>"
             for each in hw_list:
-                if each.notes != None and each.notes != "None":
-                    listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li><ul><li>Notes: {each.notes}</li></ul>"
+                if datetime.datetime.now() > each.due_date:
+                    color = 'red'
                 else:
-                    listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li>"
+                    color = 'black' 
+                if each.notes != None and each.notes != "None":
+
+                    listed = listed + f"<li style='color:{color}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li><ul><li>Notes: {each.notes}</li></ul>"
+                else:
+                    listed = listed + f"<li style='color:{color}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li>"
             #add closing tag
             listed = f"{listed}</ul>"
             todays = date.today()

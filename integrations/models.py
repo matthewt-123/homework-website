@@ -9,6 +9,7 @@ class IntegrationOption(models.Model):
 
 class AdminOnly(models.Model):
     admin_user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
+    application = models.CharField(max_length=128, default=None, blank=True, null=True)
     admin_cookie = models.TextField(default=None)
     
     

@@ -348,6 +348,7 @@ Homework List for {{user.username}}
         {% endfor %}
         {% endif %}
     </tbody>
+
 </table>
 
 <hr>
@@ -378,8 +379,8 @@ Homework List for {{user.username}}
         <a class="dropdown-item" href='?page_size=50'>50</a>
     </div>
 </div>
-<script>
 
+<script>
 const urlParams = new URLSearchParams(window.location.search)
 if(urlParams.get('page_size') == null) {
     document.getElementById('page_size_button').innerHTML = 10
@@ -392,8 +393,13 @@ function page_nav_size() {
         for(i=0; i<links.length; i++) {
             links[i].href += `&page_size=${urlParams.get('page_size')}`
         }
-        filters = document.getElementsByClassName('class_filter_items')
 
+    } else {}
+    if(urlParams.get('class') != null) {
+        links = document.getElementsByClassName('page-link')
+        for(i=0; i<links.length; i++) {
+            links[i].href += `&class=${urlParams.get('class')}`
+        }
     } else {}
 }
 function class_filters() {
@@ -410,7 +416,6 @@ function class_filters() {
 
 
 </script>
-
 
 
 

@@ -29,6 +29,7 @@ class Homework(models.Model):
     priority = models.IntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     completed = models.BooleanField(default=True)
+    ics_uid = models.TextField(blank=True, null=True)
     def __str__(self):
         return f"{self.hw_title}"
 class Carrier(models.Model):
@@ -54,3 +55,7 @@ class PWReset(models.Model):
     hash_val = models.CharField(max_length=256)
     expires = models.DateTimeField()
     active = models.BooleanField(default=True)
+class IcsLink(models.Model):
+    link_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='links')
+    link_application = models.CharField(max_length=128)
+    link = models.TextField()
