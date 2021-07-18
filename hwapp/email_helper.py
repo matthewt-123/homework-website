@@ -17,19 +17,14 @@ def send_email(interval):
             listed= f'Homework email for {recipient.preferences_user.username}'
             #get all hw for recipient
             hw_list = Homework.objects.filter(hw_user=recipient.preferences_user, completed=False).order_by('due_date', 'hw_class__period', 'priority')
-
             #iterate over each hw item, adding it to the email in HTML format
             listed = "<ul>"
             for each in hw_list:
-                if datetime.datetime.now() > each.due_date:
-                    color = 'red'
-                else:
-                    color = 'black' 
                 if each.notes != None and each.notes != "None":
 
-                    listed = listed + f"<li style='color:{color}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li><ul><li>Notes: {each.notes}</li></ul>"
+                    listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li><ul><li>Notes: {each.notes}</li></ul>"
                 else:
-                    listed = listed + f"<li style='color:{color}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li>"
+                    listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li>"
             #add closing tag
             listed = f"{listed}</ul>"
             todays = date.today()

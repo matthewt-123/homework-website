@@ -44,8 +44,6 @@ def refresh(request, occurence, hash_value):
         return JsonResponse({'error': 'access denied'}, status=403)
     #email feature
     send_email(occurence)
-    if request.GET.get('stuff'):
-        pass
     return HttpResponseRedirect(reverse('logout'))
 
 @login_required(login_url='/login')
@@ -451,7 +449,6 @@ def allhw(request):
             completed.append(hw)
         else:
             hwlist.append(hw)
-    print(completed)
     return render(request, 'hwapp/index.html', {
         'hwlist': hwlist,
         'completed': completed,
@@ -629,7 +626,6 @@ def reset_password(request):
                         
                         else:
                             u = hash_val_db.reset_user
-                            print(u)
                             u.set_password(pw)
                             u.save()
                             #invalidate link
