@@ -6,6 +6,9 @@ import datetime
 from .models import Recurrence, User, Homework, Class, Preferences, Carrier
 import requests
 from dotenv import load_dotenv
+import sys
+sys.path.append("..")
+from integrations.views import refresh_ics
 
 def send_email(interval):
     #load data from .env to get API key
@@ -41,6 +44,8 @@ def send_email(interval):
     except:
         #pass if no recipients matching preference query
         pass
+        #refresh ICS feed
+    refresh_ics()
     try:
         text_recipients = Preferences.objects.get(text_notifications=True, phone_number__isnull=False)
         for text_recipient in text_recipients:

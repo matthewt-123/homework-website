@@ -49,9 +49,9 @@ def schoology_init(request):
         dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
         day = Day.objects.get(days='Sunday')
         try:
-            class1 = Class.objects.get(class_user=request.user, class_name='Schoology Integration', time=dt_obj, period=999999)
+            class1 = Class.objects.get(class_user=request.user, class_name='Schoology Integration', time=dt_obj, period=999999, ics_link=link)
         except:
-            class1 = Class(class_user = request.user, class_name='Schoology Integration', time=dt_obj, period=999999)
+            class1 = Class(class_user = request.user, class_name='Schoology Integration', time=dt_obj, period=999999, ics_link=link)
             class1.save()
             class1.days.add(day)
             class1.save()
@@ -124,9 +124,9 @@ def canvas_init(request):
         dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
         day = Day.objects.get(days='Sunday')
         try:
-            class2 = Class.objects.get(class_user=request.user, class_name='Canvas Integration', time=dt_obj, period=999999)
+            class2 = Class.objects.get(class_user=request.user, class_name='Canvas Integration', time=dt_obj, period=999999, ics_link=link)
         except:
-            class2 = Class(class_user = request.user, class_name='Canvas Integration', time=dt_obj, period=999999)
+            class2 = Class(class_user = request.user, class_name='Canvas Integration', time=dt_obj, period=999999, ics_link=link)
             class2.save()
             class2.days.add(day)
             class2.save()
@@ -199,9 +199,9 @@ def other_init(request):
         day = Day.objects.get(days='Sunday')
         class_name = request.POST.get('integration_name')
         try:
-            class2 = Class.objects.get(class_user=request.user, class_name=class_name, time=dt_obj, period=999999)
+            class2 = Class.objects.get(class_user=request.user, class_name=class_name, time=dt_obj, period=999999, ics_link=link)
         except:
-            class2 = Class(class_user = request.user, class_name=class_name, time=dt_obj, period=999999)
+            class2 = Class(class_user = request.user, class_name=class_name, time=dt_obj, period=999999, ics_link=link)
             class2.save()
             class2.days.add(day)
             class2.save()
@@ -280,4 +280,50 @@ def export(request, user_id, hash_value):
     else:
         return JsonResponse({'error': 'method not supported'}, status=405)
 
-
+def refresh_ics():
+    classes = Class.objects.exclude(ics_link__isnull=True)
+    for class1 in classes:
+        link = class1.ics_link
+        try:
+            #make link an https link
+            c = Calendar(requests.get(link).text)
+        except:
+            pass
+        #SETUP: create new Class instance if not already existing(since Canvas does not provide class names with HW assignments)
+        dt_str = '00:00'
+        dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
+        #pull prior integrated events:
+        uids = Homework.objects.filter(hw_class=class1)
+        uid_list = []
+        for uid in uids:
+            uid_list.append(uid.ics_uid)
+        timezone = Preferences.objects.get(preferences_user = class1.class_user).user_timezone
+        #append new hw to database and calendar
+        #convert ics to Timeline instance
+        for event in c.timeline:
+            #pull summary(name)
+            #pull end date, start date if no end date, or default time(midnight)
+            if event.end:
+                time=(event.end).to(str(timezone))
+                time.format('YYYY-MM-DD')
+                time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
+            elif event.begin:
+                time=(event.begin).to(str(timezone))
+                time.format('YYYY-MM-DD')
+                time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
+            else:
+                time=dt_obj
+            hw_name = str(event.name)
+            try:
+                notes = str(event.description)
+            except:
+                notes=None
+            try:
+                ics_uid = event.uid
+            except:
+                ics_uid = None
+                        #check if uid exists. If so, do not create the event
+            if ics_uid in uid_list:
+                pass
+            else:
+                Homework.objects.create(hw_user=class1.class_user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False, ics_uid=ics_uid)
