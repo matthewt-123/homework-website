@@ -201,7 +201,8 @@ def addhw(request):
         except:
             return HttpResponseRedirect(reverse('classes'))
         return render(request, 'hwapp/addhw.html', {
-            'classes':classes
+            'classes':classes,
+            'website_root': os.environ.get('website_root')
         })
 
 @login_required(login_url='/login')
