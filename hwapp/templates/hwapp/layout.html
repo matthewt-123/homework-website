@@ -23,7 +23,7 @@
         <table>
             <tr>
                 <td width=10%>
-                    <a href='{% url "index" %}'><img src='/static/hwapp/hwapp logo.png'></a>
+                    <a href='{% url "index" %}'><img alt='HW App logo' src='/static/hwapp/hwapp logo.png'></a>
                     {% if user.is_authenticated %}
                     <td width=10% class="nav-item" style="font-weight:bold;text-align: center;";>
                         <a class="nav-link" href="{% url 'index' %}">Home</a>

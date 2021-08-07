@@ -8,14 +8,10 @@ from django.http import HttpResponseRedirect
 import requests
 from django.urls import reverse
 from django import forms
-import time, sched
 from django.contrib.auth.decorators import login_required, user_passes_test
 import os
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
-from . import basics
-from ics import Calendar, Event
-from .forms import HomeworkForm, PreferencesForm, AddClassForm
+from ics import Event
+from .forms import PreferencesForm, AddClassForm
 from dotenv import load_dotenv
 import json
 from datetime import datetime, timedelta
