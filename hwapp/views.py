@@ -370,14 +370,6 @@ def addclass(request):
         })
 @login_required(login_url='/login')
 def editclass(request, class_id):
-    try:
-        do_not_edit = Class.objects.get(class_user=request.user, class_name='Schoology Integration', period=999999)
-    except:
-        do_not_edit=None
-    try:
-        do_not_edit = Class.objects.get(class_user=request.user, class_name='Canvas Integration', period=999999)
-    except:
-        do_not_edit=None
     if request.method == "POST":
         form = AddClassForm(request.POST)
         if form.is_valid():
@@ -409,13 +401,6 @@ def editclass(request, class_id):
             return HttpResponseRedirect(reverse('classes'))
 
     else:
-        try:
-            if class_id==do_not_edit.id:
-                return render(request, 'hwapp/error.html', {
-                    'error': "Access Denied: Please do not edit this class"
-                })
-        except:
-            pass
         try:
             editclass = Class.objects.get(class_user=request.user, id=class_id)
         except:
