@@ -194,10 +194,9 @@ Homework List for {{user.username}}
                         
                     }
 
-
                 } else {
                     const alert = document.getElementById('alert')
-                    alert.innerHTML = `Yayy! You completed an assignment!`
+                    alert.innerHTML = `Yay! You completed an assignment!`
                     alert.style.display='block'
                     document.getElementById(id).value = "True"
                     document.getElementById(id).setAttribute("checked", "true")
@@ -293,7 +292,7 @@ Homework List for {{user.username}}
                 {% csrf_token %}
             <tr class='index'>
                 <td style='text-align: center;' id='index_plus_sign' class='mobile_hide'>+</td>
-                <td class='mobile_hide'><input id='hw_title' type='text' class='input1' placeholder="Assignment Name"></td>
+                <td class='mobile_hide'><input id='hw_title' autofocus autocomplete="off" type='text' class='input1' placeholder="Assignment Name"></td>
                 <td class='mobile_hide'><select id='hw_class' class='input1 form-select'>
                     <option disabled selected>Class Name</option>
                     {% for class in class_list %}
@@ -301,8 +300,8 @@ Homework List for {{user.username}}
                     {% endfor %}
                     <option value='add_new_class'>Add New Class</option>
                 </select></td>
-                <td class='mobile_hide'><input id='due_date' type='datetime-local' class='input1'></td>
-                <td width=5% class='mobile_hide'><input id='priority' type='number' class='input1' min="1" max="100" placeholder="Priority"></td>
+                <td class='mobile_hide'><input autocomplete="off" id='due_date' type='datetime-local' class='input1'></td>
+                <td width=5% class='mobile_hide'><input autocomplete="off" id='priority' type='number' class='input1' min="1" max="100" placeholder="Priority"></td>
                 <td class='mobile_hide'>
                     <button id='add_hw' hidden type="submit"></button>
                 </td>
