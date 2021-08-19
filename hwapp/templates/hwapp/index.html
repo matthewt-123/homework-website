@@ -203,6 +203,10 @@ Homework List for {{user.username}}
                     try {
                         const complete = document.getElementById('completed_table')
                         var toappend = document.getElementById(`hwentry_${id}`)
+                        if(complete == null) {
+                            toappend.style.display = "none"
+                            
+                        } 
                         complete.append(toappend)
                     } catch {}
 
