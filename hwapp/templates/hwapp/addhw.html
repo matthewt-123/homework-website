@@ -6,36 +6,6 @@
 {% block body %}
 <script>
     function hw_json() {
-        tz=new Date().getTimezoneOffset()
-        if(tz > 0){
-            var m = tz % 60;
-            var h = (tz-m) / 60;
-            if(m == 0) {
-                m = '00';
-            } else if(0 < m < 10) {
-                m = `0${m}`;
-            }
-            if(h == 0) {
-                h = '00';
-            } else if(0<h<10) {
-                h = `0${h}`;
-            }
-            tz = `+${h}${m}`
-        } else {
-            var m = tz % 60;
-            var h = (tz-m) / 60;
-            if(m == 0) {
-                m = '00';
-            } else if(0 < m < 10) {
-                m = `0${m}`;
-            }
-            if(h == 0) {
-                h = '00';
-            } else if(0<h<10) {
-                h = `0${h}`;
-            }
-            tz = `-${m}${h}`
-        }
         fetch(`/addhw`, {
             method: 'POST',
             headers: {
@@ -45,7 +15,7 @@
             body: JSON.stringify({
                 hw_class: document.getElementById('hw_class').value,
                 hw_title: document.getElementById('hw_title').value,
-                due_date: `${document.getElementById('due_date').value}${tz}`,
+                due_date: `${document.getElementById('due_date').value}`,
                 priority: document.getElementById('priority').value,
                 notes: document.getElementById('notes').value
             })

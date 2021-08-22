@@ -6,36 +6,6 @@
         //adding timezone to time input
         hw_id = {{hw.id}}
         website_root = "{{website_root}}"
-        tz=new Date().getTimezoneOffset()
-        if(tz > 0){
-            var m = tz % 60;
-            var h = (tz-m) / 60;
-            if(m == 0) {
-                m = '00';
-            } else if(0 < m < 10) {
-                m = `0${m}`;
-            }
-            if(h == 0) {
-                h = '00';
-            } else if(0<h<10) {
-                h = `0${h}`;
-            }
-            tz = `+${h}${m}`
-        } else {
-            var m = tz % 60;
-            var h = (tz-m) / 60;
-            if(m == 0) {
-                m = '00';
-            } else if(0 < m < 10) {
-                m = `0${m}`;
-            }
-            if(h == 0) {
-                h = '00';
-            } else if(0<h<10) {
-                h = `0${h}`;
-            }
-            tz = `-${m}${h}`
-        }
         fetch(`/edit_hw/${hw_id}`, {
             method: 'POST',
             headers: {
@@ -45,7 +15,7 @@
             body: JSON.stringify({
                 hw_class: document.getElementById('hw_class').value,
                 hw_title: document.getElementById('hw_title').value,
-                due_date: `${document.getElementById('due_date').value}${tz}`,
+                due_date: `${document.getElementById('due_date').value}`,
                 priority: document.getElementById('priority').value,
                 notes: document.getElementById('notes').value
             })
@@ -80,14 +50,17 @@
 <h1  class='django_forms'>Edit Homework</h1>
 <hr>
 
-<form action="/addhw" onsubmit='return false' class="indented add_hw_form" method='POST'>
+<form action="/edit_hw" onsubmit='return false' class="indented add_hw_form" method='POST'>
     {% csrf_token %}
     <table class='django_forms'>
         <tbody><tr><th><label for="id_hw_class">Hw class:</label></th><td><select name="hw_class" required="" id="hw_class">
 <option value="" disabled>---------</option>
-<option value="{{hw.hw_class.id}}">{{hw.hw_class}}</option>
 {% for class in classes %}
+{% if class.id == hw.hw_class.id %}
+<option selected value="{{hw.hw_class.id}}">{{hw.hw_class.class_name}}</option>
+{% else %}
 <option value={{class.id}}>{{class.class_name}}</option>
+{% endif %}
 {% endfor %}
 <option value='add_new_class'>Add New Class</option>
 
@@ -106,20 +79,7 @@
             const class_ins = document.getElementById('hw_class')
             if(document.getElementById('hw_class').value == 'add_new_class') {
                 window.location.href='https://{{website_root}}/addclass'
-            } else {
-                    fetch(`/getclasstime/${class_ins.value}`, {
-                    method: 'GET',
-                    credentials: 'same-origin',
-                })
-                .then(response=>response.json())
-                .then(result => {
-                    if(result['status'] == 200){
-                        document.getElementById('due_date').value = result['class_time']
-                    } else {
-                        console.log(result['message'])
-                    }
-                })
-            }
+            } 
 
         }
     })

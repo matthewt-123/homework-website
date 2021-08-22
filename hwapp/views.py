@@ -147,6 +147,44 @@ def addhw(request):
             data['priority'] = int(data['priority'])
         except:
             data['priority'] = None
+
+        try:
+            hw_class = Class.objects.get(id=data['hw_class'], class_user =request.user)
+        except:
+            return JsonResponse({
+                "message": "error: not authorized",
+                "status": 400
+            }, 403)
+        data['due_date'] = datetime.strptime(data['due_date'], "%Y-%m-%dT%H:%M")
+        new_hw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=data['hw_title'], due_date=data['due_date'], priority=data['priority'], completed=False)   
+        new_hw.save()
+        date_ics = data['due_date']
+        date = date_ics.strftime("%b. %d, %Y")
+        try:
+            notes=data['notes']
+        except:
+            notes=None
+        #create ICS entry if calendar_output is true:
+        try:
+            var = Preferences.objects.get(preferences_user=request.user).calendar_output
+        except:
+            var=False
+        
+        if var == True:
+            e = Event()
+            e.name = data['hw_title']
+            e.begin = arrow.get(data['due_date'])
+            e.description = f"Class: {hw_class.class_name}; Notes: {notes}"
+            #enter new event into database:
+            new_calevent = CalendarEvent(calendar_user = request.user, homework_event=new_hw, ics=e)
+            new_calevent.save()
+        return JsonResponse({
+            "message": "Homework added successfully!",
+            "status": 201,
+            'hw_id': new_hw.id,
+            'class_name': new_hw.hw_class.class_name,
+            'formatted_date': date
+        }, status=201)
         #actual code
         try:
             try:
@@ -156,7 +194,7 @@ def addhw(request):
                     "message": "error: not authorized",
                     "status": 400
                 }, 403)
-            data['due_date'] = datetime.strptime(data['due_date'], "%Y-%m-%dT%H:%M%z")
+            data['due_date'] = datetime.strptime(data['due_date'], "%Y-%m-%dT%H:%M")
             new_hw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=data['hw_title'], due_date=data['due_date'], priority=data['priority'], completed=False)   
             new_hw.save()
             date_ics = data['due_date']
@@ -268,14 +306,6 @@ def preferences(request):
             })
 @login_required(login_url='/login')
 def edit_hw(request, hw_id):
-    forms.DateTimeInput.input_type="datetime-local" 
-    class EditHwForm(ModelForm):
-        class Meta:
-            model = Homework
-            fields = ['hw_class', 'hw_title', 'due_date', 'priority', 'notes']
-        def __init__(self, *args, **kwargs):
-            super(EditHwForm, self).__init__(*args, **kwargs)
-            self.fields['hw_class'].queryset = Class.objects.filter(class_user=request.user)
     if request.method == 'POST':
         form = json.loads(request.body)
         if form:
@@ -301,7 +331,7 @@ def edit_hw(request, hw_id):
                     'error': "Access Denied"
                 })
             #format date:
-            formatted_date = datetime.strptime(due_date, "%Y-%m-%dT%H:%M%z")
+            formatted_date = datetime.strptime(due_date, "%Y-%m-%dT%H:%M")
 
             #update ICS:
             if Preferences.objects.get(preferences_user=request.user).calendar_output == True:
@@ -344,6 +374,16 @@ def edit_hw(request, hw_id):
 
             }) 
         except:
+                        #render json/ajax form
+            hw = Homework.objects.get(hw_user=request.user, id=hw_id)
+            return render(request, 'hwapp/edit_hw.html', {
+                'hw_id': hw_id,
+                'classes': Class.objects.filter(class_user=request.user),
+                'hw': hw,
+                'website_root': os.environ.get("website_root"),
+                'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M")
+
+            }) 
             return HttpResponseRedirect(reverse('index'))  
 
 @login_required(login_url='/login')
