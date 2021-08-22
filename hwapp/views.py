@@ -280,6 +280,7 @@ def edit_hw(request, hw_id):
             if form['notes'] != None:
                 notes = form['notes']
             else:
+                #to prevent django from making this field "None"
                 notes = ""
             try:
                 #updating model
