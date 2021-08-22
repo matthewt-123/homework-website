@@ -147,44 +147,6 @@ def addhw(request):
             data['priority'] = int(data['priority'])
         except:
             data['priority'] = None
-
-        try:
-            hw_class = Class.objects.get(id=data['hw_class'], class_user =request.user)
-        except:
-            return JsonResponse({
-                "message": "error: not authorized",
-                "status": 400
-            }, 403)
-        data['due_date'] = datetime.strptime(data['due_date'], "%Y-%m-%dT%H:%M")
-        new_hw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=data['hw_title'], due_date=data['due_date'], priority=data['priority'], completed=False)   
-        new_hw.save()
-        date_ics = data['due_date']
-        date = date_ics.strftime("%b. %d, %Y")
-        try:
-            notes=data['notes']
-        except:
-            notes=None
-        #create ICS entry if calendar_output is true:
-        try:
-            var = Preferences.objects.get(preferences_user=request.user).calendar_output
-        except:
-            var=False
-        
-        if var == True:
-            e = Event()
-            e.name = data['hw_title']
-            e.begin = arrow.get(data['due_date'])
-            e.description = f"Class: {hw_class.class_name}; Notes: {notes}"
-            #enter new event into database:
-            new_calevent = CalendarEvent(calendar_user = request.user, homework_event=new_hw, ics=e)
-            new_calevent.save()
-        return JsonResponse({
-            "message": "Homework added successfully!",
-            "status": 201,
-            'hw_id': new_hw.id,
-            'class_name': new_hw.hw_class.class_name,
-            'formatted_date': date
-        }, status=201)
         #actual code
         try:
             try:
@@ -195,14 +157,15 @@ def addhw(request):
                     "status": 400
                 }, 403)
             data['due_date'] = datetime.strptime(data['due_date'], "%Y-%m-%dT%H:%M")
-            new_hw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=data['hw_title'], due_date=data['due_date'], priority=data['priority'], completed=False)   
+            try:
+                if data['notes'] != None:
+                    notes=data['notes']
+            except:
+                notes=""
+            new_hw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=data['hw_title'], due_date=data['due_date'], priority=data['priority'], completed=False, notes=notes)
             new_hw.save()
             date_ics = data['due_date']
-            date = date_ics.strftime("%b. %d, %Y")
-            try:
-                notes=data['notes']
-            except:
-                notes=None
+            date = date_ics.strftime("%b. %d, %Y, %H:%M")
             #create ICS entry if calendar_output is true:
             try:
                 var = Preferences.objects.get(preferences_user=request.user).calendar_output
@@ -314,7 +277,10 @@ def edit_hw(request, hw_id):
             hw_title = form['hw_title']
             due_date = form['due_date']
             priority = form['priority']
-            notes = form['notes']
+            if form['notes'] != None:
+                notes = form['notes']
+            else:
+                notes = ""
             try:
                 #updating model
                 updated = Homework.objects.get(hw_user=request.user, id=hw_id)
