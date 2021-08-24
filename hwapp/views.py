@@ -8,14 +8,10 @@ from django.http import HttpResponseRedirect
 import requests
 from django.urls import reverse
 from django import forms
-import time, sched
 from django.contrib.auth.decorators import login_required, user_passes_test
 import os
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
-from . import basics
-from ics import Calendar, Event
-from .forms import HomeworkForm, PreferencesForm, AddClassForm
+from ics import Event
+from .forms import PreferencesForm, AddClassForm
 from dotenv import load_dotenv
 import json
 from datetime import datetime, timedelta
@@ -160,15 +156,16 @@ def addhw(request):
                     "message": "error: not authorized",
                     "status": 400
                 }, 403)
-            data['due_date'] = datetime.strptime(data['due_date'], "%Y-%m-%dT%H:%M%z")
-            new_hw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=data['hw_title'], due_date=data['due_date'], priority=data['priority'], completed=False)   
+            data['due_date'] = datetime.strptime(data['due_date'], "%Y-%m-%dT%H:%M")
+            try:
+                if data['notes'] != None:
+                    notes=data['notes']
+            except:
+                notes=""
+            new_hw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=data['hw_title'], due_date=data['due_date'], priority=data['priority'], completed=False, notes=notes)
             new_hw.save()
             date_ics = data['due_date']
-            date = date_ics.strftime("%b. %d, %Y")
-            try:
-                notes=data['notes']
-            except:
-                notes=None
+            date = date_ics.strftime("%b. %d, %Y, %H:%M")
             #create ICS entry if calendar_output is true:
             try:
                 var = Preferences.objects.get(preferences_user=request.user).calendar_output
@@ -201,7 +198,8 @@ def addhw(request):
         except:
             return HttpResponseRedirect(reverse('classes'))
         return render(request, 'hwapp/addhw.html', {
-            'classes':classes
+            'classes':classes,
+            'website_root': os.environ.get('website_root')
         })
 
 @login_required(login_url='/login')
@@ -271,38 +269,36 @@ def preferences(request):
             })
 @login_required(login_url='/login')
 def edit_hw(request, hw_id):
-    forms.DateTimeInput.input_type="datetime-local" 
-    class EditHwForm(ModelForm):
-        class Meta:
-            model = Homework
-            fields = ['hw_class', 'hw_title', 'due_date', 'priority', 'notes']
-        def __init__(self, *args, **kwargs):
-            super(EditHwForm, self).__init__(*args, **kwargs)
-            self.fields['hw_class'].queryset = Class.objects.filter(class_user=request.user)
     if request.method == 'POST':
-        form = EditHwForm(request.POST)
-        if form.is_valid():
+        form = json.loads(request.body)
+        if form:
             #pulling form data
-            hw_class = form.cleaned_data['hw_class']
-            hw_title = form.cleaned_data['hw_title']
-            due_date = form.cleaned_data['due_date']
-            priority = form.cleaned_data['priority']
-            notes = form.cleaned_data['notes']
+            hw_class = Class.objects.get(id=form['hw_class'])
+            hw_title = form['hw_title']
+            due_date = form['due_date']
+            priority = form['priority']
+            if form['notes'] != None:
+                notes = form['notes']
+            else:
+                #to prevent django from making this field "None"
+                notes = ""
             try:
                 #updating model
                 updated = Homework.objects.get(hw_user=request.user, id=hw_id)
                 updated.hw_class = hw_class
                 updated.hw_title = hw_title
                 updated.due_date = due_date
-                updated.priority = priority
-                updated.notes = notes
+                if priority:
+                    updated.priority = priority
+                if notes:
+                    updated.notes = notes
                 updated.save()
             except:
                 return render(request, 'hwapp/error.html', {
                     'error': "Access Denied"
                 })
             #format date:
-            formatted_date = datetime.combine(due_date, hw_class.time)
+            formatted_date = datetime.strptime(due_date, "%Y-%m-%dT%H:%M")
 
             #update ICS:
             if Preferences.objects.get(preferences_user=request.user).calendar_output == True:
@@ -314,30 +310,47 @@ def edit_hw(request, hw_id):
                     e.description += f"; {notes}"
 
                 #pull ICS:
-                edit_event = CalendarEvent.objects.get(calendar_user = request.user, homework_event=updated)
+                try:
+                    edit_event = CalendarEvent.objects.get(calendar_user = request.user, homework_event=updated)
+                except:
+                    edit_event = CalendarEvent()
+                    edit_event.calendar_user = request.user
+                    edit_event.homework_event = updated
                 edit_event.ics = e
                 edit_event.save()
-            return HttpResponseRedirect(reverse('index'))
+            return JsonResponse({
+                'status': 201
+            }, status=201)
         else:
-            return render(request, 'hwapp/edit_hw.html', {
-                'form': form
-            })
+            #reload json form and return it to the user with error message
+            hw = Homework.objects.get(hw_user=request.user, id=hw_id)
+            return JsonResponse({
+                'message': 'An error has occured. Please check all your fields and try again.',
+                'status': '400'
+            }, status=400)
     else:
         try:
+            #render json/ajax form
             hw = Homework.objects.get(hw_user=request.user, id=hw_id)
-            values = {
-                'hw_class': hw.hw_class,
-                'hw_title': hw.hw_title,
-                'notes': hw.notes,
-                'priority': hw.priority,
-                'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M")
-            }   
-            form = EditHwForm(initial=values)
             return render(request, 'hwapp/edit_hw.html', {
-                'form': form,
-                'hw_id': hw_id
-            })  
+                'hw_id': hw_id,
+                'classes': Class.objects.filter(class_user=request.user),
+                'hw': hw,
+                'website_root': os.environ.get("website_root"),
+                'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M")
+
+            }) 
         except:
+                        #render json/ajax form
+            hw = Homework.objects.get(hw_user=request.user, id=hw_id)
+            return render(request, 'hwapp/edit_hw.html', {
+                'hw_id': hw_id,
+                'classes': Class.objects.filter(class_user=request.user),
+                'hw': hw,
+                'website_root': os.environ.get("website_root"),
+                'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M")
+
+            }) 
             return HttpResponseRedirect(reverse('index'))  
 
 @login_required(login_url='/login')
@@ -373,14 +386,6 @@ def addclass(request):
         })
 @login_required(login_url='/login')
 def editclass(request, class_id):
-    try:
-        do_not_edit = Class.objects.get(class_user=request.user, class_name='Schoology Integration', period=999999)
-    except:
-        do_not_edit=None
-    try:
-        do_not_edit = Class.objects.get(class_user=request.user, class_name='Canvas Integration', period=999999)
-    except:
-        do_not_edit=None
     if request.method == "POST":
         form = AddClassForm(request.POST)
         if form.is_valid():
@@ -389,11 +394,6 @@ def editclass(request, class_id):
             days = form.cleaned_data['days']
             time = form.cleaned_data['time']
             dlist=[]
-            if class_id==do_not_edit.id:
-                if int(period) == int(999999):
-                    return render(request, 'hwapp/error.html', {
-                        'error': "Access Denied: Please do not edit this class"
-                    })
             for day in days.iterator():
                 dlist.append(day)
             try:
@@ -412,13 +412,6 @@ def editclass(request, class_id):
             return HttpResponseRedirect(reverse('classes'))
 
     else:
-        try:
-            if class_id==do_not_edit.id:
-                return render(request, 'hwapp/error.html', {
-                    'error': "Access Denied: Please do not edit this class"
-                })
-        except:
-            pass
         try:
             editclass = Class.objects.get(class_user=request.user, id=class_id)
         except:

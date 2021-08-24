@@ -1,15 +1,18 @@
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 import os
 from datetime import date
 import datetime
 from .models import Recurrence, User, Homework, Class, Preferences, Carrier
 import requests
 from dotenv import load_dotenv
+import sys
+sys.path.append("..")
+from integrations.views import refresh_ics
 
 def send_email(interval):
     #load data from .env to get API key
     load_dotenv()
+    #refresh ICS
+    refresh_ics()
     interval_instance = Recurrence.objects.get(basis=str(interval))
     try:
         recipients = Preferences.objects.filter(email_notifications=True, email_recurrence=interval_instance)

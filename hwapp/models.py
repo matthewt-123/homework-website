@@ -19,6 +19,7 @@ class Class(models.Model):
     period = models.IntegerField(null=True, blank=True,)
     days = models.ManyToManyField(Day, null=True, blank=True,)
     time = models.TimeField()
+    ics_link = models.CharField(blank=True, null=True, max_length=512)
     def __str__(self):
         return f"{self.class_name}"
 class Homework(models.Model):

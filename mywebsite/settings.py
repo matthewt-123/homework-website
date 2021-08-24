@@ -27,9 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['matthewshomeworkapp.herokuapp.com', 'homeworkapp-webapp.azurewebsites.net/','localhost']
+ALLOWED_HOSTS = ['matthewshomeworkapp.herokuapp.com', 'homeworkapp-webapp.azurewebsites.net/','localhost', '*.matthewtsai.games', 'matthewtsai.games']
 
 
 
@@ -47,14 +47,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.admindocs',
     'django.contrib.sites',
-    'phone_field', 
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.apple',
-    'allauth.socialaccount.providers.facebook',
-    'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.microsoft',
     'integrations',
 
 ]

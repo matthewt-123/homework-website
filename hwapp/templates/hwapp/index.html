@@ -7,7 +7,7 @@
 Homework List for {{user.username}}
 </h1>
 
-<img id='page_size_button' class='btn btn-default dropdown-toggle index_filter' data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style='height:6%;width:6%;position:relative;margin-top:-4%;float:right;margin-right:5%;' src="{% static 'hwapp/filter.png' %}">
+<img id='page_size_button' alt='class filter' class='btn btn-default dropdown-toggle index_filter' data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style='height:6%;width:6%;position:relative;margin-top:-4%;float:right;margin-right:5%;' src="{% static 'hwapp/filter.png' %}">
 <div class='dropdown-menu' id='class_filter' aria-labelledby="page_size_label">
     <b>Class Filter</b>
     <a onclick='class_filters()' class="dropdown-item class_filter_items" href='/' >All Classes</a>
@@ -22,36 +22,6 @@ Homework List for {{user.username}}
     document.addEventListener('DOMContentLoaded', () => {
         row_id = 0
         document.getElementById('non_functional_form').addEventListener('submit', () => {
-            tz=new Date().getTimezoneOffset()
-            if(tz > 0){
-                var m = tz % 60;
-                var h = (tz-m) / 60;
-                if(m == 0) {
-                    m = '00';
-                } else if(0 < m < 10) {
-                    m = `0${m}`;
-                }
-                if(h == 0) {
-                    h = '00';
-                } else if(0<h<10) {
-                    h = `0${h}`;
-                }
-                tz = `+${h}${m}`
-            } else {
-                var m = tz % 60;
-                var h = (tz-m) / 60;
-                if(m == 0) {
-                    m = '00';
-                } else if(0 < m < 10) {
-                    m = `0${m}`;
-                }
-                if(h == 0) {
-                    h = '00';
-                } else if(0<h<10) {
-                    h = `0${h}`;
-                }
-                tz = `-${m}${h}`
-            }
             fetch(`/addhw`, {
             method: 'POST',
             headers: {
@@ -61,7 +31,7 @@ Homework List for {{user.username}}
             body: JSON.stringify({
                 hw_class: document.getElementById('hw_class').value,
                 hw_title: document.getElementById('hw_title').value,
-                due_date: `${document.getElementById('due_date').value}${tz}`,
+                due_date: `${document.getElementById('due_date').value}`,
                 priority: document.getElementById('priority').value,
             })
         })
@@ -194,16 +164,19 @@ Homework List for {{user.username}}
                         
                     }
 
-
                 } else {
                     const alert = document.getElementById('alert')
-                    alert.innerHTML = `Yayy! You completed an assignment!`
+                    alert.innerHTML = `Yay! You completed an assignment!`
                     alert.style.display='block'
                     document.getElementById(id).value = "True"
                     document.getElementById(id).setAttribute("checked", "true")
                     try {
                         const complete = document.getElementById('completed_table')
                         var toappend = document.getElementById(`hwentry_${id}`)
+                        if(complete == null) {
+                            toappend.style.display = "none"
+                            
+                        } 
                         complete.append(toappend)
                     } catch {}
 
@@ -293,7 +266,7 @@ Homework List for {{user.username}}
                 {% csrf_token %}
             <tr class='index'>
                 <td style='text-align: center;' id='index_plus_sign' class='mobile_hide'>+</td>
-                <td class='mobile_hide'><input id='hw_title' type='text' class='input1' placeholder="Assignment Name"></td>
+                <td class='mobile_hide'><input id='hw_title' autofocus autocomplete="off" type='text' class='input1' placeholder="Assignment Name"></td>
                 <td class='mobile_hide'><select id='hw_class' class='input1 form-select'>
                     <option disabled selected>Class Name</option>
                     {% for class in class_list %}
@@ -301,8 +274,8 @@ Homework List for {{user.username}}
                     {% endfor %}
                     <option value='add_new_class'>Add New Class</option>
                 </select></td>
-                <td class='mobile_hide'><input id='due_date' type='datetime-local' class='input1'></td>
-                <td width=5% class='mobile_hide'><input id='priority' type='number' class='input1' min="1" max="100" placeholder="Priority"></td>
+                <td class='mobile_hide'><input autocomplete="off" id='due_date' type='datetime-local' class='input1'></td>
+                <td width=5% class='mobile_hide'><input autocomplete="off" id='priority' type='number' class='input1' min="1" max="100" placeholder="Priority"></td>
                 <td class='mobile_hide'>
                     <button id='add_hw' hidden type="submit"></button>
                 </td>
