@@ -14,6 +14,10 @@ from pathlib import Path
 import os
 import dj_database_url
 from dotenv import load_dotenv
+import django.contrib.gis.db.backends.mysql
+import django.db.backends.mysql
+import django.db.backends.mysql.client
+
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -104,9 +108,23 @@ WSGI_APPLICATION = 'mywebsite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+#DATABASES = {
+#    "default": {
+#        "ENGINE": "django.db.backends.mysql",
+#        "NAME": "hwapp",
+#        "USER": "home_root",
+#        "PASSWORD": os.environ.get('sql_server_pw'),
+#        "HOST": "a7jxjw4j47gyzcaah.westus.cloudapp.azure.com",
+#       "PORT": "3306",
+#    }
+#}
+#db_from_env = dj_database_url.config(conn_max_age=600)
+#DATABASES['default'].update(db_from_env)
+
+#old database-sqlite for dev env
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
+       'ENGINE': 'django.db.backends.sqlite3',
         'NAME': str(os.path.join(BASE_DIR, "db.sqlite3")),
     }
 }
