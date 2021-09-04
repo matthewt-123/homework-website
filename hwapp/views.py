@@ -660,3 +660,15 @@ def matthew_schoology_grades(request):
     return render(request, 'hwapp/matthew-schoology.html', {
         'html': grades.text,
     })
+@user_passes_test(matthew_check, login_url='/login')
+def admin_console(request):
+    if request.method == "POST":
+        json_val = json.loads(request.body)
+        if json_val['function'] == "refresh":
+            send_email("Daily")
+            return JsonResponse({"status": 200}, status=200)
+    elif request.method == "GET":
+        return render(request, "hwapp/admin_console.html")
+    else:
+        return JsonResponse({"error": "method not allowed"}, status=405)
+

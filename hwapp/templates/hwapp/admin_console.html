@@ -1,0 +1,33 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+{% if user.is_superuser %}
+<script>
+    function refresh() {
+        fetch(`/admin_view`, {
+            method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({
+                    "function": "refresh",
+                })
+        })
+        .then(response=>response.json())
+        .then(result => {
+            if(result['status'] == 200) {
+                const alert = document.getElementById('alert')
+                alert.innerHTML = `Email sent successfully`
+                alert.style.display='block'
+            }
+        })
+    }
+</script>
+{% csrf_token %}
+<div id="alert" class='alert alert-success' style="display: none;"></div>
+<button class='btn btn-primary' onclick="refresh()">Refresh ICS/Email</button>
+{% else %}
+<div class="alert alert-danger" role="alert">Error: Access Denied</div>
+{% endif %}
+{% endblock %}

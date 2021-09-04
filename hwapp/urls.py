@@ -25,6 +25,7 @@ urlpatterns = [
     path("getclasstime/<int:class_id>", views.getclasstime, name='getclasstime'),
     path("reset_password", views.reset_password, name='reset_password'),
     path('matthew/schoology_grades', views.matthew_schoology_grades, name='matthew_schoology_grades'),
+    path('admin_view', views.admin_console, name='admin_view'),
 
 
 ]
