@@ -5,6 +5,7 @@ from .models import Recurrence, User, Homework, Class, Preferences, Carrier
 import requests
 from dotenv import load_dotenv
 import sys
+import pytz
 sys.path.append("..")
 from integrations.views import refresh_ics
 
@@ -104,3 +105,9 @@ def pw_reset_email(user, hash_val, expires, email):
                 "html": listed 
             }      
     )
+
+def timezone_helper(u_timezone, u_datetime):
+    local_time = pytz.timezone(str(u_timezone))    
+    local_datetime = local_time.localize(u_datetime, is_dst=None)
+    utc_datetime = local_datetime.astimezone(pytz.utc)
+    return utc_datetime

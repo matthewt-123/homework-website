@@ -51,7 +51,7 @@ class Preferences(models.Model):
     text_notifications = models.BooleanField(default=False)
     phone_number = models.IntegerField(blank=True, null=True )
     carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE, null=True, blank=True)
-    calendar_output = models.BooleanField(default=False)
+    calendar_output = models.BooleanField(default=True)
     user_timezone = models.ForeignKey(Timezone, null=True, blank=True, on_delete=models.CASCADE)
 class PWReset(models.Model):
     reset_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pw_reset_user')

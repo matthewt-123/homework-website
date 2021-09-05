@@ -14,10 +14,10 @@ from ics import Event
 from .forms import PreferencesForm, AddClassForm
 from dotenv import load_dotenv
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from django.utils import timezone
 from django.core.paginator import Paginator
-from .email_helper import pw_reset_email, send_email, overdue_check
+from .email_helper import pw_reset_email, send_email, overdue_check, timezone_helper
 import arrow
 from . import helpers
 
@@ -173,11 +173,11 @@ def addhw(request):
                 var = Preferences.objects.get(preferences_user=request.user).calendar_output
             except:
                 var=False
-            
             if var == True:
+                utc_val = timezone_helper(u_timezone=Preferences.objects.get(preferences_user=request.user).user_timezone.timezone, u_datetime=data['due_date'])
                 e = Event()
                 e.name = data['hw_title']
-                e.begin = arrow.get(data['due_date'])
+                e.begin = arrow.get(utc_val)
                 e.description = f"Class: {hw_class.class_name}; Notes: {notes}"
                 #enter new event into database:
                 new_calevent = CalendarEvent(calendar_user = request.user, homework_event=new_hw, ics=e)
@@ -304,9 +304,10 @@ def edit_hw(request, hw_id):
 
             #update ICS:
             if Preferences.objects.get(preferences_user=request.user).calendar_output == True:
+                utc_val = timezone_helper(u_timezone=Preferences.objects.get(preferences_user=request.user).user_timezone.timezone, u_datetime=datetime.strptime(form['due_date'], "%Y-%m-%dT%H:%M"))
                 e = Event()
                 e.name = hw_title
-                e.begin = formatted_date
+                e.begin = utc_val
                 e.description = f"Class: {hw_class.class_name}"
                 if notes:
                     e.description += f"; {notes}"
