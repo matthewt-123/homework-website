@@ -31,7 +31,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['matthewshomeworkapp.herokuapp.com','localhost', '*.matthewtsai.games', 'matthewtsai.games']
 
@@ -114,7 +114,7 @@ DATABASES = {
         "USER": "home_root",
         "PASSWORD": os.environ.get('sql_server_pw'),
         "HOST": "a7jxjw4j47gyzcaah.westus.cloudapp.azure.com",
-       "PORT": "3306",
+        "PORT": "3306",
     }
 }
 #db_from_env = dj_database_url.config(conn_max_age=600)

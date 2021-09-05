@@ -23,7 +23,7 @@
 {% endif %}
 <h1 style='margin-left: 41%;'>Add Class</h1>
 
-<form action='{% url "addclass" %}' method='POST' class='indented'>
+<form action='{% url "addclass" %}' method='POST' class='indented' autocomplete='off' autofocus='true'>
   {% csrf_token %}
   <table style='margin-left: 35%;'>
     {{form.as_table}}

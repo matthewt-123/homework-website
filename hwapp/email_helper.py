@@ -8,9 +8,19 @@ import sys
 sys.path.append("..")
 from integrations.views import refresh_ics
 
+def overdue_check():
+    my_date = datetime.datetime.now()
+    day = my_date.strftime("%d")
+    month = my_date.strftime("%m")
+    year = my_date.strftime("%Y")
+    allhw = Homework.objects.filter(due_date__date=datetime.datetime(int(year), int(month), int(day)), completed=False)
+    for hw in allhw:
+        hw.overdue = True
+        hw.save()
 def send_email(interval):
     #load data from .env to get API key
     load_dotenv()
+    overdue_check()
     #refresh ICS
     refresh_ics()
     interval_instance = Recurrence.objects.get(basis=str(interval))
@@ -23,11 +33,16 @@ def send_email(interval):
             #iterate over each hw item, adding it to the email in HTML format
             listed = "<ul>"
             for each in hw_list:
-                if each.notes != None and each.notes != "None":
-
-                    listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li><ul><li>Notes: {each.notes}</li></ul>"
+                if each.overdue:
+                    if each.notes != None and each.notes != "None":
+                        listed = listed + f"<li style='color:red'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li><ul><li style='color:red'>Notes: {each.notes}</li></ul>"
+                    else:
+                        listed = listed + f"<li style='color:red'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li>"
                 else:
-                    listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li>"
+                    if each.notes != None and each.notes != "None":
+                        listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li><ul><li>Notes: {each.notes}</li></ul>"
+                    else:
+                        listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li>"
             #add closing tag
             listed = f"{listed}</ul>"
             todays = date.today()

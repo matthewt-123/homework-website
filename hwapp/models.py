@@ -30,6 +30,7 @@ class Homework(models.Model):
     priority = models.IntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     completed = models.BooleanField(default=True)
+    overdue = models.BooleanField(default=False)
     ics_uid = models.TextField(blank=True, null=True)
     def __str__(self):
         return f"{self.hw_title}"
