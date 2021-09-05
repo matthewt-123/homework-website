@@ -33,7 +33,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['matthewshomeworkapp.herokuapp.com', 'homeworkapp-webapp.azurewebsites.net/','localhost', '*.matthewtsai.games', 'matthewtsai.games']
+ALLOWED_HOSTS = ['matthewshomeworkapp.herokuapp.com','localhost', '*.matthewtsai.games', 'matthewtsai.games']
 
 
 
@@ -42,7 +42,6 @@ ALLOWED_HOSTS = ['matthewshomeworkapp.herokuapp.com', 'homeworkapp-webapp.azurew
 
 INSTALLED_APPS = [
     'hwapp',
-    'calendarapp',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -108,26 +107,26 @@ WSGI_APPLICATION = 'mywebsite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-#DATABASES = {
-#    "default": {
-#        "ENGINE": "django.db.backends.mysql",
-#        "NAME": "hwapp",
-#        "USER": "home_root",
-#        "PASSWORD": os.environ.get('sql_server_pw'),
-#        "HOST": "a7jxjw4j47gyzcaah.westus.cloudapp.azure.com",
-#       "PORT": "3306",
-#    }
-#}
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "hwapp",
+        "USER": "home_root",
+        "PASSWORD": os.environ.get('sql_server_pw'),
+        "HOST": "a7jxjw4j47gyzcaah.westus.cloudapp.azure.com",
+       "PORT": "3306",
+    }
+}
 #db_from_env = dj_database_url.config(conn_max_age=600)
 #DATABASES['default'].update(db_from_env)
 
 #old database-sqlite for dev env
-DATABASES = {
-    'default': {
-       'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(os.path.join(BASE_DIR, "db.sqlite3")),
-    }
-}
+#DATABASES = {
+#    'default': {
+#       'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': str(os.path.join(BASE_DIR, "db.sqlite3")),
+#    }
+#  }
 
 db_from_env = dj_database_url.config(conn_max_age=600)
 DATABASES['default'].update(db_from_env)
