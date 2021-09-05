@@ -4,20 +4,16 @@ from django.http.request import RAISE_ERROR
 from django.shortcuts import render
 from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
-from django.db import IntegrityError, connection
 from django.forms import ModelForm
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 import os
-from .models import IntegrationOption, CalendarEvent
+from .models import CalendarEvent
 from dotenv import load_dotenv
 import datetime
-import arrow
 import json
 import requests
 from ics import Calendar, Event
-from django.http import HttpResponse
-from wsgiref.util import FileWrapper
 
 
 

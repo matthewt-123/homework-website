@@ -17,7 +17,7 @@ import json
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.core.paginator import Paginator
-from .email_helper import pw_reset_email, send_email
+from .email_helper import pw_reset_email, send_email, overdue_check
 import arrow
 from . import helpers
 
