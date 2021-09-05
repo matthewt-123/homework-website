@@ -26,6 +26,6 @@ urlpatterns = [
     path("reset_password", views.reset_password, name='reset_password'),
     path('matthew/schoology_grades', views.matthew_schoology_grades, name='matthew_schoology_grades'),
     path('admin_view', views.admin_console, name='admin_view'),
-
+    path('welcome', views.new_user_view, name='new_user_view'),
 
 ]
