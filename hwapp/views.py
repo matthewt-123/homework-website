@@ -25,6 +25,8 @@ from . import helpers
 import sys
 sys.path.append("..")
 from integrations.models import CalendarEvent, AdminOnly
+from integrations.views import refresh_ics
+
 
 load_dotenv()
 def user_check(user):
@@ -667,6 +669,13 @@ def admin_console(request):
         if json_val['function'] == "refresh":
             send_email("Daily")
             return JsonResponse({"status": 200}, status=200)
+        elif json_val['function'] == "overdue":
+            overdue_check()
+            return JsonResponse({"status": 200}, status=200)
+        elif json_val['function'] == 'ics_refresh':
+            refresh_ics()
+            return JsonResponse({"status": 200}, status=200)
+
     elif request.method == "GET":
         return render(request, "hwapp/admin_console.html")
     else:
