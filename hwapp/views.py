@@ -129,7 +129,7 @@ def register(request):
             })
         login(request, user)
 
-        return HttpResponseRedirect(reverse("index"))
+        return HttpResponseRedirect(reverse("new_user_view"))
     else:
         return render(request, "hwapp/register.html")
 # Create your views here.
@@ -681,3 +681,6 @@ def admin_console(request):
     else:
         return JsonResponse({"error": "method not allowed"}, status=405)
 
+@login_required(login_url='/login')
+def new_user_view(request):
+    return render(request, 'hwapp/newuser.html')

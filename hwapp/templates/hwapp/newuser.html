@@ -1,0 +1,23 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+<h1>Welcome to the Homework App!</h1>
+<hr>
+<h6>
+    Please complete the following tasks to set up your profile:
+</h6>
+<ul>
+    <li>
+        Set up your <a href='/preferences'>preferences and timezone</a> to use the calendar export feature. The calendar export option will create a calendar feed that can be integrated into your personal calendar 
+    </li>
+    <li>
+        Set up your <a href='/classes'>classes</a>
+    </li>
+    <li>
+        (Optional): Add a <a href='/integrations'>calendar feed</a> from your school to create tasks on this website
+    </li>
+    <li>
+        Get started by <a href='/'>adding homework</a>! Please contact me at matthew@matthewtsai.games if you have any questions. Thanks!
+    </li>
+</ul>
+{% endblock %}
