@@ -215,6 +215,22 @@ Homework List for {{user.username}}
     </thead>
     <tbody id="incomplete_table" class='index sortable'>
         {% for hw in hwlist %}
+        {% if hw.overdue %}
+        <tr class='index' id="hwentry_{{hw.id}}" style='background-color: rgb(255, 210, 209);'>
+            <td class='index'></td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_title}}</a>
+            </td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_class}}</a>
+            </td>
+            <td class='index date_field'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>
+            </td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.priority}}</a>
+            </td>
+            {% else %}
         <tr class='index' id="hwentry_{{hw.id}}">
             <td class='index'></td>
             <td class='index'>
@@ -229,7 +245,7 @@ Homework List for {{user.username}}
             <td class='index'>
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.priority}}</a>
             </td>
-
+            {% endif %}
                 <td class='index'>
                 <form action='/' method="POST" id="hwform_{{hw.id}}" class="hwform" name='{{hw.id}}'>
                     {% csrf_token %}

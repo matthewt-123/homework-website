@@ -23,10 +23,62 @@
             }
         })
     }
+    function overdue() {
+        fetch(`/admin_view`, {
+            method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({
+                    "function": "overdue",
+                })
+        })
+        .then(response=>response.json())
+        .then(result => {
+            if(result['status'] == 200) {
+                const alert = document.getElementById('alert')
+                alert.innerHTML = `Overdue items refreshed successfully`
+                alert.style.display='block'
+            }
+        })
+    }
+    function refresh_ics() {
+        fetch(`/admin_view`, {
+            method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({
+                    "function": "ics_refresh",
+                })
+        })
+        .then(response=>response.json())
+        .then(result => {
+            if(result['status'] == 200) {
+                const alert = document.getElementById('alert')
+                alert.innerHTML = `ICS refreshed successfully`
+                alert.style.display='block'
+            }
+        })
+    }
 </script>
 {% csrf_token %}
 <div id="alert" class='alert alert-success' style="display: none;"></div>
-<button class='btn btn-primary' onclick="refresh()">Refresh ICS/Email</button>
+<div class='flex-container' style='display:flex;height=200px;align-items: space-around;justify-content: center;flex-direction: row;gap:5%;'>
+    <div>
+        <button class='btn btn-primary' onclick="refresh()">Refresh ICS/Email</button>
+    </div>
+    <div>
+        <button class='btn btn-primary' onclick="overdue()">Refresh Overdue</button>
+    </div>
+    <div>
+        <button class='btn btn-primary' onclick="refresh_ics()">Refresh ICS</button>
+    </div>
+</div>
+
+
 {% else %}
 <div class="alert alert-danger" role="alert">Error: Access Denied</div>
 {% endif %}
