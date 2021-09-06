@@ -51,6 +51,5 @@ webencodings==0.5.1
 Werkzeug==1.0.1
 whitenoise==5.2.0
 psycopg2
-mysql-python
 mysqlclient
 pytz

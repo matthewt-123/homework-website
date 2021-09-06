@@ -17,7 +17,7 @@ import json
 from datetime import datetime, time, timedelta
 from django.utils import timezone
 from django.core.paginator import Paginator
-from .email_helper import pw_reset_email, send_email, overdue_check, timezone_helper
+from .email_helper import pw_reset_email, send_email, overdue_check, timezone_helper, text_refresh
 import arrow
 from . import helpers
 
@@ -207,7 +207,7 @@ def addhw(request):
 @login_required(login_url='/login')
 def preferences(request):
     if request.method == 'POST':
-        form = PreferencesForm(request.POST)  
+        form = PreferencesForm(request.POST) 
         if form.is_valid():
             email_recurrence=form.cleaned_data['email_recurrence']
             email_notifications=form.cleaned_data['email_notifications']
@@ -246,6 +246,9 @@ def preferences(request):
                 'form': form,
                 'message': "Success! Your preferences have been saved."
             })
+        else:
+            return render(request, 'hwapp/preferences.html', {'form': form})
+
     else:
         try: 
             preferences = Preferences.objects.get(preferences_user=request.user)
@@ -675,6 +678,9 @@ def admin_console(request):
             return JsonResponse({"status": 200}, status=200)
         elif json_val['function'] == 'ics_refresh':
             refresh_ics()
+            return JsonResponse({"status": 200}, status=200)
+        elif json_val['function'] == 'send_text':
+            text_refresh()
             return JsonResponse({"status": 200}, status=200)
 
     elif request.method == "GET":
