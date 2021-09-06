@@ -6,7 +6,6 @@ class User(AbstractUser):
     pass
 class Recurrence(models.Model):
     basis = models.CharField(max_length=128)
-    hour_definition = models.IntegerField()
     def __str__(self):
         return f"{self.basis}"
 class Day(models.Model):
@@ -41,7 +40,6 @@ class Carrier(models.Model):
         return f"{self.carrier}"
 class Timezone(models.Model):
     timezone = models.CharField(max_length=256)
-    utc_def = models.CharField(max_length=7, blank=True, null=True)
     def __str__(self):
         return f"{self.timezone}"
 class Preferences(models.Model):
@@ -49,7 +47,7 @@ class Preferences(models.Model):
     email_notifications = models.BooleanField(default=False)
     email_recurrence = models.ForeignKey(Recurrence, null=True, blank=True, on_delete=models.CASCADE, related_name="recurrence")
     text_notifications = models.BooleanField(default=False)
-    phone_number = models.IntegerField(blank=True, null=True )
+    phone_number = models.BigIntegerField(blank=True, null=True )
     carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE, null=True, blank=True)
     calendar_output = models.BooleanField(default=True)
     user_timezone = models.ForeignKey(Timezone, null=True, blank=True, on_delete=models.CASCADE)

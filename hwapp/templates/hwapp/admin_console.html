@@ -63,6 +63,26 @@
             }
         })
     }
+    function send_text() {
+        fetch(`/admin_view`, {
+            method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({
+                    "function": "send_text",
+                })
+        })
+        .then(response=>response.json())
+        .then(result => {
+            if(result['status'] == 200) {
+                const alert = document.getElementById('alert')
+                alert.innerHTML = `Text sent successfully`
+                alert.style.display='block'
+            }
+        })
+    }
 </script>
 {% csrf_token %}
 <div id="alert" class='alert alert-success' style="display: none;"></div>
@@ -75,6 +95,9 @@
     </div>
     <div>
         <button class='btn btn-primary' onclick="refresh_ics()">Refresh ICS</button>
+    </div>
+    <div>
+        <button class='btn btn-primary' onclick="send_text()">Send Text</button>
     </div>
 </div>
 

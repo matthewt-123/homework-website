@@ -21,7 +21,6 @@ def overdue_check():
 def send_email(interval):
     #load data from .env to get API key
     load_dotenv()
-    overdue_check()
     #refresh ICS
     refresh_ics()
     interval_instance = Recurrence.objects.get(basis=str(interval))
@@ -60,14 +59,17 @@ def send_email(interval):
     except:
         #pass if no recipients matching preference query
         pass
+
+def text_refresh():
+    text_recipients = Preferences.objects.filter(text_notifications=True, phone_number__isnull=False)
     try:
-        text_recipients = Preferences.objects.get(text_notifications=True, phone_number__isnull=False)
+        text_recipients = Preferences.objects.filter(text_notifications=True, phone_number__isnull=False)
         for text_recipient in text_recipients:
             email_base = text_recipient.carrier.email
             phone_number=int(text_recipient.phone_number)
-            listed= f'Homework email for {recipient.preferences_user.username}'
+            listed= f'Homework email for {text_recipient.preferences_user.username}'
             #get all hw for recipient
-            hw_list = Homework.objects.filter(hw_user=recipient.preferences_user, completed=False).order_by('due_date', 'hw_class__period', 'priority')
+            hw_list = Homework.objects.filter(hw_user=text_recipient.preferences_user, completed=False).order_by('due_date', 'hw_class__period', 'priority')
 
             #iterate over each hw item, adding it to the email in HTML format
             listed = "<ul>"
@@ -85,7 +87,7 @@ def send_email(interval):
                 data={
                     "from": "Homework App <noreply@mail.matthewtsai.games>",
                     "to": [f"{phone_number}{email_base}"],
-                    "subject": f"{recipient.preferences_user.username}'s Homework Email for {todays}",
+                    "subject": f"{text_recipient.preferences_user.username}'s Homework Email for {todays}",
                     "html": listed 
                 }
             )
