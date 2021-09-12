@@ -31,7 +31,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['matthewshomeworkapp.herokuapp.com','localhost', '*.matthewtsai.games', 'matthewtsai.games']
 
@@ -113,7 +113,7 @@ DATABASES = {
         "NAME": "hwapp",
         "USER": "home_root",
         "PASSWORD": os.environ.get('sql_server_pw'),
-        "HOST": "a7jxjw4j47gyzcaah.westus.cloudapp.azure.com",
+        "HOST": "10.0.0.6",
         "PORT": "3306",
     }
 }
@@ -122,11 +122,7 @@ DATABASES = {
 
 #old database-sqlite for dev env
 #DATABASES = {
-#    'default': {
-#       'ENGINE': 'django.db.backends.sqlite3',
-#        'NAME': str(os.path.join(BASE_DIR, "db.sqlite3")),
-#    }
-#  }
+#    'default': {       'ENGINE': 'django.db.backends.sqlite3','NAME': str(os.path.join(BASE_DIR, "db.sqlite3")),}}
 
 db_from_env = dj_database_url.config(conn_max_age=600)
 DATABASES['default'].update(db_from_env)
