@@ -278,7 +278,12 @@ def edit_hw(request, hw_id):
         form = json.loads(request.body)
         if form:
             #pulling form data
-            hw_class = Class.objects.get(id=form['hw_class'])
+            try:
+                hw_class = Class.objects.get(id=form['hw_class'])
+            except:
+                return render(request, "hwapp/error.html", {
+                    "error": "Access Denied"
+                })
             hw_title = form['hw_title']
             due_date = form['due_date']
             priority = form['priority']
@@ -302,8 +307,6 @@ def edit_hw(request, hw_id):
                 return render(request, 'hwapp/error.html', {
                     'error': "Access Denied"
                 })
-            #format date:
-            formatted_date = datetime.strptime(due_date, "%Y-%m-%dT%H:%M")
 
             #update ICS:
             if Preferences.objects.get(preferences_user=request.user).calendar_output == True:
@@ -329,7 +332,10 @@ def edit_hw(request, hw_id):
             }, status=201)
         else:
             #reload json form and return it to the user with error message
-            hw = Homework.objects.get(hw_user=request.user, id=hw_id)
+            try:
+                hw = Homework.objects.get(hw_user=request.user, id=hw_id)
+            except:
+                return JsonResponse({'message': 'Access Denied', 'status': '403'}, status=403)
             return JsonResponse({
                 'message': 'An error has occured. Please check all your fields and try again.',
                 'status': '400'
@@ -337,7 +343,12 @@ def edit_hw(request, hw_id):
     else:
         try:
             #render json/ajax form
-            hw = Homework.objects.get(hw_user=request.user, id=hw_id)
+            try:
+                hw = Homework.objects.get(hw_user=request.user, id=hw_id)
+            except:
+                return render(request, 'hwapp/error.html', {
+                    'error': 'Access Denied'
+                })
             return render(request, 'hwapp/edit_hw.html', {
                 'hw_id': hw_id,
                 'classes': Class.objects.filter(class_user=request.user),
@@ -348,7 +359,12 @@ def edit_hw(request, hw_id):
             }) 
         except:
                         #render json/ajax form
-            hw = Homework.objects.get(hw_user=request.user, id=hw_id)
+            try:
+                hw = Homework.objects.get(hw_user=request.user, id=hw_id)
+            except:
+                return render(request, 'hwapp/error.html', {
+                    'error': 'Access Denied'
+                })
             return render(request, 'hwapp/edit_hw.html', {
                 'hw_id': hw_id,
                 'classes': Class.objects.filter(class_user=request.user),

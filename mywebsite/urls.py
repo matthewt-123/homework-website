@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+admin.site.enable_nav_sidebar = False
 
 
 urlpatterns = [

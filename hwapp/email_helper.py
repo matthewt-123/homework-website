@@ -14,7 +14,8 @@ def overdue_check():
     day = my_date.strftime("%d")
     month = my_date.strftime("%m")
     year = my_date.strftime("%Y")
-    allhw = Homework.objects.filter(due_date__date=datetime.datetime(int(year), int(month), int(day)), completed=False)
+    #day-1 as this refresh runs midnight PST/0700 UTC for all hw due previous day
+    allhw = Homework.objects.filter(due_date__date=datetime.datetime(int(year), int(month), int(day)-1), completed=False)
     for hw in allhw:
         hw.overdue = True
         hw.save()
