@@ -29,3 +29,4 @@ urlpatterns = [
     path('welcome', views.new_user_view, name='new_user_view'),
 
 ]
+
