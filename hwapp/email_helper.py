@@ -5,7 +5,7 @@ from .models import Recurrence, User, Homework, Class, Preferences, Carrier
 import requests
 from dotenv import load_dotenv
 import sys
-import pytz
+import pytz 
 sys.path.append("..")
 from integrations.views import refresh_ics
 
@@ -36,16 +36,17 @@ def send_email(interval):
             for each in hw_list:
                 if each.overdue:
                     if each.notes != None and each.notes != "None":
-                        listed = listed + f"<li style='color:red'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li><ul><li style='color:red'>Notes: {each.notes}</li></ul>"
+                        listed = listed + f"<li style='color:red'><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li><ul><li style='color:red'>Notes: {each.notes}</li></ul>"
                     else:
-                        listed = listed + f"<li style='color:red'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li>"
+                        listed = listed + f"<li style='color:red'><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li>"
                 else:
                     if each.notes != None and each.notes != "None":
-                        listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li><ul><li>Notes: {each.notes}</li></ul>"
+                        listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li><ul><li>Notes: {each.notes}</li></ul>"
                     else:
-                        listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li>"
+                        listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li>"
             #add closing tag
             listed = f"{listed}</ul>"
+            print(listed)
             todays = date.today()
             send = requests.post(
                 f"{os.environ.get('API_BASE_URL')}/messages",
@@ -76,9 +77,9 @@ def text_refresh():
             listed = "<ul>"
             for each in hw_list:
                 if each.notes != None and each.notes != "None":
-                    listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li><ul><li>Notes: {each.notes}</li></ul>"
+                    listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li><ul><li>Notes: {each.notes}</li></ul>"
                 else:
-                    listed = listed + f"<li>{each.hw_title} for {each.hw_class} is due at {each.due_date}</li>"
+                    listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li>"
             #add closing tag
             listed = f"{listed}</ul>"
             todays = date.today()
