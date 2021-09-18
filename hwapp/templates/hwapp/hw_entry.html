@@ -1,0 +1,43 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+<h1>{{hw.hw_title}}</h1>
+<table>
+    <thead>
+        <tr>
+            <td width='20%'></td>
+            <td width='30%'>
+            </td>
+            <td width='30%'>
+            </td>
+            <td width='20%'></td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td width='20%'></td>
+            <td width='30%'>
+                <b>Due Date: &nbsp;</b>
+            </td>
+            <td width='30%'>
+                {{hw.due_date}}
+            </td>
+            <td width='20%'></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><b>Priority: &nbsp;</b></td>
+            <td>{{hw.priority}}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><b>Notes: &nbsp;</b></td>
+            <td>{{hw.notes}}</td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+<a href='/edit_hw/{{hw.id}}' class='btn btn-primary'>Edit HW</a>
+
+{% endblock %}

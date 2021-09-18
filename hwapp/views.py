@@ -174,7 +174,13 @@ def addhw(request):
             except:
                 var=False
             if var == True:
-                utc_val = timezone_helper(u_timezone=Preferences.objects.get(preferences_user=request.user).user_timezone.timezone, u_datetime=data['due_date'])
+                try:
+                    utc_val = timezone_helper(u_timezone=Preferences.objects.get(preferences_user=request.user).user_timezone.timezone, u_datetime=data['due_date'])
+                except:
+                    return JsonResponse({
+                        'status': '400',
+                        'message': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
+                    }, status=400)
                 e = Event()
                 e.name = data['hw_title']
                 e.begin = arrow.get(utc_val)
@@ -310,7 +316,13 @@ def edit_hw(request, hw_id):
 
             #update ICS:
             if Preferences.objects.get(preferences_user=request.user).calendar_output == True:
-                utc_val = timezone_helper(u_timezone=Preferences.objects.get(preferences_user=request.user).user_timezone.timezone, u_datetime=datetime.strptime(form['due_date'], "%Y-%m-%dT%H:%M"))
+                try:
+                    utc_val = timezone_helper(u_timezone=Preferences.objects.get(preferences_user=request.user).user_timezone.timezone, u_datetime=datetime.strptime(form['due_date'], "%Y-%m-%dT%H:%M"))
+                except:
+                    return JsonResponse({
+                        'status': '400',
+                        'message': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
+                    }, status=400)
                 e = Event()
                 e.name = hw_title
                 e.begin = utc_val
@@ -576,6 +588,7 @@ def getclasstime(request, class_id):
         }, status=405)
 
 def reset_password(request):
+    load_dotenv()
     if request.method == "GET":
         hash_val = request.GET.get('hash')
         if hash_val == None:
@@ -603,12 +616,18 @@ def reset_password(request):
                 try:
                     user = User.objects.get(email = request.POST['form_email'])
                     hash_val = hash(f"{user.username}{user.id}{datetime.now()}")
-                    now_plus_10 = timezone.now() + timedelta(minutes = 10)
+                    now_plus_10 = timezone.now() + timedelta(minutes = 45)
                     PWReset.objects.create(reset_user=user, hash_val=hash_val, expires=now_plus_10)
                     pw_reset_email(user=user, hash_val=hash_val, expires=now_plus_10, email=user.email)
-                    return HttpResponseRedirect(reverse('index'))
+                    website_root = os.environ.get('website_root')
+                    return render(request, 'hwapp/reset_password.html', {
+                        'success': f'If your email is recognized in our system, you will receive an email to reset your password. Please be sure to check your spam folder, and the link will expire in 45 minutes. If you do not receive an email within 10 minutes, there is no account associated with that email, but you may create an account at <a href="https://{website_root}/register">this link</a>. Please visit our <a href="https://itsm.{website_root}">help center</a> with any questions. Thanks!'
+                    })
                 except:
-                    return HttpResponseRedirect(reverse('index'))
+                    website_root = os.environ.get('website_root')
+                    return render(request, 'hwapp/reset_password.html', {
+                        'success': f'If your email is recognized in our system, you will receive an email to reset your password. Please be sure to check your spam folder, and the link will expire in 45 minutes. If you do not receive an email within 10 minutes, there is no account associated with that email, but you may create an account at <a href="https://{website_root}/register">this link</a>. Please visit our <a href="https://itsm.{website_root}">help center</a> with any questions. Thanks!'
+                    })
             except:
                 try:
                     pw = request.POST['pw']
@@ -707,3 +726,14 @@ def admin_console(request):
 @login_required(login_url='/login')
 def new_user_view(request):
     return render(request, 'hwapp/newuser.html')
+@login_required(login_url='/login')
+def homework_entry(request, hw_id):
+    try:
+        hw = Homework.objects.get(hw_user=request.user, id=hw_id)
+        return render(request, 'hwapp/hw_entry.html', {
+            'hw': hw
+        })
+    except:
+        return render(request, 'hwapp/error.html', {
+            'error': 'Homework matching query does not exist. Please check you link and try again'
+        })
