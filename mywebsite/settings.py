@@ -33,7 +33,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['matthewshomeworkapp.herokuapp.com','localhost', '*.matthewtsai.games', 'matthewtsai.games']
+ALLOWED_HOSTS = ['matthewshomeworkapp.herokuapp.com','localhost', '*.matthewtsai.games', 'matthewtsai.games', 'internal.matthewtsai.games', '10.2.0.4']
 
 
 
@@ -108,7 +108,15 @@ WSGI_APPLICATION = 'mywebsite.wsgi.application'
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
-    "default": {
+    "dev": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "dev",
+        "USER": "home_root",
+        "PASSWORD": os.environ.get('sql_server_pw'),
+        "HOST": "10.0.0.6",
+        "PORT": "3306",
+    },
+        "prod": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "hwapp",
         "USER": "home_root",
@@ -117,6 +125,7 @@ DATABASES = {
         "PORT": "3306",
     }
 }
+DATABASES['default'] = DATABASES['dev' if DEBUG else 'prod']
 #db_from_env = dj_database_url.config(conn_max_age=600)
 #DATABASES['default'].update(db_from_env)
 
@@ -171,3 +180,4 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'hwapp/static'),
 )
 
+ADMINS = [('Matthew', 'matthew@matthewtsai.games')]

@@ -3,82 +3,22 @@
 {% block body %}
 {% if user.is_superuser %}
 <script>
-    function refresh() {
+    function admin(function1) {
         fetch(`/admin_view`, {
             method: 'POST',
-                headers: {
+            headers: {
                     'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
                 },
-                credentials: "same-origin",
-                body: JSON.stringify({
-                    "function": "refresh",
-                })
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                'function': `${function1}`
+            })
         })
         .then(response=>response.json())
         .then(result => {
             if(result['status'] == 200) {
                 const alert = document.getElementById('alert')
-                alert.innerHTML = `Email sent successfully`
-                alert.style.display='block'
-            }
-        })
-    }
-    function overdue() {
-        fetch(`/admin_view`, {
-            method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
-                },
-                credentials: "same-origin",
-                body: JSON.stringify({
-                    "function": "overdue",
-                })
-        })
-        .then(response=>response.json())
-        .then(result => {
-            if(result['status'] == 200) {
-                const alert = document.getElementById('alert')
-                alert.innerHTML = `Overdue items refreshed successfully`
-                alert.style.display='block'
-            }
-        })
-    }
-    function refresh_ics() {
-        fetch(`/admin_view`, {
-            method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
-                },
-                credentials: "same-origin",
-                body: JSON.stringify({
-                    "function": "ics_refresh",
-                })
-        })
-        .then(response=>response.json())
-        .then(result => {
-            if(result['status'] == 200) {
-                const alert = document.getElementById('alert')
-                alert.innerHTML = `ICS refreshed successfully`
-                alert.style.display='block'
-            }
-        })
-    }
-    function send_text() {
-        fetch(`/admin_view`, {
-            method: 'POST',
-                headers: {
-                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
-                },
-                credentials: "same-origin",
-                body: JSON.stringify({
-                    "function": "send_text",
-                })
-        })
-        .then(response=>response.json())
-        .then(result => {
-            if(result['status'] == 200) {
-                const alert = document.getElementById('alert')
-                alert.innerHTML = `Text sent successfully`
+                alert.innerHTML = `${function1} completed successfully`
                 alert.style.display='block'
             }
         })
@@ -88,19 +28,27 @@
 <div id="alert" class='alert alert-success' style="display: none;"></div>
 <div class='flex-container' style='display:flex;height=200px;align-items: space-around;justify-content: center;flex-direction: row;gap:5%;'>
     <div>
-        <button class='btn btn-primary' onclick="refresh()">Refresh ICS/Email</button>
+        <button class='btn btn-primary' onclick="admin(function1='refresh')">Refresh ICS/Email</button>
     </div>
     <div>
-        <button class='btn btn-primary' onclick="overdue()">Refresh Overdue</button>
+        <button class='btn btn-primary' onclick="admin(function1='overdue')">Refresh Overdue</button>
     </div>
     <div>
-        <button class='btn btn-primary' onclick="refresh_ics()">Refresh ICS</button>
+        <button class='btn btn-primary' onclick="admin(function1='ics_refresh')">Refresh ICS</button>
     </div>
     <div>
-        <button class='btn btn-primary' onclick="send_text()">Send Text</button>
+        <button class='btn btn-primary' onclick="admin(function1='send_text')">Send Text</button>
     </div>
     <div>
         <a class='btn btn-primary' href='https://matthew-homeworkapp.atlassian.net/jira/software/projects/HOM/boards/1'>Jira Board</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' href='https://matthew-homeworkapp.atlassian.net/jira/servicedesk/projects/IP/queues/custom/15'>
+            ITSM Console
+        </a>
+    </div>
+    <div>
+        <button class='btn btn-primary' onclick='window.location.href="/500error"'>Test 500</button>
     </div>
 </div>
 

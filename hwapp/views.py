@@ -24,7 +24,7 @@ from . import helpers
 #allow python to access Calendar data model
 import sys
 sys.path.append("..")
-from integrations.models import CalendarEvent, AdminOnly
+from integrations.models import CalendarEvent, AdminOnly, IcsHashVal
 from integrations.views import refresh_ics
 
 
@@ -514,8 +514,13 @@ def profile(request):
 @login_required(login_url='/login')
 def calendar(request):
     if request.method == "GET":
-        hash_val = abs(hash(str(request.user.id)))
-        ics_link = f"{os.environ.get('website_root')}/integrations/export/{request.user.id}/{hash_val}"
+        #pull hash val if it exists or create a new one
+        try:
+            hash_val = IcsHashVal.objects.get(hash_user=request.user)
+        except:
+            hash_val = IcsHashVal(hash_val = abs(hash(str(request.user.id))), hash_user=request.user)
+            hash_val.save()
+        ics_link = f"{os.environ.get('website_root')}/integrations/export/{request.user.id}/{hash_val.hash_val}"
         return render(request, 'hwapp/calendar.html', {
             'ics_link': ics_link
         })
@@ -737,3 +742,12 @@ def homework_entry(request, hw_id):
         return render(request, 'hwapp/error.html', {
             'error': 'Homework matching query does not exist. Please check you link and try again'
         })
+@user_passes_test(matthew_check, login_url='/login')
+def edit_about(request):
+    if request.method == 'POST':
+        pass
+    else:
+        return render(request, 'hwapp/edit_about.html')
+@user_passes_test(matthew_check, login_url='/login')
+def fivehundrederror(request):
+    pass
