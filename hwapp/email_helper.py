@@ -46,7 +46,6 @@ def send_email(interval):
                         listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li>"
             #add closing tag
             listed = f"{listed}</ul>"
-            print(listed)
             todays = date.today()
             send = requests.post(
                 f"{os.environ.get('API_BASE_URL')}/messages",

@@ -60,4 +60,3 @@ class IcsLink(models.Model):
     link_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='links')
     link_application = models.CharField(max_length=128)
     link = models.TextField()
-

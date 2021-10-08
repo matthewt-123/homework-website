@@ -1,0 +1,31 @@
+
+{% extends "hwapp/layout.html" %}
+
+{% block javascript %}
+<script src="https://cdn.tiny.cloud/1/40sv45vzy4u71pmvmdz7wjo889ftg47y45me0eaf69471kmh/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+{% endblock %}
+{% block body %}
+
+  <form method="post">
+    <h1>Multiple editors on a page: Section 1</h1>
+    <div class="myeditablediv" id="section001">Click here to edit the first section of content!</div>
+  
+    <h1>Multiple editors on a page: Section 2</h1>
+    <div class="myeditablediv" id="section002">Click here to edit the second section of content!</div>
+  </form>
+  <script>
+      tinymce.init({
+    selector: '.myeditablediv',
+    inline: true,
+    menubar: true,
+  });
+    tinymce.init({
+      selector: 'textarea',
+      plugins: 'a11ychecker advcode casechange export formatpainter linkchecker autolink lists checklist media mediaembed pageembed permanentpen powerpaste table advtable tinycomments tinymcespellchecker',
+      toolbar: 'a11ycheck addcomment showcomments casechange checklist code export formatpainter pageembed permanentpen table',
+      toolbar_mode: 'floating',
+      tinycomments_mode: 'embedded',
+      tinycomments_author: 'Author name'
+    });
+  </script>
+{% endblock %}

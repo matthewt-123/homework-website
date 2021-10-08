@@ -1,8 +1,8 @@
 {% extends "hwapp/layout.html" %}
 
 {% block body %}
-<h1>{{hw.hw_title}}</h1>
-<table>
+<h1 style="text-align:center">{{hw.hw_title}}</h1>
+<table width='100%'>
     <thead>
         <tr>
             <td width='20%'></td>
@@ -38,6 +38,8 @@
         </tr>
     </tbody>
 </table>
-<a href='/edit_hw/{{hw.id}}' class='btn btn-primary'>Edit HW</a>
+<div style='text-align: center;'>
+    <a href='/edit_hw/{{hw.id}}' style="text-align:center" class='btn btn-primary'>Edit HW</a>
+</div>
 
 {% endblock %}

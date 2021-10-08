@@ -8,7 +8,7 @@ from django.forms import ModelForm
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 import os
-from .models import CalendarEvent
+from .models import CalendarEvent, IcsHashVal
 from dotenv import load_dotenv
 import datetime
 import json
@@ -257,7 +257,14 @@ def export(request, user_id, hash_value):
     #check if user is authorized
     if request.method == 'GET':
         #setup hashing functions:
-        sys_val = abs(hash(str(user_id)))
+        #sys_val = abs(hash(str(user_id)))
+        try:
+            sys_val = IcsHashVal.objects.get(hash_user=request.user)
+
+        except:
+            return render(request, 'hwapp/error.html', {
+                'error': 'User not Found'
+            })
         prov_val = abs(hash_value)
         if prov_val == sys_val:
             pass
