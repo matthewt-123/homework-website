@@ -26,7 +26,7 @@
 </script>
 {% csrf_token %}
 <div id="alert" class='alert alert-success' style="display: none;"></div>
-<div class='flex-container' style='display:flex;height=200px;align-items: space-around;justify-content: center;flex-direction: row;gap:5%;'>
+<div class='flex-container' style='display:flex;height:100px;align-items: space-around;justify-content: center;flex-direction: row;gap:5%;flex-wrap: wrap;'>
     <div>
         <button class='btn btn-primary' onclick="admin(function1='refresh')">Refresh ICS/Email</button>
     </div>
@@ -40,15 +40,18 @@
         <button class='btn btn-primary' onclick="admin(function1='send_text')">Send Text</button>
     </div>
     <div>
-        <a class='btn btn-primary' href='https://matthew-homeworkapp.atlassian.net/jira/software/projects/HOM/boards/1'>Jira Board</a>
+        <a class='btn btn-primary' target="_blank" href='https://matthew-homeworkapp.atlassian.net/jira/software/projects/HOM/boards/1'>Jira Board</a>
     </div>
     <div>
-        <a class='btn btn-primary' href='https://matthew-homeworkapp.atlassian.net/jira/servicedesk/projects/IP/queues/custom/15'>
+        <a class='btn btn-primary' target="_blank" href='https://matthew-homeworkapp.atlassian.net/jira/servicedesk/projects/IP/queues/custom/15'>
             ITSM Console
         </a>
     </div>
     <div>
         <button class='btn btn-primary' onclick='window.location.href="/500error"'>Test 500</button>
+    </div>
+    <div>
+        <a class='btn btn-primary' href='/config/email_templates'>Email Template Config</a>
     </div>
 </div>
 

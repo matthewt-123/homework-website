@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError, connection
 from django.forms import ModelForm
-from .models import User, Class, Homework, Preferences, PWReset
+from .models import EmailTemplate, User, Class, Homework, Preferences, PWReset
 from django.http import HttpResponseRedirect
 import requests
 from django.urls import reverse
@@ -630,6 +630,7 @@ def reset_password(request):
                     })
                 except:
                     website_root = os.environ.get('website_root')
+                    print(False)
                     return render(request, 'hwapp/reset_password.html', {
                         'success': f'If your email is recognized in our system, you will receive an email to reset your password. Please be sure to check your spam folder, and the link will expire in 45 minutes. If you do not receive an email within 10 minutes, there is no account associated with that email, but you may create an account at <a href="https://{website_root}/register">this link</a>. Please visit our <a href="https://itsm.{website_root}">help center</a> with any questions. Thanks!'
                     })
@@ -750,4 +751,35 @@ def edit_about(request):
         return render(request, 'hwapp/edit_about.html')
 @user_passes_test(matthew_check, login_url='/login')
 def fivehundrederror(request):
+    pass
+@user_passes_test(matthew_check, login_url='/login')
+def email_template_editor(request):
+    if request.method == 'GET':
+        template_id = request.GET.get('template_id')
+        if template_id == None:
+            return render(request, 'hwapp/template_selector.html', {
+                'templates': EmailTemplate.objects.all()
+            })
+        return render(request, 'hwapp/email_templates.html', {
+            'email_template': EmailTemplate.objects.get(id=template_id),
+            'website_root': os.environ.get('website_root')
+        })
+    if request.method == 'POST':
+        template_id = request.GET.get('template_id')
+        if template_id == None:
+            return render(request, 'hwapp/error.html', {
+                'error': 'No template selected'
+            })
+        else:
+            to_edit = EmailTemplate.objects.get(id=template_id)
+            form_val = request.POST['template_body']
+            to_edit.template_body = form_val
+            to_edit.save()
+            return render(request, 'hwapp/email_templates.html', {
+                'message': 'Template Successfully Saved',
+                'email_template': EmailTemplate.objects.get(id=template_id),
+                'website_root': os.environ.get('website_root')
+            })
+@login_required(login_url='/login')
+def unsubscribe(request):
     pass

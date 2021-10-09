@@ -1,7 +1,7 @@
 import os
 from datetime import date
 import datetime
-from .models import Recurrence, User, Homework, Class, Preferences, Carrier
+from .models import Recurrence, User, Homework, Class, Preferences, Carrier, EmailTemplate
 import requests
 from dotenv import load_dotenv
 import sys
@@ -26,6 +26,7 @@ def send_email(interval):
     refresh_ics()
     interval_instance = Recurrence.objects.get(basis=str(interval))
     try:
+
         recipients = Preferences.objects.filter(email_notifications=True, email_recurrence=interval_instance)
         for recipient in recipients:
             listed= f'Homework email for {recipient.preferences_user.username}'
@@ -36,16 +37,19 @@ def send_email(interval):
             for each in hw_list:
                 if each.overdue:
                     if each.notes != None and each.notes != "None":
-                        listed = listed + f"<li style='color:red'><a style='color:red' href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li><ul><li style='color:red'>Notes: {each.notes}</li></ul>"
+                        listed = listed + f"<li style='color:red'><a style='color:red' href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li><ul><li style='color:red'>Notes: {each.notes}</li></ul>"
                     else:
-                        listed = listed + f"<li style='color:red'><a style='color:red' href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li>"
+                        listed = listed + f"<li style='color:red'><a style='color:red' href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li>"
                 else:
                     if each.notes != None and each.notes != "None":
-                        listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li><ul><li>Notes: {each.notes}</li></ul>"
+                        listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li><ul><li>Notes: {each.notes}</li></ul>"
                     else:
-                        listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li>"
+                        listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li>"
             #add closing tag
             listed = f"{listed}</ul>"
+            daily_email_template = str(EmailTemplate.objects.get(id=2).template_body)
+            html_content = daily_email_template.replace('$$website_root', os.environ.get('website_root'))
+            html_content = html_content.replace('$$homework', listed)
             todays = date.today()
             send = requests.post(
                 f"{os.environ.get('API_BASE_URL')}/messages",
@@ -54,7 +58,7 @@ def send_email(interval):
                     "from": "Homework App <noreply@mail.matthewtsai.games>",
                     "to": [recipient.preferences_user.email],
                     "subject": f"{recipient.preferences_user.username}'s Homework Email for {todays}",
-                    "html": listed 
+                    "html": html_content 
                 }
             )
     except:
@@ -97,7 +101,12 @@ def text_refresh():
         pass
 
 def pw_reset_email(user, hash_val, expires, email):
-    listed = f"<h1>Password Reset Email for {user.username}:</h1><br>Please navigate to the below link to reset your password. Please note that this link expires at {expires}: <br><a href='{os.environ.get('website_root')}/reset_password?hash={hash_val}'>{os.environ.get('website_root')}/reset_password?hash={hash_val}</a>"
+    pw_email_template = str(EmailTemplate.objects.get(id=1).template_body)
+    listed = pw_email_template.replace('$$exp_time', expires.strftime('%d %B, %Y, %I:%M %p'))
+    listed = listed.replace('$$pw_reset_link', f'https://{os.environ.get("website_root")}/reset_password?hash={hash_val}')
+    listed = listed.replace('$$website_root', os.environ.get("website_root"))
+    #listed = f"<h1>Password Reset Email for {user.username}:</h1><br>Please navigate to the below link to reset your password. Please note that this link expires at {expires}: <br><a href='{os.environ.get('website_root')}/reset_password?hash={hash_val}'>{os.environ.get('website_root')}/reset_password?hash={hash_val}</a>"
+    print(listed)
     send = requests.post(
         f"{os.environ.get('API_BASE_URL')}/messages",
             auth=("api", f"{os.environ.get('mailgun_api_key')}"),
