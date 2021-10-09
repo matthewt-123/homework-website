@@ -259,14 +259,13 @@ def export(request, user_id, hash_value):
         #setup hashing functions:
         #sys_val = abs(hash(str(user_id)))
         try:
-            sys_val = IcsHashVal.objects.get(hash_user=request.user)
-
+            sys_val = IcsHashVal.objects.get(hash_user=User.objects.get(id=user_id))
         except:
             return render(request, 'hwapp/error.html', {
                 'error': 'User not Found'
             })
         prov_val = abs(hash_value)
-        if prov_val == sys_val:
+        if prov_val == int(sys_val.hash_val):
             pass
         else:
             return render(request, 'hwapp/error.html', {
