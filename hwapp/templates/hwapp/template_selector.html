@@ -1,0 +1,35 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+{% if message %}
+<div class="alert alert-danger" role="alert">
+    {{message}}    
+    </div>
+{% endif %}
+
+<ol>
+    {% for template in templates %}
+        <li>
+            <a href='{% url "email_template_editor" %}?template_id={{template.id }}'>
+                {{ template.template_name }}
+            </a>
+        </li>
+    {% endfor %}
+</ol>
+<h3>Available Variables: </h3>
+<ul>
+    <li>
+        $$exp_time
+    </li>
+    <li>
+        $$pw_reset_link
+    </li>
+    <li>
+        $$website_root
+    </li>
+    <li>
+        $$homework
+    </li>
+</ul>
+
+{% endblock %}
