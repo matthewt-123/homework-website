@@ -48,7 +48,6 @@ def send_email(interval):
             #add closing tag
             listed = f"{listed}</ul>"
             daily_email_template = str(EmailTemplate.objects.get(id=2).template_body)
-            html_content = daily_email_template.replace('$$website_root', os.environ.get('website_root'))
             html_content = html_content.replace('$$homework', listed)
             todays = date.today()
             send = requests.post(

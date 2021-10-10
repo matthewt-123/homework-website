@@ -28,10 +28,10 @@ urlpatterns = [
     path('admin_view', views.admin_console, name='admin_view'),
     path('welcome', views.new_user_view, name='new_user_view'),
     path('homework/<int:hw_id>', views.homework_entry, name='homework_entry'),
-    path('edit_about', views.edit_about, name='edit_about'),
     path('500error', views.fivehundrederror, name='500error'),
     path('config/email_templates', views.email_template_editor, name='email_template_editor'),
-    path('unsubscribe', views.unsubscribe, name='unsubscribe'),
+    path('config', views.experience, name='experience_manager'),
+
 
 ]
 

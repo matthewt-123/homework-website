@@ -1,5 +1,7 @@
 {% extends "hwapp/layout.html" %}
-
+{% block title %}
+Admin Console
+{% endblock %}
 {% block body %}
 {% if user.is_superuser %}
 <script>
@@ -51,8 +53,9 @@
         <button class='btn btn-primary' onclick='window.location.href="/500error"'>Test 500</button>
     </div>
     <div>
-        <a class='btn btn-primary' href='/config/email_templates'>Email Template Config</a>
+        <a class='btn btn-primary' href='/config'>Experience Manager</a>
     </div>
+
 </div>
 
 
