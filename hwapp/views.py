@@ -94,10 +94,7 @@ def login_view(request):
                 "message": "Invalid username and/or password."
             })
     else:
-        return render(request, "hwapp/login.html", {
-            'CLIENT_ID': os.environ.get('oauth_client_id_google'),
-            'ENDPOINT': os.environ.get('oauth_endpoint_google')
-        })
+        return render(request, "hwapp/login.html")
 
 
 def logout_view(request):
@@ -483,7 +480,10 @@ def allhw(request):
         'website_root': os.environ.get('website_root')
     })
 def about(request):
-    return render(request, 'hwapp/aboutme.html')
+    template = EmailTemplate.objects.get(id=4)
+    return render(request, 'hwapp/aboutme.html', {
+        'template': template.template_body
+    })
 @login_required(login_url='/login')
 def profile(request):
     class UserForm(ModelForm):
@@ -731,7 +731,10 @@ def admin_console(request):
 
 @login_required(login_url='/login')
 def new_user_view(request):
-    return render(request, 'hwapp/newuser.html')
+    template = EmailTemplate.objects.get(id=5)
+    return render(request, 'hwapp/newuser.html', {
+        'template': template.template_body
+    })
 @login_required(login_url='/login')
 def homework_entry(request, hw_id):
     try:
@@ -743,12 +746,7 @@ def homework_entry(request, hw_id):
         return render(request, 'hwapp/error.html', {
             'error': 'Homework matching query does not exist. Please check you link and try again'
         })
-@user_passes_test(matthew_check, login_url='/login')
-def edit_about(request):
-    if request.method == 'POST':
-        pass
-    else:
-        return render(request, 'hwapp/edit_about.html')
+
 @user_passes_test(matthew_check, login_url='/login')
 def fivehundrederror(request):
     pass
@@ -780,6 +778,8 @@ def email_template_editor(request):
                 'email_template': EmailTemplate.objects.get(id=template_id),
                 'website_root': os.environ.get('website_root')
             })
-@login_required(login_url='/login')
-def unsubscribe(request):
-    pass
+
+@user_passes_test(matthew_check, login_url='/login')
+def experience(request):
+    return render(request, 'hwapp/experience_manager.html')
+

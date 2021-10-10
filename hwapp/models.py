@@ -30,7 +30,6 @@ class Homework(models.Model):
     notes = models.TextField(blank=True, null=True)
     completed = models.BooleanField(default=True)
     overdue = models.BooleanField(default=False)
-    ics_uid = models.TextField(blank=True, null=True)
     def __str__(self):
         return f"{self.hw_title}"
 class Carrier(models.Model):
@@ -65,3 +64,6 @@ class EmailTemplate(models.Model):
     template_body = models.TextField()
     def __str__(self):
         return f"{self.template_name}"
+class IcsId(models.Model):
+    icsID_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='icsID_user')
+    icsID = models.CharField(max_length=512)

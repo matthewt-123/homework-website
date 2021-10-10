@@ -20,7 +20,7 @@ from ics import Calendar, Event
 #import hwapp models
 import sys
 sys.path.append("..")
-from hwapp.models import Homework, Class, Day, Preferences, User
+from hwapp.models import Homework, Class, Day, IcsId, Preferences, User
 
 load_dotenv()
 # Create your views here.
@@ -52,10 +52,10 @@ def schoology_init(request):
             class1.days.add(day)
             class1.save()
         #pull prior integrated events:
-        uids = Homework.objects.filter(hw_class=class1, hw_user=request.user)
+        uids = IcsId.objects.filter(hw_user=request.user)
         uid_list = []
         for uid in uids:
-            uid_list.append(uid.ics_uid)
+            uid_list.append(uid.icsID)
         #pull timezone, default to Pacific if necessary:
         try:
             timezone = Preferences.objects.get(preferences_user=request.user).user_timezone
@@ -96,7 +96,8 @@ def schoology_init(request):
             if ics_uid in uid_list:
                 pass
             else:
-                Homework.objects.create(hw_user=request.user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False, ics_uid=ics_uid)        
+                Homework.objects.create(hw_user=request.user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)        
+                IcsId.objects.create(icsID_user=request.user, icsID = ics_uid)
         return render(request, 'hwapp/success.html', {
             'message': "Schoology feed integrated successfully. Please <a href='/'>return home</a>"
         })    
@@ -127,10 +128,10 @@ def canvas_init(request):
             class2.days.add(day)
             class2.save()
         #pull prior integrated events:
-        uids = Homework.objects.filter(hw_class=class2, hw_user=request.user)
+        uids = IcsId.objects.filter(hw_user=request.user)
         uid_list = []
         for uid in uids:
-            uid_list.append(uid.ics_uid)
+            uid_list.append(uid.icsID)
         #pull timezone, default to Pacific if necessary:
         try:
             timezone = Preferences.objects.get(preferences_user=request.user).user_timezone
@@ -171,7 +172,9 @@ def canvas_init(request):
             if ics_uid in uid_list:
                 pass
             else:
-                Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False, ics_uid=ics_uid)
+                Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
+                IcsId.objects.create(icsID_user=request.user, icsID = ics_uid)
+
         return render(request, 'hwapp/success.html', {
             'message': "Canvas feed integrated successfully. Please <a href='/'>return home</a>"
         })        
@@ -202,10 +205,10 @@ def other_init(request):
             class2.days.add(day)
             class2.save()
         #pull prior integrated events:
-        uids = Homework.objects.filter(hw_class=class2, hw_user=request.user)
+        uids = IcsId.objects.filter(hw_user=request.user)
         uid_list = []
         for uid in uids:
-            uid_list.append(uid.ics_uid)
+            uid_list.append(uid.icsID)
         #pull timezone, default to Pacific if necessary:
         try:
             timezone = Preferences.objects.get(preferences_user=request.user).user_timezone
@@ -246,7 +249,8 @@ def other_init(request):
             if ics_uid in uid_list:
                 pass
             else:
-                Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False, ics_uid=ics_uid)
+                Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
+                IcsId.objects.create(icsID_user=request.user, icsID = ics_uid)
         return render(request, 'hwapp/success.html', {
             'message': "Feed integrated successfully. Please <a href='/'>return home</a>"
         })        
@@ -295,10 +299,10 @@ def refresh_ics():
         dt_str = '00:00'
         dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
         #pull prior integrated events:
-        uids = Homework.objects.filter(hw_class=class1)
+        uids = IcsId.objects.filter(icsID_user=class1.class_user)
         uid_list = []
         for uid in uids:
-            uid_list.append(uid.ics_uid)
+            uid_list.append(uid.icsID)
         timezone = Preferences.objects.get(preferences_user = class1.class_user).user_timezone
         #append new hw to database and calendar
         #convert ics to Timeline instance
@@ -325,7 +329,10 @@ def refresh_ics():
             except:
                 ics_uid = None
                         #check if uid exists. If so, do not create the event
+            print(uid_list)
             if ics_uid in uid_list:
                 pass
+                print(True)
             else:
-                Homework.objects.create(hw_user=class1.class_user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False, ics_uid=ics_uid)
+                IcsId.objects.create(icsID_user=class1.class_user, icsID = ics_uid)
+                Homework.objects.create(hw_user=class1.class_user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
