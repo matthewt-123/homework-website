@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError, connection
 from django.forms import ModelForm
-from .models import EmailTemplate, User, Class, Homework, Preferences, PWReset
+from .models import EmailTemplate, User, Class, Homework, Preferences, PWReset, IcsId
 from django.http import HttpResponseRedirect
 import requests
 from django.urls import reverse
@@ -26,7 +26,6 @@ import sys
 sys.path.append("..")
 from integrations.models import CalendarEvent, AdminOnly, IcsHashVal
 from integrations.views import refresh_ics
-
 
 load_dotenv()
 def user_check(user):
@@ -392,17 +391,10 @@ def addclass(request):
             user = request.user
             class_name = form.cleaned_data['class_name']
             period = form.cleaned_data['period']
-            days = form.cleaned_data['days']
             time = form.cleaned_data['time']
-            dlist=[]
-            for day in days.iterator():
-                dlist.append(day)
             class1 = Class(class_user=user, class_name=class_name, period=period, time=time)
             class1.save()
             newclass = Class.objects.get(id=class1.id)
-            
-            for item in dlist:
-                newclass.days.add(item)
       
             newclass.save()
         else:
@@ -783,3 +775,8 @@ def email_template_editor(request):
 def experience(request):
     return render(request, 'hwapp/experience_manager.html')
 
+@user_passes_test(matthew_check, login_url='/login')
+def adminexport(request):
+    for Ics_id in IcsIds:
+        IcsId.objects.create(icsID_user = request.user, icsID = Ics_id)
+    pass

@@ -16,7 +16,6 @@ class Class(models.Model):
     class_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='class_owner')
     class_name = models.CharField(max_length=128)
     period = models.IntegerField(null=True, blank=True,)
-    days = models.ManyToManyField(Day, null=True, blank=True,)
     time = models.TimeField()
     ics_link = models.CharField(blank=True, null=True, max_length=512)
     def __str__(self):

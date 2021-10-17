@@ -21,9 +21,5 @@ class PreferencesForm(ModelForm):
 class AddClassForm(ModelForm):
     class Meta:
         model = Class
-        fields = ['class_name', 'period', 'days', 'time']
-    days = forms.ModelMultipleChoiceField(
-        queryset = Day.objects.all(),
-        widget=forms.CheckboxSelectMultiple
-    )
+        fields = ['class_name', 'period', 'time']
     time = forms.TimeInput()

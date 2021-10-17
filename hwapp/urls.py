@@ -31,6 +31,7 @@ urlpatterns = [
     path('500error', views.fivehundrederror, name='500error'),
     path('config/email_templates', views.email_template_editor, name='email_template_editor'),
     path('config', views.experience, name='experience_manager'),
+    path('adminexport', views.adminexport, name='adminexport'),
 
 
 ]
