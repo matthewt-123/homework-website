@@ -6,8 +6,9 @@ from django.http.response import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.forms import ModelForm
 from django.urls import reverse
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 import os
+
 from .models import CalendarEvent, IcsHashVal
 from dotenv import load_dotenv
 import datetime
@@ -43,16 +44,13 @@ def schoology_init(request):
         #SETUP: create Schoology Class instance if not already existing(since Schoology does not provide class names with HW assignments)
         dt_str = '00:00'
         dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
-        day = Day.objects.get(days='Sunday')
         try:
             class1 = Class.objects.get(class_user=request.user, class_name='Schoology Integration', time=dt_obj, period=999999, ics_link=link)
         except:
             class1 = Class(class_user = request.user, class_name='Schoology Integration', time=dt_obj, period=999999, ics_link=link)
             class1.save()
-            class1.days.add(day)
-            class1.save()
         #pull prior integrated events:
-        uids = IcsId.objects.filter(hw_user=request.user)
+        uids = IcsId.objects.filter(icsID_user=request.user)
         uid_list = []
         for uid in uids:
             uid_list.append(uid.icsID)
@@ -119,16 +117,13 @@ def canvas_init(request):
         #SETUP: create Canvas Class instance if not already existing(since Canvas does not provide class names with HW assignments)
         dt_str = '00:00'
         dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
-        day = Day.objects.get(days='Sunday')
         try:
             class2 = Class.objects.get(class_user=request.user, class_name='Canvas Integration', time=dt_obj, period=999999, ics_link=link)
         except:
             class2 = Class(class_user = request.user, class_name='Canvas Integration', time=dt_obj, period=999999, ics_link=link)
             class2.save()
-            class2.days.add(day)
-            class2.save()
         #pull prior integrated events:
-        uids = IcsId.objects.filter(hw_user=request.user)
+        uids = IcsId.objects.filter(icsID_user=request.user)
         uid_list = []
         for uid in uids:
             uid_list.append(uid.icsID)
@@ -195,17 +190,14 @@ def other_init(request):
         #SETUP: create new Class instance if not already existing(since Canvas does not provide class names with HW assignments)
         dt_str = '00:00'
         dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
-        day = Day.objects.get(days='Sunday')
         class_name = request.POST.get('integration_name')
         try:
             class2 = Class.objects.get(class_user=request.user, class_name=class_name, time=dt_obj, period=999999, ics_link=link)
         except:
             class2 = Class(class_user = request.user, class_name=class_name, time=dt_obj, period=999999, ics_link=link)
             class2.save()
-            class2.days.add(day)
-            class2.save()
         #pull prior integrated events:
-        uids = IcsId.objects.filter(hw_user=request.user)
+        uids = IcsId.objects.filter(icsID_user=request.user)
         uid_list = []
         for uid in uids:
             uid_list.append(uid.icsID)
@@ -329,10 +321,8 @@ def refresh_ics():
             except:
                 ics_uid = None
                         #check if uid exists. If so, do not create the event
-            print(uid_list)
             if ics_uid in uid_list:
                 pass
-                print(True)
             else:
                 IcsId.objects.create(icsID_user=class1.class_user, icsID = ics_uid)
                 Homework.objects.create(hw_user=class1.class_user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)

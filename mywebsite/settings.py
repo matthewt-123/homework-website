@@ -22,6 +22,7 @@ import django.db.backends.mysql.client
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+print(BASE_DIR)
 
 
 # Quick-start development settings - unsuitable for production
@@ -109,21 +110,13 @@ WSGI_APPLICATION = 'mywebsite.wsgi.application'
 
 DATABASES = {
     "dev": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "dev",
-        "USER": "home_root",
-        "PASSWORD": os.environ.get('sql_server_pw'),
-        "HOST": "10.0.0.6",
-        "PORT": "3306",
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': str(os.path.join(BASE_DIR, "db_dev.sqlite3")),
     },
-        "prod": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": "hwapp",
-        "USER": "home_root",
-        "PASSWORD": os.environ.get('sql_server_pw'),
-        "HOST": "10.0.0.6",
-        "PORT": "3306",
-    }
+    "prod": {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME':  "/home/TestVM/database/db.sqlite3",
+    },
 }
 DATABASES['default'] = DATABASES['dev' if DEBUG else 'prod']
 #db_from_env = dj_database_url.config(conn_max_age=600)

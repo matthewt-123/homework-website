@@ -1,6 +1,5 @@
 appdirs==1.4.4
 arrow==0.14.7
-asgiref==3.3.1
 backcall==0.2.0
 cffi==1.14.5
 chardet==3.0.4
@@ -51,5 +50,5 @@ webencodings==0.5.1
 Werkzeug==1.0.1
 whitenoise==5.2.0
 #psycopg2 -for postgresql only
-mysqlclient
+#mysqlclient
 pytz
