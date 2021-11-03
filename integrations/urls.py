@@ -9,5 +9,6 @@ urlpatterns = [
     path("canvas_init", views.canvas_init, name="canvas_init"),
     path("export/<int:user_id>/<int:hash_value>", views.export, name="export"),
     path("other_init", views.other_init, name="other_init"),
+    path("vmsapi/intakecode", views.vmsapi, name="api_view"),
     
 ]
