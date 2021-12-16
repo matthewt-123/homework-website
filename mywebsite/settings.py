@@ -33,9 +33,15 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['matthewshomeworkapp.herokuapp.com','localhost', '*.matthewtsai.games', 'matthewtsai.games', 'internal.matthewtsai.games', '10.2.0.4']
+ALLOWED_HOSTS_TYPES = {
+    "dev":
+    ['matthewshomeworkapp.herokuapp.com','localhost', '*.matthewtsai.games', 'matthewtsai.games', 'internal.matthewtsai.games', '10.2.0.4', '192.168.0.28'], 
+     "prod":
+    ['*.matthewtsai.games', 'matthewtsai.games', 'internal.matthewtsai.games', '10.2.0.4'], 
+}
 
 
+ALLOWED_HOSTS = ALLOWED_HOSTS_TYPES['dev' if DEBUG else 'prod']
 
 
 # Application definition
