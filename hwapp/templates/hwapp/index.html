@@ -195,17 +195,14 @@ Homework List for {{user.username}}
     <thead class='index'>
         <tr class='index'>
             <td class='index' width=5%></td>
-            <td class='index'width='40%'>
+            <td class='index'width='45%'>
                 <strong>Assignment Name</strong>
             </td>
-            <td class='index' width='20%'>
+            <td class='index' width='25%'>
                 <strong>Class Name</strong>
             </td>
             <td class='index' width=15%>
                 <strong>Due Date </strong>
-            </td>
-            <td class='index' width='10%'>
-                <strong>Priority</strong>
             </td>
             <td class='index' width=5%>
                 <strong>Completed?</strong>        
@@ -242,9 +239,6 @@ Homework List for {{user.username}}
             <td class='index date_field'>
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>
             </td>
-            <td class='index'>
-                <a href = '{% url "edit_hw" hw.id %}'>{{hw.priority}}</a>
-            </td>
             {% endif %}
                 <td class='index'>
                 <form action='/' method="POST" id="hwform_{{hw.id}}" class="hwform" name='{{hw.id}}'>
@@ -267,7 +261,6 @@ Homework List for {{user.username}}
                 <td><a id='new_hw_title_0' class='new_hw_link'></a></td>
                 <td><a id='new_hw_class_0' class='new_hw_link'></a></td>
                 <td><a id='new_due_date_0' class='new_hw_link'></a></td>
-                <td><a id='new_priority_0' class='new_hw_link'></a></td>
                 <td id="checkbox_0" style='display:none;'>
                     <form action='/' method="POST"   class="hwform" name='{{item.id}}'>
                         {% csrf_token %}
@@ -291,7 +284,6 @@ Homework List for {{user.username}}
                     <option value='add_new_class'>Add New Class</option>
                 </select></td>
                 <td class='mobile_hide'><input autocomplete="off" id='due_date' type='datetime-local' class='input1'></td>
-                <td width=5% class='mobile_hide'><input autocomplete="off" id='priority' type='number' class='input1' min="1" max="100" placeholder="Priority"></td>
                 <td class='mobile_hide'>
                     <button id='add_hw' hidden type="submit"></button>
                 </td>
@@ -307,17 +299,14 @@ Homework List for {{user.username}}
         {% for item in completed %}
             <tr id="hwentry_{{item.id}}">
                 <td width='5%'></td>
-                <td width='40%'>
+                <td width='45%'>
                     <a href = '{% url "edit_hw" item.id %}'>{{item.hw_title}}</a>
                 </td>
-                <td width='20%'>
+                <td width='25%'>
                     <a href = '{% url "edit_hw" item.id %}'>{{item.hw_class}}</a>
                 </td>
                 <td width='15%'>
                     <a href = '{% url "edit_hw" item.id %}'>{{item.due_date}}</a>
-                </td>
-                <td width='10%'>
-                    <a href = '{% url "edit_hw" item.id %}'>{{item.priority}}</a>
                 </td>
  
                     <td width='5%'>
