@@ -414,19 +414,13 @@ def editclass(request, class_id):
         if form.is_valid():
             class_name = form.cleaned_data['class_name']
             period = form.cleaned_data['period']
-            days = form.cleaned_data['days']
             time = form.cleaned_data['time']
             dlist=[]
-            for day in days.iterator():
-                dlist.append(day)
             try:
                 class1 = Class.objects.get(class_user=request.user, id=class_id)
                 class1.class_name=class_name
                 class1.period=period
                 class1.time=time
-                class1.save()
-                for day in days:
-                    class1.days.add(day)
                 class1.save()
             except:
                 return render(request, 'hwapp/error.html', {
@@ -445,7 +439,6 @@ def editclass(request, class_id):
             'class_name': editclass.class_name,
             'period': editclass.period,
             'time': editclass.time,
-            'days': editclass.days.all()
         }
         form = AddClassForm(initial=initial)
         return render(request, 'hwapp/editclass.html', {

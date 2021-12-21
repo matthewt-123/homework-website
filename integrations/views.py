@@ -2,19 +2,21 @@ from io import StringIO
 from django.contrib.auth import login
 from django.http.request import RAISE_ERROR
 from django.shortcuts import render
-from django.http.response import HttpResponseRedirect, JsonResponse
+from django.http.response import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.forms import ModelForm
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 import os
-
+from django.views.decorators.csrf import csrf_exempt
+import re
 from .models import CalendarEvent, IcsHashVal
 from dotenv import load_dotenv
 import datetime
 import json
 import requests
 from ics import Calendar, Event
+from pathlib import Path
 
 
 
@@ -22,6 +24,8 @@ from ics import Calendar, Event
 import sys
 sys.path.append("..")
 from hwapp.models import Homework, Class, Day, IcsId, Preferences, User
+def matthew_check(user):
+    return user.id == 1
 
 load_dotenv()
 # Create your views here.
@@ -326,3 +330,64 @@ def refresh_ics():
             else:
                 IcsId.objects.create(icsID_user=class1.class_user, icsID = ics_uid)
                 Homework.objects.create(hw_user=class1.class_user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
+intake_verification = ''
+@csrf_exempt
+def vmsapi(request):
+    global intake_verification
+    if request.method == 'POST':
+        reg = re.compile('[+]account%3A[+]*')
+        res = reg.search(str(request.body))
+        span_val = int(res.span()[1])
+        code = str(request.body)[span_val:span_val+4]
+        intake_verification = code
+        return JsonResponse({'message': 'success'}, status=200)
+
+    else:
+        if request.headers['Matthewstoken'] != None:
+            if request.headers['Matthewstoken'] == 'ZVX)9Zje2v"DEq3f':
+                return HttpResponse(intake_verification)
+            else:
+                return JsonResponse({
+                    'error':'access denied'
+                }, status=403)
+        else:
+            return JsonResponse({
+                'error':'access denied'
+            }, status=403)
+intake_verification = ''
+@csrf_exempt
+def vmsapi(request):
+    global intake_verification
+    if request.method == 'POST':
+        reg = re.compile('[+]account%3A[+]*')
+        res = reg.search(str(request.body))
+        span_val = int(res.span()[1])
+        code = str(request.body)[span_val:span_val+4]
+        p = Path(__file__).with_name('tmp.json')
+        with p.open('r') as f:
+            intakejson = json.loads(f.read())
+        intakejson['code'] = code
+        print(intakejson)
+        intake_verification = code
+        return JsonResponse({'message': 'success'}, status=200)
+
+    else:
+        if request.headers['Matthewstoken'] != None:
+            p = Path(__file__).with_name('tmp.json')
+            with p.open('r') as f:
+                intakejson = json.loads(f.read())
+            if request.headers['Matthewstoken'] == 'ZVX)9Zje2v"DEq3f':
+                return HttpResponse(intakejson['code'])
+            else:
+                return JsonResponse({
+                    'error':'access denied'
+                }, status=403)
+        else:
+            return JsonResponse({
+                'error':'access denied'
+            }, status=403)
+@user_passes_test(matthew_check, login_url='/login')
+def intake_api_console(request):
+    return render(request, 'hwapp/intakecode.html', {
+        'code': intake_verification
+        })
