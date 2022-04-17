@@ -289,6 +289,8 @@ def edit_hw(request, hw_id):
             hw_title = form['hw_title']
             due_date = form['due_date']
             priority = form['priority']
+            completed = form['completed']
+            overdue = form['overdue']
             if form['notes'] != None:
                 notes = form['notes']
             else:
@@ -300,6 +302,8 @@ def edit_hw(request, hw_id):
                 updated.hw_class = hw_class
                 updated.hw_title = hw_title
                 updated.due_date = due_date
+                updated.completed = completed
+                updated.overdue = overdue
                 if priority:
                     updated.priority = priority
                 if notes:
@@ -349,39 +353,21 @@ def edit_hw(request, hw_id):
                 'status': '400'
             }, status=400)
     else:
+        #render json/ajax form
         try:
-            #render json/ajax form
-            try:
-                hw = Homework.objects.get(hw_user=request.user, id=hw_id)
-            except:
-                return render(request, 'hwapp/error.html', {
-                    'error': 'Access Denied'
-                })
-            return render(request, 'hwapp/edit_hw.html', {
-                'hw_id': hw_id,
-                'classes': Class.objects.filter(class_user=request.user),
-                'hw': hw,
-                'website_root': os.environ.get("website_root"),
-                'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M")
-
-            }) 
+            hw = Homework.objects.get(hw_user=request.user, id=hw_id)
         except:
-                        #render json/ajax form
-            try:
-                hw = Homework.objects.get(hw_user=request.user, id=hw_id)
-            except:
-                return render(request, 'hwapp/error.html', {
-                    'error': 'Access Denied'
-                })
-            return render(request, 'hwapp/edit_hw.html', {
-                'hw_id': hw_id,
-                'classes': Class.objects.filter(class_user=request.user),
-                'hw': hw,
-                'website_root': os.environ.get("website_root"),
-                'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M")
+            return render(request, 'hwapp/error.html', {
+                'error': 'Access Denied'
+            })
 
-            }) 
-            return HttpResponseRedirect(reverse('index'))  
+        return render(request, 'hwapp/edit_hw.html', {
+            'hw_id': hw_id,
+            'classes': Class.objects.filter(class_user=request.user),
+            'hw': hw,
+            'website_root': os.environ.get("website_root"),
+            'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M")
+        }) 
 
 @login_required(login_url='/login')
 def addclass(request):

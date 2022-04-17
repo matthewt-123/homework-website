@@ -1,0 +1,19 @@
+{% extends "hwapp/layout.html" %}
+{% load static %}
+{% block title %}Notion Auth{% endblock %}
+{% block body %}
+<div id="btn_container" style='text-align:center;margin:auto' >
+
+<h1>Integrate with Notion</h1>
+<h3>WARNING: This will update your database schema</h3>
+<h6>
+    Import all your feeds and data into Notion for use with their software. Read more <a href="https://notion.so">here</a>. Please only import <b>ONE</b> page for use with this site
+</h6><br>
+
+<a class="btn btn-primary" href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=https%3A%2F%2Fmatthewtsai.games%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">Integrate with Notion</a><br>
+<br>
+<a class="btn btn-danger" href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=http%3A%2F%2Flocalhost:8000%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">Integrate with Notion(test site only)</a>
+
+
+
+{% endblock %}

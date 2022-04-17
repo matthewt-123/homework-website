@@ -25,3 +25,10 @@ class CalendarEvent(models.Model):
 class IcsHashVal(models.Model):
     hash_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hash_user')
     hash_val = models.CharField(max_length=128)
+class NotionData(models.Model):
+    notion_user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
+    access_token = models.CharField(max_length=512, default=None, blank=True, null=True)
+    bot_id = models.CharField(max_length=512, default=None, blank=True, null=True)
+    workspace_name = models.CharField(max_length=512, default=None, blank=True, null=True)
+    workspace_id =  models.CharField(max_length=512, default=None, blank=True, null=True)
+    db_id = models.TextField(default=None, blank=True, null=True)

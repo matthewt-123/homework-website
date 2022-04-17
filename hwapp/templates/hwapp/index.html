@@ -32,7 +32,6 @@ Homework List for {{user.username}}
                 hw_class: document.getElementById('hw_class').value,
                 hw_title: document.getElementById('hw_title').value,
                 due_date: `${document.getElementById('due_date').value}`,
-                priority: document.getElementById('priority').value,
             })
         })
         .then(response => response.json())
@@ -75,12 +74,9 @@ Homework List for {{user.username}}
                 new_due_date.innerHTML = result['formatted_date'];
                 new_due_date.href = `/edit_hw/${result['hw_id']}`;
 
-                var new_priority = document.getElementById(`new_priority_${row_id}`);
-                new_priority.innerHTML = document.getElementById('priority').value;
-                new_priority.href = `/edit_hw/${result['hw_id']}`;
                 
                 /*increment id values*/
-                table.innerHTML += `<tr id="new_hw_${row_id + 1}" class='index'> <td></td> <td><a id='new_hw_title_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_hw_class_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_due_date_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_priority_${row_id + 1}' class='new_hw_link'></a></td> <td id="checkbox_${row_id + 1}" style='display:none;'> <form action='/' method="POST" class="hwform" > {% csrf_token %} <input type='checkbox' id="hwcheckbox_new_${row_id + 1}" class='completed' name='hw_completion' value=''> <input type='hidden' class='completed' name='hw_id'> </form></td> </tr>`;
+                table.innerHTML += `<tr id="new_hw_${row_id + 1}" class='index'> <td></td> <td><a id='new_hw_title_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_hw_class_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_due_date_${row_id + 1}' class='new_hw_link'></a></td> <td id="checkbox_${row_id + 1}" style='display:none;'> <form action='/' method="POST" class="hwform" > {% csrf_token %} <input type='checkbox' id="hwcheckbox_new_${row_id + 1}" class='completed' name='hw_completion' value=''> <input type='hidden' class='completed' name='hw_id'> </form></td> </tr>`;
 
                 /* create completioncall() onClick  for hw_id  */
                 document.getElementById(`hwcheckbox_new_${row_id}`).value = false;
@@ -102,7 +98,6 @@ Homework List for {{user.username}}
                 document.getElementById('hw_class').value = '';
                 document.getElementById('hw_title').value = '';
                 document.getElementById('due_date').value = '';
-                document.getElementById('priority').value = '';
 
                 /* autofocus on new row*/
                 document.getElementById('hw_title').focus();
@@ -224,9 +219,7 @@ Homework List for {{user.username}}
             <td class='index date_field'>
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>
             </td>
-            <td class='index'>
-                <a href = '{% url "edit_hw" hw.id %}'>{{hw.priority}}</a>
-            </td>
+
             {% else %}
         <tr class='index' id="hwentry_{{hw.id}}">
             <td class='index'></td>

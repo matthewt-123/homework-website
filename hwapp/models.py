@@ -22,13 +22,15 @@ class Class(models.Model):
         return f"{self.class_name}"
 class Homework(models.Model):
     hw_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hw_user')
-    hw_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='hw_class1')
-    hw_title = models.CharField(max_length=256)
-    due_date = models.DateTimeField()
+    hw_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='hw_class1', blank=True, null=True)
+    hw_title = models.CharField(blank=True, max_length=256, null=True)
+    due_date = models.DateTimeField(blank=True, null=True)
     priority = models.IntegerField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    completed = models.BooleanField(default=True)
-    overdue = models.BooleanField(default=False)
+    completed = models.BooleanField(blank=True, default=True, null=True)
+    overdue = models.BooleanField(blank=True, default=False, null=True)
+    notion_migrated = models.BooleanField(blank=True, default=False, null=True)
+    notion_id = models.CharField(blank=True, default=False, null=True, max_length=256)
     def __str__(self):
         return f"{self.hw_title}"
 class Carrier(models.Model):

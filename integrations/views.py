@@ -10,15 +10,16 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 import os
 from django.views.decorators.csrf import csrf_exempt
 import re
-from .models import CalendarEvent, IcsHashVal
+from .models import CalendarEvent, IcsHashVal, NotionData
 from dotenv import load_dotenv
 import datetime
 import json
 import requests
 from ics import Calendar, Event
 from pathlib import Path
+import base64
 
-
+notion_bearer_token = 'NTkyMDM3YmYtNjE2Ni00YTliLWJmNjctNjlkODc5NTA3NjNkOnNlY3JldF9IWXA0RFdCemNLckUxTGNlMkRIdjhpTG5LczJyZkVsMTBOcXg3SWV6eGc1'
 
 #import hwapp models
 import sys
@@ -391,3 +392,191 @@ def intake_api_console(request):
     return render(request, 'hwapp/intakecode.html', {
         'code': intake_verification
         })
+@login_required(login_url='/login')
+def notion_auth(request):
+    if request.method == 'POST':
+        pass
+    else:
+        return render(request, 'hwapp/notion_auth.html')
+
+@login_required(login_url='/login')
+def notion_callback(request):
+    if request.method == "GET":
+        if request.GET.get('code'):
+            code = request.GET.get('code')
+        elif request.GET.get('error'):
+            return render(request, 'hwapp/error.html', {
+                'error': request.GET.get('error')
+            })
+        else:
+            return JsonResponse({"status": "400", "error": "no callback code"}, status=400)
+        url = 'https://api.notion.com/v1/oauth/token'
+        body = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": f"http://localhost:8000/integrations/notion_callback"
+            #"redirect_uri": "https://matthewtsai.games/integrations/notion_callback"
+        }
+        b64 = notion_bearer_token
+        response = requests.post(url, data=body, headers={"Authorization": f"Basic {b64}"})
+        data1 = json.loads(response.text)
+        print(data1)
+        try:
+            n_data = NotionData.objects.get(notion_user=request.user)
+            n_data.notion_user = request.user
+            n_data.access_token = data1['access_token']
+            n_data.bot_id = data1['bot_id']
+            n_data.workspace_name = data1['workspace_name']
+            n_data.workspace_id = data1['workspace_id']
+            n_data.save()
+        except:
+            n_data = NotionData.objects.create(notion_user = request.user, access_token = data1['access_token'], bot_id = data1['bot_id'],workspace_name = data1['workspace_name'], workspace_id = data1['workspace_id'])
+
+        #get DB id 
+        try:
+            url = 'https://api.notion.com/v1/databases'
+            response = requests.get(url, headers={"Authorization": f"Bearer {n_data.access_token}", "Notion-Version": "2021-08-16"})
+            n_data.db_id = json.loads(response.text)['results'][0]['id']
+            n_data.save()
+        except:
+            return render(request, 'hwapp/error.html', {
+                'error': "Too many pages selected. Please return to the <a href=/integrations/notion_auth>previous page</a> and select only <b>ONE</b> page"
+            })
+
+        #get DB properties:
+        url = f'https://api.notion.com/v1/databases/{n_data.db_id}'
+        response = requests.get(url, headers={"Authorization": f"Bearer {n_data.access_token}", "Notion-Version": "2022-02-22"})
+        properties = json.loads(response.text)['properties']
+        for property in properties:
+            properties1 = '{'
+            print(property)
+            if not any(x in str(property).upper() for x in ['DATE', 'DUE']):
+                properties1 += '{"Date": {"date"}}'
+            if not any(x in str(property).upper() for x in ['NAME']):
+                properties1 += '({"Name": ["title"]})'
+            if "CLASS" in str(property).upper():
+                c = True
+                to_omit = []
+                for i in properties[str(property)]['select']['options']:
+                    hwapp_list = Class.objects.filter(class_user = request.user)
+                    for class1 in hwapp_list:
+                        #do not update existing classes in Notion, instead map them to existing data in hwapp
+                        if class1.class_name.upper() in i['name'].upper() or i['name'].upper() in class1.class_name.upper():
+                            to_omit.append([class1, properties[str(property)]['id']])
+                    to_add = []
+                    for class1 in hwapp_list:
+                        #add non-mapped classes to separate list
+                        if str(class1.class_name) not in str(to_omit):
+                            to_add.append(class1)
+                    j = ''
+                    for add1 in to_add:
+                        j += "{\'name\': " + f"\'{add1}\'" + "}"
+                try:
+                    to_omit = []
+                    for i in properties[str(property)]['select']['options']:
+                        hwapp_list = Class.objects.filter(class_user = request.user)
+                        for class1 in hwapp_list:
+                            #do not update existing classes in Notion, instead map them to existing data in hwapp
+                            if class1.class_name.upper() in i['name'].upper() or i['name'].upper() in class1.class_name.upper():
+                                to_omit.append([class1, properties[str(property)]['id']])
+                        to_add = []
+                        for class1 in hwapp_list:
+                            #add non-mapped classes to separate list
+                            if str(class1.class_name) not in str(to_omit):
+                                to_add.append(class1)
+                        j = ''
+                        for add1 in to_add:
+                            j += "{\'name\': " + f"\'{add1.class_name}\'" + "}"
+                        print(j)
+                                                    
+                    print(to_add)
+                except:
+                    c = False
+                properties1 += "{'" + json.loads(response.text)['properties'][str(property)]['id'] + "': {\"select\": {\"options\": ['" + f'{j}' + "']}}}"
+                properties1 += '}'
+                print(properties1)
+
+                body = {
+                    'properties': json.dumps(properties1)
+                }
+                headers = {
+                    "Authorization": f"Bearer {n_data.access_token}",
+                    "Notion-Version": "2022-02-22"
+                }
+                response = requests.patch(url, data=body, headers=headers)
+        #update the DB as necessary
+        body = {
+            'properties': json.dumps(properties1)
+        }
+        headers = {
+            "Authorization": f"Bearer {n_data.access_token}",
+            "Notion-Version": "2022-02-22"
+        }
+        response = requests.patch(url, data=body, headers=headers)
+        print(response)
+        print(response.text)
+        print(body)
+        return render(request, 'hwapp/success.html', {
+            'message': 'Notion feed integrated successfully'
+        })
+    else:
+        return JsonResponse({"error": "invalid request"}, status=400)
+@user_passes_test(matthew_check)
+def admin_notion(request):
+    token = 'secret_MhEfmsvCF6ru7RybJVUj7johlJ4buNYDCHc4YSXRf08'
+    page_id = 'f6b38a903c284453a6c49d00de237064'
+    url = 'https://api.notion.com/v1/pages'
+    to_post = Homework.objects.filter(hw_user=request.user, completed=False, notion_migrated=False)
+    m = []
+    for hw in to_post:
+        body = {
+            "parent": {
+                "database_id": f"{page_id}"
+            },
+            "properties": {
+                "Name": {
+                    "title": [{"type":"text","text":{"content":f"{hw.hw_title}","link":None},"plain_text":f"{hw.hw_title}","href":None}]
+                    
+                },
+                "Status": {
+                    "select": {
+                        "name":"Not started"
+                    }
+                },
+                "Class": {
+                    "type": f"select",
+                    "select": {
+                        "name": f"{hw.hw_class.class_name}"
+                    }
+                },
+                "Due": {
+                    "type": "date",
+                    "date": {
+                        "start": f"{hw.due_date}",
+                        "end": None,
+                        "time_zone": "US/Pacific"
+                    }
+                }
+                
+            }
+        }
+        response = requests.post(url, data=json.dumps(body), headers={'Authorization': f'Bearer {token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
+        hw.notion_migrated = True
+        hw.notion_id = json.loads(response.text)['id']
+        hw.save()
+        m.append(hw.hw_title)
+    migrated = Homework.objects.filter(hw_user=request.user, completed=True, notion_migrated=True)
+    for m in migrated:
+        url = f'https://api.notion.com/v1/pages/{m.notion_id}'
+        data = {
+        "properties": {
+            "Status": {
+                "select": {
+                    "name":"Completed"
+                }
+            },    
+        }}
+        response = requests.patch(url, data=json.dumps(data), headers={'Authorization': f'Bearer {token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
+    return render(request, 'hwapp/success.html', {
+        'message': f'migration completed successfully. Added: <br> {m}'
+    })
