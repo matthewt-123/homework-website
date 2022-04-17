@@ -1,6 +1,7 @@
 appdirs==1.4.4
 arrow==0.14.7
 backcall==0.2.0
+base64
 cffi==1.14.5
 chardet==3.0.4
 currency-symbols==2.0.0

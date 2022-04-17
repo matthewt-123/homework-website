@@ -17,7 +17,9 @@
                 hw_title: document.getElementById('hw_title').value,
                 due_date: `${document.getElementById('due_date').value}`,
                 priority: document.getElementById('priority').value,
-                notes: document.getElementById('notes').value
+                notes: document.getElementById('notes').value,
+                overdue: document.getElementById('overdue').checked,
+                completed: document.getElementById('completed').checked
             })
         })
         .then(response => response.json())
@@ -68,7 +70,35 @@
 <tr><th><label for="id_hw_title">Hw title:</label></th><td><input type="text" name="hw_title"maxlength="256" required="" id="hw_title" value="{{hw.hw_title}}"></td></tr>
 <tr><th><label for="id_due_date">Due date:</label></th><td><input type="datetime-local" name="due_date" required="" id="due_date" value ="{{due_date}}"></td></tr>
 <tr><th><label for="id_priority">Priority:</label></th><td><input type="number" name="priority" id="priority" value="{{hw.priority}}"></td></tr>
-<tr><th><label for="id_notes">Notes:</label></th><td><textarea name="notes" cols="40" rows="10" id="notes" value="{{hw.notes}}">{{hw.notes}}</textarea></td></tr> 
+<tr><th><label for="id_notes">Notes:</label></th><td><textarea name="notes" cols="40" rows="10" id="notes" value="{{hw.notes}}">{{hw.notes}}</textarea></td></tr> \
+{% if hw.completed %}
+<tr><th><label for="id_completed">Completed:</label></th><td>    <div class="custom-control custom-switch">
+    <input type="checkbox" class="custom-control-input" id="completed" checked>
+    <label class="custom-control-label" for="completed"></label>
+  </div></tr> 
+{% else %}
+<tr><th><label for="id_completed">Completed:</label></th><td>    <div class="custom-control custom-switch">
+    <input type="checkbox" class="custom-control-input" id="completed">
+    <label class="custom-control-label" for="completed"></label>
+  </div></td></tr> 
+
+{% endif %}
+
+{% if hw.overdue %}
+
+<tr><th><label for="id_overdue">Overdue:</label></th><td>    <div class="custom-control custom-switch">
+    <input type="checkbox" class="custom-control-input" id="overdue" checked>
+    <label class="custom-control-label" for="overdue"></label>
+  </div></td></tr> 
+{% else %}
+<tr><th><label for="id_overdue">Overdue:</label></th>
+<td>
+    <div class="custom-control custom-switch">
+        <input type="checkbox" class="custom-control-input" id="overdue">
+        <label class="custom-control-label" for="overdue"></label>
+      </div>
+</td></tr> 
+{% endif %}
     </tbody></table>
     <button onclick='hw_json()' style="margin-left: 35%" type="submit" class="btn btn-primary">Submit</button>
 
