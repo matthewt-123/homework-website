@@ -53,7 +53,7 @@ def send_email(interval):
                 f"{os.environ.get('API_BASE_URL')}/messages",
                 auth=("api", f"{os.environ.get('mailgun_api_key')}"),
                 data={
-                    "from": "Homework App <noreply@mail.matthewtsai.games>",
+                    "from": "Homework App <noreply@matthewtsai.me>",
                     "to": [recipient.preferences_user.email],
                     "subject": f"{recipient.preferences_user.username}'s Homework Email for {todays}",
                     "html": html_content 
@@ -88,7 +88,7 @@ def text_refresh():
                 f"{os.environ.get('API_BASE_URL')}/messages",
                 auth=("api", f"{os.environ.get('mailgun_api_key')}"),
                 data={
-                    "from": "Homework App <noreply@mail.matthewtsai.games>",
+                    "from": "Homework App <noreply@matthewtsai.me>",
                     "to": [f"{phone_number}{email_base}"],
                     "subject": f"{text_recipient.preferences_user.username}'s Homework Email for {todays}",
                     "html": listed 
@@ -108,13 +108,24 @@ def pw_reset_email(user, hash_val, expires, email):
         f"{os.environ.get('API_BASE_URL')}/messages",
             auth=("api", f"{os.environ.get('mailgun_api_key')}"),
             data={
-                "from": "Homework App <noreply@mail.matthewtsai.games>",
+                "from": "Homework App <noreply@matthewtsai.me>",
                 "to": [email],
                 "subject": f"{user}'s Password Reset Email",
                 "html": listed 
             }      
     )
-
+def email_user(emails, content, subject):
+    listed = content.replace('$$website_root', os.environ.get("website_root"))
+    send = requests.post(
+        f"{os.environ.get('API_BASE_URL')}/messages",
+            auth=("api", f"{os.environ.get('mailgun_api_key')}"),
+            data={
+                "from": "Homework App <noreply@matthewtsai.me>",
+                "to": emails,
+                "subject": f"{subject}",
+                "html": listed 
+            }      
+    )
 def timezone_helper(u_timezone, u_datetime):
     local_time = pytz.timezone(str(u_timezone))    
     local_datetime = local_time.localize(u_datetime, is_dst=None)
