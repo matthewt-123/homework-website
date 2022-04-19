@@ -24,14 +24,13 @@ urlpatterns = [
     path("refresh/<str:occurence>/<str:hash_value>", views.refresh, name='refresh'),
     path("getclasstime/<int:class_id>", views.getclasstime, name='getclasstime'),
     path("reset_password", views.reset_password, name='reset_password'),
-    path('matthew/schoology_grades', views.matthew_schoology_grades, name='matthew_schoology_grades'),
     path('admin_view', views.admin_console, name='admin_view'),
     path('welcome', views.new_user_view, name='new_user_view'),
     path('homework/<int:hw_id>', views.homework_entry, name='homework_entry'),
     path('500error', views.fivehundrederror, name='500error'),
     path('config/email_templates', views.email_template_editor, name='email_template_editor'),
     path('config', views.experience, name='experience_manager'),
-    path('adminexport', views.adminexport, name='adminexport'),
+    path('communications', views.email_all, name='communications'),
 
 
 ]

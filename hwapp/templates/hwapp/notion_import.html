@@ -1,0 +1,39 @@
+{% extends "hwapp/layout.html" %}
+{% load static %}
+{% block title %}Notion Auth{% endblock %}
+{% block body %}
+<div id="btn_container" style='text-align:center;margin:auto' >
+
+<h1>Integrate with Notion</h1>
+<h3>WARNING: This will update your database schema. Please follow these exact steps</h3>
+<h6>
+    Import all your feeds and data into Notion for use with their software. Read more <a href="https://notion.so">here</a>. Please only import <b>ONE</b> page for use with this site
+</h6><br>
+<table>
+    <tr>
+            <li>
+                Click <a class = 'btn btn-primary' href="https://www.notion.so/matthewtsai/087be0651e8b40a7ac9144d9a9d9db33?v=a2fd6322156c49009f2523e1f131bba9&duplicate=true">here</a> to duplicate the template page
+            </li>
+    </tr>
+    <br>
+    <tr>
+        <li>
+            Select the page you just duplicated(titled Homework App Template) from the following screen: 
+
+        </li>
+    </tr>
+    <br>
+    <tr>
+    <a class="btn btn-primary" href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=https%3A%2F%2Fmatthewtsai.games%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">Integrate with Notion</a><br>
+
+    </tr>
+
+    <br>
+    
+</table>
+</div>
+
+
+
+
+{% endblock %}

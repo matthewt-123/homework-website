@@ -17,7 +17,7 @@ import json
 from datetime import datetime, time, timedelta
 from django.utils import timezone
 from django.core.paginator import Paginator
-from .email_helper import pw_reset_email, send_email, overdue_check, timezone_helper, text_refresh
+from .email_helper import pw_reset_email, send_email, overdue_check, timezone_helper, text_refresh, email_user
 import arrow
 from . import helpers
 
@@ -25,7 +25,8 @@ from . import helpers
 import sys
 sys.path.append("..")
 from integrations.models import CalendarEvent, AdminOnly, IcsHashVal
-from integrations.views import refresh_ics
+from integrations.views import notion_auth, refresh_ics
+from integrations.helper import notion_push
 
 load_dotenv()
 def user_check(user):
@@ -184,6 +185,7 @@ def addhw(request):
                 #enter new event into database:
                 new_calevent = CalendarEvent(calendar_user = request.user, homework_event=new_hw, ics=e)
                 new_calevent.save()
+            notion_push(hw=new_hw, user=request.user)
             return JsonResponse({
                 "message": "Homework added successfully!",
                 "status": 201,
@@ -649,35 +651,7 @@ def reset_password(request):
 
                 except:
                     return HttpResponseRedirect(reverse('index'))
-@user_passes_test(matthew_check, login_url='/login')
-def matthew_schoology_grades(request):
-    url = 'https://fuhsd.schoology.com/grades/grades'
-    headers = {
-        'authority': 'fuhsd.schoology.com',
-'method':'GET',
-'path':'/grades/grades',
-'scheme':'https',
-'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-'accept-encoding':'gzip, deflate, br',
-'accept-language':'en-US,en;q=0.9',
-'cache-control':'no-cache',
-'cookie': AdminOnly.objects.get(admin_user=request.user).admin_cookie,
-'dnt':'1',
-'pragma':'no-cache',
-'referer':'https://fuhsd.schoology.com/home',
-'sec-ch-ua':'"Not;A Brand";v="99", "Google Chrome";v="91", "Chromium";v="91"',
-'sec-ch-ua-mobile':'?0',
-'sec-fetch-dest':'document',
-'sec-fetch-mode':'navigate',
-'sec-fetch-site':'same-origin',
-'sec-fetch-user':'?1',
-'upgrade-insecure-requests': '1',
-'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
-    }
-    grades = requests.get(url, headers=headers)
-    return render(request, 'hwapp/matthew-schoology.html', {
-        'html': grades.text,
-    })
+
 @user_passes_test(matthew_check, login_url='/login')
 def admin_console(request):
     if request.method == "POST":
@@ -754,8 +728,17 @@ def email_template_editor(request):
 def experience(request):
     return render(request, 'hwapp/experience_manager.html')
 
-@user_passes_test(matthew_check, login_url='/login')
-def adminexport(request):
-    for Ics_id in IcsIds:
-        IcsId.objects.create(icsID_user = request.user, icsID = Ics_id)
-    pass
+@login_required(login_url='/login')
+def email_all(request):
+    if request.method == 'POST':
+        content = request.POST['template_body']
+        subject = request.POST['subject']
+        email_list = []
+        for user in User.objects.all():
+            email_list.append(user.email)
+        email_user(emails = email_list, subject=subject, content=content)
+        return render(request, 'hwapp/success.html', {
+            'message': 'email sent successfully'
+        })
+    else:
+        return render(request, 'hwapp/email_all.html')

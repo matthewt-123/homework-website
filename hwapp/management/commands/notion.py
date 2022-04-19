@@ -1,6 +1,6 @@
 import requests
 import json
-from models import Homework, User
+from hwapp.models import Homework, User
 from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
