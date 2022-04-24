@@ -31,6 +31,7 @@ class Homework(models.Model):
     overdue = models.BooleanField(blank=True, default=False, null=True)
     notion_migrated = models.BooleanField(blank=True, default=False, null=True)
     notion_id = models.CharField(blank=True, default=False, null=True, max_length=256)
+    ics_id = models.CharField(blank=True, default=False, null=True, max_length=256)
     def __str__(self):
         return f"{self.hw_title}"
 class Carrier(models.Model):

@@ -1,14 +1,13 @@
 appdirs==1.4.4
 arrow==0.14.7
 backcall==0.2.0
-base64
 cffi==1.14.5
 chardet==3.0.4
 currency-symbols==2.0.0
 decorator==4.4.2
 distlib==0.3.1
 dj-database-url==0.5.0
-Django==3.2.8
+Django==3.2.13
 django-cors-headers==3.7.0
 django-ical==1.8.0
 filelock==3.0.12
@@ -22,6 +21,7 @@ Jinja2==2.11.2
 lazy-object-proxy==1.5.2
 markdown2==2.4.0
 MarkupSafe==1.1.1
+notion
 pipenv==2020.11.15
 pycparser==2.20
 pyserial==3.5

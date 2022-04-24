@@ -66,6 +66,9 @@
                             <a href="{% url 'notion_auth' %}" style="text-decoration: none;"><div class="nav_item">
                                 Notion
                             </div></a>
+                            <a href="{% url 'google_info' %}" style="text-decoration: none;"><div class="nav_item">
+                                Google
+                            </div></a>
                             <a href="{% url 'other_init' %}" style="text-decoration: none;"><div class="nav_item">
                                 Other
                             </div></a>
@@ -135,7 +138,43 @@
 
                             </div>
                             <a href="/calendar">Calendar</a>
-                            <a href="/integrations">Integrations</a>
+                            <a href="#" onclick = 'show_item("integrations_block")'>Integrations &#9660;</a>
+                            <div id='integrations_block' style='display:none;'>
+                                <ul style="list-style-type:none;">
+                                    <li>
+                                        <a style='font-size:20px' href='{% url "integrations_index" %}'>
+                                            Information
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a style='font-size:20px' href='{% url "schoology_init" %}'>
+                                            Schoology
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a style='font-size:20px' href='{% url "canvas_init" %}'>
+                                            Canvas
+                                        </a>
+                                    </li>  
+                                    <li>
+                                        <a style='font-size:20px' href='{% url "notion_auth" %}'>
+                                            Notion
+                                        </a>
+                                    </li>                                  
+                                    <li>
+                                        <a style='font-size:20px' href='{% url "google_info" %}'>
+                                            Google
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a style='font-size:20px' href='{% url "other_init" %}'>
+                                            Other
+                                        </a>
+                                    </li>
+
+                                </ul>
+
+                            </div>
                             <a href="#" onclick='show_item("settings_block")'>Settings &#9660;</a>
                             <div id='settings_block' style='display:none;'>
                                 <ul style="list-style-type:none;">

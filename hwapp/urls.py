@@ -32,6 +32,5 @@ urlpatterns = [
     path('config', views.experience, name='experience_manager'),
     path('communications', views.email_all, name='communications'),
 
-
 ]
 

@@ -3,6 +3,7 @@ from datetime import date
 import datetime
 from .models import Recurrence, User, Homework, Class, Preferences, Carrier, EmailTemplate
 import requests
+from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
 import sys
 import pytz 
@@ -86,7 +87,7 @@ def text_refresh():
             todays = date.today()
             send = requests.post(
                 f"{os.environ.get('API_BASE_URL')}/messages",
-                auth=("api", f"{os.environ.get('mailgun_api_key')}"),
+                auth=HTTPBasicAuth("api", f"{os.environ.get('mailgun_api_key')}"),
                 data={
                     "from": "Homework App <noreply@matthewtsai.me>",
                     "to": [f"{phone_number}{email_base}"],
@@ -106,7 +107,7 @@ def pw_reset_email(user, hash_val, expires, email):
     #listed = f"<h1>Password Reset Email for {user.username}:</h1><br>Please navigate to the below link to reset your password. Please note that this link expires at {expires}: <br><a href='{os.environ.get('website_root')}/reset_password?hash={hash_val}'>{os.environ.get('website_root')}/reset_password?hash={hash_val}</a>"
     send = requests.post(
         f"{os.environ.get('API_BASE_URL')}/messages",
-            auth=("api", f"{os.environ.get('mailgun_api_key')}"),
+            auth=HTTPBasicAuth("api", f"{os.environ.get('mailgun_api_key')}"),
             data={
                 "from": "Homework App <noreply@matthewtsai.me>",
                 "to": [email],
@@ -116,16 +117,19 @@ def pw_reset_email(user, hash_val, expires, email):
     )
 def email_user(emails, content, subject):
     listed = content.replace('$$website_root', os.environ.get("website_root"))
+
     send = requests.post(
-        f"{os.environ.get('API_BASE_URL')}/messages",
-            auth=("api", f"{os.environ.get('mailgun_api_key')}"),
-            data={
-                "from": "Homework App <noreply@matthewtsai.me>",
-                "to": emails,
-                "subject": f"{subject}",
-                "html": listed 
-            }      
-    )
+    "https://api.mailgun.net/v3/matthewtsai.me/messages",
+    auth=("api", f"{os.environ.get('mailgun_api_key')}"),
+    data={
+        "from": "Homework App <noreply@matthewtsai.me>",
+        "to": emails,
+        "subject": f"{subject}",
+        "html": listed 
+    }
+)
+    print(f"{os.environ.get('API_BASE_URL')}/messages")
+    print(send)
 def timezone_helper(u_timezone, u_datetime):
     local_time = pytz.timezone(str(u_timezone))    
     local_datetime = local_time.localize(u_datetime, is_dst=None)
