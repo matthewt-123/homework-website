@@ -3,12 +3,16 @@ import json
 from hwapp.models import Homework, User
 from django.core.management.base import BaseCommand
 
+from integrations.models import NotionData
+
 class Command(BaseCommand):
     def handle(self, *args, **options):
         token = 'secret_MhEfmsvCF6ru7RybJVUj7johlJ4buNYDCHc4YSXRf08'
         page_id = 'f6b38a903c284453a6c49d00de237064'
         url = 'https://api.notion.com/v1/pages'
-        to_post = Homework.objects.filter(hw_user=User.objects.get(id=1), completed=False, notion_migrated=False)
+        users = NotionData.objects.all()
+        
+        to_post = Homework.objects.filter(hw_user=NotionData.objects.all(), completed=False, notion_migrated=False)
         m = []
         for hw in to_post:
             body = {

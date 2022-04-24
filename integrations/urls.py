@@ -11,6 +11,11 @@ urlpatterns = [
     path("other_init", views.other_init, name="other_init"),
     path("notion_auth", views.notion_auth, name='notion_auth'),
     path("notion_callback", views.notion_callback),
-    path('admin_notion', views.admin_notion, name='matthew_notion')
-    
+    path('admin_notion', views.admin_notion, name='matthew_notion'),
+    path('google', views.google_view, name='google_view'),
+    path('google_callback', views.google_callback, name='google_callback'),
+    path('google_info', views.google_info, name='google_info'),
+    #path('notion_to_ics', views.notion_toics, name='notion_toics'),
+    path('notionexport/<int:user_id>/<int:hash_value>', views.notion_toics, name='notionicsfeed')
+
 ]

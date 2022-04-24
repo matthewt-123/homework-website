@@ -11,3 +11,26 @@ Recurrences:
 Timezones:
     US/: Eastern, central, mountain, pacific
 Create superuser
+
+    try:
+        code = request.GET.get('code')
+        scopes = request.GET.get('scope')
+        if 'https://www.googleapis.com/auth/calendar.events.readonly' not in str(scopes):
+            return render(request, 'hwapp/error.html', {
+                'error': 'Please grant this app access to your Calendar'
+            })
+        try:
+            g_obj = GoogleData.objects.get(google_user=request.user)
+            g_obj.code = code
+            g_obj.save()
+        except:
+            g_obj = GoogleData.objects.create(google_user=request.user, code=code)
+            g_obj.save()
+        url = 'https://www.googleapis.com/calendar/v3/users/me/calendarList/'
+        response = requests.get(url, headers={'Authorization': f"Basic {code}"})
+        print(response)
+        print(response.text)
+    except:
+        return render(request, 'hwapp/error.html', {
+            'error': 'Invalid Request'
+        }) 

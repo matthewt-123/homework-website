@@ -24,9 +24,9 @@ from . import helpers
 #allow python to access Calendar data model
 import sys
 sys.path.append("..")
-from integrations.models import CalendarEvent, AdminOnly, IcsHashVal
+from integrations.models import CalendarEvent, IcsHashVal, NotionData
 from integrations.views import notion_auth, refresh_ics
-from integrations.helper import notion_push
+from integrations.helper import notion_push, notion_status_push
 
 load_dotenv()
 def user_check(user):
@@ -185,7 +185,11 @@ def addhw(request):
                 #enter new event into database:
                 new_calevent = CalendarEvent(calendar_user = request.user, homework_event=new_hw, ics=e)
                 new_calevent.save()
-            notion_push(hw=new_hw, user=request.user)
+            try:
+                notion_push(hw=new_hw, user=request.user)
+            except NotionData.DoesNotExist:
+                pass
+            
             return JsonResponse({
                 "message": "Homework added successfully!",
                 "status": 201,
@@ -194,6 +198,7 @@ def addhw(request):
                 'formatted_date': date
             }, status=201)
         except:
+            print(NotionData.objects.get(notion_user=request.user).exists())
             return JsonResponse({
                 "message": "An unknown error has occured. Please try again",
                 "status": 400,
@@ -489,13 +494,19 @@ def calendar(request):
     if request.method == "GET":
         #pull hash val if it exists or create a new one
         try:
-            hash_val = IcsHashVal.objects.get(hash_user=request.user)
+            hash_val = IcsHashVal.objects.get(hash_user=request.user, hash_type='default')
         except:
-            hash_val = IcsHashVal(hash_val = abs(hash(str(request.user.id))), hash_user=request.user)
+            hash_val = IcsHashVal(hash_val = abs(hash(str(request.user.id))), hash_user=request.user, hash_type='default')
             hash_val.save()
         ics_link = f"{os.environ.get('website_root')}/integrations/export/{request.user.id}/{hash_val.hash_val}"
+        try:
+            n = NotionData.objects.get(notion_user=request.user)
+            n_ics_link = f"{os.environ.get('website_root')}/integrations/notionexport/{request.user.id}/{hash_val.hash_val}"
+        except:
+            n_ics_link = False
         return render(request, 'hwapp/calendar.html', {
-            'ics_link': ics_link
+            'ics_link': ics_link,
+            'n_ics_link': n_ics_link
         })
     else:
         return JsonResponse({'error': 'method not supported'}, status=405)
@@ -506,12 +517,19 @@ def completion(request, hw_id):
     if request.method == "POST":
         data = json.loads(request.body)
         hw_id=data['hw_id']
+        hw_instance = Homework.objects.get(hw_user=request.user, id=hw_id)
         if str(data['completion']) == str(True):
+            try:
+                notion_status_push(hw=hw_instance, user=request.user, status='Not Started')
+            except NotionData.DoesNotExist:
+                pass
             update = False
         else:
+            try:
+                notion_status_push(hw=hw_instance, user=request.user, status='Completed')
+            except NotionData.DoesNotExist:
+                pass
             update = True
-
-        hw_instance = Homework.objects.get(hw_user=request.user, id=hw_id)
         hw_instance.completed=update
         hw_instance.save()
         return JsonResponse({
@@ -728,7 +746,7 @@ def email_template_editor(request):
 def experience(request):
     return render(request, 'hwapp/experience_manager.html')
 
-@login_required(login_url='/login')
+@user_passes_test(matthew_check, login_url='/login')
 def email_all(request):
     if request.method == 'POST':
         content = request.POST['template_body']

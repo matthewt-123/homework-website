@@ -10,15 +10,27 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 import os
 from django.views.decorators.csrf import csrf_exempt
 import re
-from .models import CalendarEvent, IcsHashVal, NotionData
+from .models import CalendarEvent, GoogleData, IcsHashVal, NotionData, GoogleCalendar
 from dotenv import load_dotenv
 import datetime
 import json
 import requests
 from ics import Calendar, Event
+from dateutil import tz
 from pathlib import Path
 import base64
-from .helper import full_notion_refresh
+from .helper import full_notion_refresh, notion_push
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+import google.oauth2.credentials
+import google_auth_oauthlib.flow
+from notion.client import NotionClient
+from notion.collection import CalendarView
+from notion.block import BasicBlock
+from notion.user import User as notion_user
 
 notion_bearer_token = 'NTkyMDM3YmYtNjE2Ni00YTliLWJmNjctNjlkODc5NTA3NjNkOnNlY3JldF9IWXA0RFdCemNLckUxTGNlMkRIdjhpTG5LczJyZkVsMTBOcXg3SWV6eGc1'
 
@@ -262,7 +274,7 @@ def export(request, user_id, hash_value):
         #setup hashing functions:
         #sys_val = abs(hash(str(user_id)))
         try:
-            sys_val = IcsHashVal.objects.get(hash_user=User.objects.get(id=user_id))
+            sys_val = IcsHashVal.objects.get(hash_user=request.user, hash_type='default')
         except:
             return render(request, 'hwapp/error.html', {
                 'error': 'User not Found'
@@ -274,7 +286,7 @@ def export(request, user_id, hash_value):
             return render(request, 'hwapp/error.html', {
                 'error': 'Access Denied'
             })
-        allhw =  CalendarEvent.objects.filter(calendar_user=User.objects.get(id=user_id))
+        allhw =  CalendarEvent.objects.filter(calendar_user=request.user)
         c=Calendar()
         for hw in allhw:
             c.events.add(hw.ics)
@@ -357,49 +369,16 @@ def vmsapi(request):
             return JsonResponse({
                 'error':'access denied'
             }, status=403)
-intake_verification = ''
-@csrf_exempt
-def vmsapi(request):
-    global intake_verification
-    if request.method == 'POST':
-        reg = re.compile('[+]account%3A[+]*')
-        res = reg.search(str(request.body))
-        span_val = int(res.span()[1])
-        code = str(request.body)[span_val:span_val+4]
-        p = Path(__file__).with_name('tmp.json')
-        with p.open('r') as f:
-            intakejson = json.loads(f.read())
-        intakejson['code'] = code
-        print(intakejson)
-        intake_verification = code
-        return JsonResponse({'message': 'success'}, status=200)
-
-    else:
-        if request.headers['Matthewstoken'] != None:
-            p = Path(__file__).with_name('tmp.json')
-            with p.open('r') as f:
-                intakejson = json.loads(f.read())
-            if request.headers['Matthewstoken'] == 'ZVX)9Zje2v"DEq3f':
-                return HttpResponse(intakejson['code'])
-            else:
-                return JsonResponse({
-                    'error':'access denied'
-                }, status=403)
-        else:
-            return JsonResponse({
-                'error':'access denied'
-            }, status=403)
-@user_passes_test(matthew_check, login_url='/login')
-def intake_api_console(request):
-    return render(request, 'hwapp/intakecode.html', {
-        'code': intake_verification
-        })
 @login_required(login_url='/login')
 def notion_auth(request):
-    if request.method == 'POST':
-        pass
-    else:
-        return render(request, 'hwapp/notion_import.html')
+    try:
+        n = NotionData.objects.get(notion_user=request.user)
+    except:
+        n = False
+    return render(request, 'hwapp/notion_import.html', {
+            'DEBUG': DEBUG,
+            'int_status': n
+    })
 
 @login_required(login_url='/login')
 def notion_callback(request):
@@ -505,4 +484,138 @@ def admin_notion(request):
     m = full_notion_refresh(request.user)
     return render(request, 'hwapp/success.html', {
         'message': f'migration completed successfully. Added: <br> {m}'
+    })
+@login_required(login_url='/login')
+def google_info(request): 
+    return render(request, 'hwapp/google_auth.html')
+@login_required(login_url='/login')
+def google_view(request):
+    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+    'client_secret.json',
+    scopes=['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/calendar.readonly', 'openid', 'email'])
+    if DEBUG:
+        flow.redirect_uri = 'http://localhost:8000/integrations/google_callback'
+    else:
+        flow.redirect_uri = 'https://matthewtsai.me/integrations/google_callback'
+    authorization_url, state = flow.authorization_url(
+    access_type='offline',
+    include_granted_scopes='true')
+    return HttpResponseRedirect(authorization_url)
+@login_required(login_url='/login')
+def google_callback(request):
+    if request.method == 'GET':
+        code = request.GET.get('code')
+        scopes = request.GET.get('scope')
+        if 'https://www.googleapis.com/auth/calendar.readonly' not in str(scopes):
+            return render(request, 'hwapp/error.html', {
+                'error': 'Please grant this app access to your Calendar'
+            })
+        print(scopes)
+        try:
+            g_obj = GoogleData.objects.get(google_user=request.user)
+            g_obj.code = code
+            g_obj.save()
+        except:
+            g_obj = GoogleData.objects.create(google_user=request.user, code=code)
+            g_obj.save()
+        url = 'https://oauth2.googleapis.com/token'
+        data = {
+            'code': code,
+            'client_id': '117121647082-9rt8p5sdt9smad8ln6onl7tk828ks2b8.apps.googleusercontent.com',
+            'client_secret': os.environ.get('google_client_secret'),
+            'grant_type': 'authorization_code',
+            'redirect_uri': 'http://localhost:8000/integrations/google_callback' 
+
+        }
+        response = requests.post(url, params=data, data=data)
+
+        i = json.loads(response.text)
+        g_obj.refresh_token = i['refresh_token']
+        g_obj.access_token = i['access_token']
+        g_obj.id_token = i['id_token']
+        g_obj.save()
+        print(response, response.text)
+        url = 'https://www.googleapis.com/calendar/v3/users/me/calendarList/'
+        response = requests.get(url, headers={'Authorization': f"Bearer {g_obj.access_token}"})
+        i = json.loads(response.text)
+        g_obj.sync_token = i['nextSyncToken']
+        return render(request, 'hwapp/gcal_list.html', {
+            'calendars': i['items']
+        })
+    elif request.method =='POST':
+        json1 = json.loads(request.body)
+        i = json1['calIDs']
+        j = json1['calname']
+        for num in range(len(i)):
+            try:
+                cal = GoogleCalendar.objects.get(google_user=request.user, calendar_id=i[num])
+                cal.save()
+            except:
+                cal = GoogleCalendar.objects.create(google_user=request.user, calendar_id=i[num], calendar_name=j[num])
+                cal.save()
+        all_objs = GoogleCalendar.objects.filter(google_user=request.user)
+        dt_str = '00:00'
+        dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
+        for obj in all_objs:
+            try:
+                sync1 = obj.sync_token
+            except:
+                sync1 = None
+            r_now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:00")
+            if sync1:
+                response = requests.get(f"https://www.googleapis.com/calendar/v3/calendars/{obj.calendar_id}/events?&sync_token={sync1}", headers={"Authorization": f"Bearer {GoogleData.objects.get(google_user=request.user).access_token}"})
+                if '410' in str(response):
+                    response = requests.get(f"https://www.googleapis.com/calendar/v3/calendars/{obj.calendar_id}/events?timeMin={r_now}Z", headers={"Authorization": f"Bearer {GoogleData.objects.get(google_user=request.user).access_token}"})
+            else:
+                response = requests.get(f"https://www.googleapis.com/calendar/v3/calendars/{obj.calendar_id}/events?timeMin={r_now}Z", headers={"Authorization": f"Bearer {GoogleData.objects.get(google_user=request.user).access_token}"})
+            
+            i = json.loads(response.text)
+            #create new class
+            try:
+                c = Class.objects.get(class_user=request.user, class_name=obj.calendar_name, period=None, time=dt_obj)
+            except:
+                c = Class.objects.create(class_user=request.user, class_name=obj.calendar_name, period=None, time=dt_obj)
+            c.save()
+            obj.sync_token = i['nextSyncToken']
+            try:
+                for l in i['items']:
+                    to_zone = tz.gettz('UTC')
+                    d = datetime.datetime.strptime(l['start']['dateTime'], "%Y-%m-%dT%H:%M:%SZ").astimezone(to_zone)
+                    try:
+                        h = Homework.objects.get(hw_user=request.user, ics_id=l['iCalUID'])
+                    except:
+                        h = Homework.objects.create(hw_user=request.user, hw_class=c, hw_title = l['summary'], due_date=d, completed=False, ics_id=l['iCalUID'])
+                    h.save()
+                    try:
+                        notion_push(hw=h, user=request.user)
+                    except:
+                        pass
+            except:
+                pass
+        return JsonResponse({"message": "Homework Imported Successfully", "status": '201'}, status=201)
+
+def notion_toics(request, user_id, hash_value):
+    try:
+        IcsHashVal.objects.get(hash_user=User.objects.get(id=user_id), hash_val=hash_value)
+    except:
+        return JsonResponse({"Error": "Not Authorized"}, status=403)
+    notion_obj = NotionData.objects.get(notion_user=request.user)
+    url = f'https://api.notion.com/v1/databases/{notion_obj.db_id}/query'
+    response = requests.post(url, headers={'Authorization': f'Bearer {notion_obj.access_token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
+    if '200' not in str(response):
+        return HttpResponseRedirect(reverse('notion_auth'))
+    i = json.loads(response.text)
+    print(response)
+    c = Calendar()
+    for event in i['results']:
+        e = Event()
+        try:
+            e.name = event['properties']['Name']['title'][0]['plain_text']
+            e.begin = event['properties']['Due']['date']['start']
+            e.description = f"Class: {event['properties']['Class']['select']['name']}; Status: {event['properties']['Status']['select']['name']}"
+            c.events.add(e)
+        except:
+            pass
+    return render(request, 'hwapp/export.html', {
+        'ics': c
     })

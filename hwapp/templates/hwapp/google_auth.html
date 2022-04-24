@@ -1,0 +1,29 @@
+{% extends "hwapp/layout.html" %}
+{% load static %}
+{% block title %}Google Calendar Auth{% endblock %}
+{% block body %}
+<div id="btn_container" style='text-align:center;margin:auto' >
+
+<h1>Integrate with Google Calendar</h1>
+<h6>
+    Import Google Calendar to this site and to Notion
+</h6><br>
+<table>
+    <tr>
+            <li>
+                Click <a class = 'btn btn-primary' href="{% url 'google_view' %}">here</a> to begin the process(Google Events -> Notion and HW App)
+            </li>
+    </tr>
+    <tr>
+        <li>
+            Click <a class = 'btn btn-primary' href="{% url 'google_view' %}">here</a> to export Notion(Google Events -> Notion and HW App)
+        </li>
+</tr>
+    
+</table>
+</div>
+
+
+
+
+{% endblock %}

@@ -17,12 +17,26 @@ from dotenv import load_dotenv
 import django.contrib.gis.db.backends.mysql
 import django.db.backends.mysql
 import django.db.backends.mysql.client
-
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+sentry_sdk.init(
+    dsn="https://86f8b9a59c8d4407a18c0574fea5781e@o1217115.ingest.sentry.io/6359235",
+    integrations=[DjangoIntegration()],
 
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0,
+
+    # If you wish to associate users to errors (assuming you are using
+    # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True,
+    release="homework-app@7.0",
+)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -37,7 +51,7 @@ ALLOWED_HOSTS_TYPES = {
     "dev":
     ['matthewshomeworkapp.herokuapp.com','localhost', '*.matthewtsai.games', 'matthewtsai.games', 'internal.matthewtsai.games', '10.2.0.4', '192.168.0.28'], 
      "prod":
-    ['*.matthewtsai.games', 'matthewtsai.games', 'internal.matthewtsai.games', '10.2.0.4'], 
+    ['*.matthewtsai.games', 'matthewtsai.games', 'matthewtsai.me', '10.2.0.4'], 
 }
 
 
