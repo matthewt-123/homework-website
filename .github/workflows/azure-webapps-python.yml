@@ -51,9 +51,7 @@ jobs:
         run: pip install -r requirements.txt
     
       - name: Collect Static
-        run: |
-          python manage.py collectstatic
-          echo y
+        run: yes yes | python manage.py collectstatic
         
       - name: Set security settings
         run: | 
