@@ -760,3 +760,7 @@ def email_all(request):
         })
     else:
         return render(request, 'hwapp/email_all.html')
+def privacy(request):
+    return render(request, 'hwapp/privacy.html')
+def terms(request):
+    return render(request, 'hwapp/terms.html')

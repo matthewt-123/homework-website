@@ -1,4 +1,5 @@
 {% load static %}
+{% load has_group %}
 
 <!DOCTYPE html>
 <meta name='viewport' content="width=device-width, initial-scale=1">
@@ -66,9 +67,12 @@
                             <a href="{% url 'notion_auth' %}" style="text-decoration: none;"><div class="nav_item">
                                 Notion
                             </div></a>
+                            {% if request.user|has_group:"Authorized Google Users" %} 
                             <a href="{% url 'google_info' %}" style="text-decoration: none;"><div class="nav_item">
                                 Google
                             </div></a>
+                            {% endif %}
+
                             <a href="{% url 'other_init' %}" style="text-decoration: none;"><div class="nav_item">
                                 Other
                             </div></a>
@@ -160,12 +164,14 @@
                                         <a style='font-size:20px' href='{% url "notion_auth" %}'>
                                             Notion
                                         </a>
-                                    </li>                                  
+                                    </li>          
+                            {% if request.user|has_group:"Authorized Google Users" %} 
                                     <li>
                                         <a style='font-size:20px' href='{% url "google_info" %}'>
                                             Google
                                         </a>
                                     </li>
+                            {% endif %}
                                     <li>
                                         <a style='font-size:20px' href='{% url "other_init" %}'>
                                             Other
@@ -247,8 +253,21 @@
         <hr>
         {% block body %}
         {% endblock %}
+        <div id="btn_container" class= 'footer' style='text-align:center;margin:auto' >
+        <hr>
+            <a href="{% url 'terms' %}">Terms and Conditions</a> | <a href="{% url 'privacy' %}">Privacy Policy</a> 
+        </div>
     </body>
     <footer>
+        <style>
+        .footer {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+          }
+        </style>
 
         <!--jQuery-->
         <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
@@ -308,5 +327,6 @@
                 }
             })
         </script>
+
     </footer>
 </html>

@@ -31,6 +31,8 @@ urlpatterns = [
     path('config/email_templates', views.email_template_editor, name='email_template_editor'),
     path('config', views.experience, name='experience_manager'),
     path('communications', views.email_all, name='communications'),
+    path('privacy', views.privacy, name='privacy'),
+    path('termsandconditions', views.terms, name='terms'),
 
 ]
 

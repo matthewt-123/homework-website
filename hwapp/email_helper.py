@@ -116,8 +116,8 @@ def pw_reset_email(user, hash_val, expires, email):
             }      
     )
 def email_user(emails, content, subject):
-    listed = content.replace('$$website_root', os.environ.get("website_root"))
-
+    #listed = content.replace('$$website_root', os.environ.get("website_root"))
+    listed = content
     send = requests.post(
     "https://api.mailgun.net/v3/matthewtsai.me/messages",
     auth=("api", f"{os.environ.get('mailgun_api_key')}"),

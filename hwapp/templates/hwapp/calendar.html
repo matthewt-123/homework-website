@@ -43,7 +43,8 @@ Calendar Export
 {% if n_ics_link %}
 
 <div id="btn_container" style='text-align:center;margin:auto' >
-    If your Notion workplace was created following <a href="{% url 'notion_auth' %}">these instructions</a>, you may use the Notion ICS export to export your Notion events to your personal calendar
+    If your Notion workplace was created following <a href="{% url 'notion_auth' %}">these instructions</a>, you may use the Notion ICS export to export your Notion events to your personal calendar<br>
+    If you are redirected back to the Notion Authorization page, your session has expired and you will need to re-sign into the website with the "Integrate With Notion" button
 </div>
 
 {% endif %}
