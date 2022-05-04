@@ -26,11 +26,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import google.oauth2.credentials
+import sentry_sdk
+
 import google_auth_oauthlib.flow
-from notion.client import NotionClient
-from notion.collection import CalendarView
-from notion.block import BasicBlock
-from notion.user import User as notion_user
+
 
 notion_bearer_token = 'NTkyMDM3YmYtNjE2Ni00YTliLWJmNjctNjlkODc5NTA3NjNkOnNlY3JldF9IWXA0RFdCemNLckUxTGNlMkRIdjhpTG5LczJyZkVsMTBOcXg3SWV6eGc1'
 
@@ -41,7 +40,8 @@ from hwapp.models import Homework, Class, Day, IcsId, Preferences, User
 from mywebsite.settings import DEBUG
 def matthew_check(user):
     return user.id == 1
-
+def google_check(user):
+    return user.groups.filter(name='Authorized Google Users') or user.is_superuser
 load_dotenv()
 # Create your views here.
 @login_required(login_url='/login')
@@ -345,30 +345,7 @@ def refresh_ics():
             else:
                 IcsId.objects.create(icsID_user=class1.class_user, icsID = ics_uid)
                 Homework.objects.create(hw_user=class1.class_user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
-intake_verification = ''
-@csrf_exempt
-def vmsapi(request):
-    global intake_verification
-    if request.method == 'POST':
-        reg = re.compile('[+]account%3A[+]*')
-        res = reg.search(str(request.body))
-        span_val = int(res.span()[1])
-        code = str(request.body)[span_val:span_val+4]
-        intake_verification = code
-        return JsonResponse({'message': 'success'}, status=200)
 
-    else:
-        if request.headers['Matthewstoken'] != None:
-            if request.headers['Matthewstoken'] == 'ZVX)9Zje2v"DEq3f':
-                return HttpResponse(intake_verification)
-            else:
-                return JsonResponse({
-                    'error':'access denied'
-                }, status=403)
-        else:
-            return JsonResponse({
-                'error':'access denied'
-            }, status=403)
 @login_required(login_url='/login')
 def notion_auth(request):
     try:
@@ -486,31 +463,41 @@ def admin_notion(request):
         'message': f'migration completed successfully. Added: <br> {m}'
     })
 @login_required(login_url='/login')
+@user_passes_test(google_check)
 def google_info(request): 
     return render(request, 'hwapp/google_auth.html')
 @login_required(login_url='/login')
+@user_passes_test(google_check)
 def google_view(request):
-    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-    'client_secret.json',
-    scopes=['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/calendar.readonly', 'openid', 'email'])
     if DEBUG:
+        flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        'client_secret.json',
+        scopes=['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/calendar.readonly', 'openid', 'email'])
         flow.redirect_uri = 'http://localhost:8000/integrations/google_callback'
+
     else:
+        flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+        '/home/TestVM/mywebsite-dev/client_secret.json',
+        scopes=['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/calendar.readonly', 'openid', 'email'])
         flow.redirect_uri = 'https://matthewtsai.me/integrations/google_callback'
     authorization_url, state = flow.authorization_url(
     access_type='offline',
     include_granted_scopes='true')
     return HttpResponseRedirect(authorization_url)
 @login_required(login_url='/login')
+@user_passes_test(google_check)
 def google_callback(request):
     if request.method == 'GET':
+        if request.user.groups.filter(name='Authorized Google Users'):
+            print(True)
+        else:
+            pass
         code = request.GET.get('code')
         scopes = request.GET.get('scope')
         if 'https://www.googleapis.com/auth/calendar.readonly' not in str(scopes):
             return render(request, 'hwapp/error.html', {
                 'error': 'Please grant this app access to your Calendar'
             })
-        print(scopes)
         try:
             g_obj = GoogleData.objects.get(google_user=request.user)
             g_obj.code = code
@@ -518,23 +505,25 @@ def google_callback(request):
         except:
             g_obj = GoogleData.objects.create(google_user=request.user, code=code)
             g_obj.save()
-        url = 'https://oauth2.googleapis.com/token'
+        url = 'https://oauth2.googleapis.com/token?prompt=consent&access_type=offline'
+        if DEBUG:
+            url1 = 'http://localhost:8000/integrations/google_callback' 
+        else:
+            url1 = 'https://matthewtsai.me/integrations/google_callback' 
         data = {
             'code': code,
             'client_id': '117121647082-9rt8p5sdt9smad8ln6onl7tk828ks2b8.apps.googleusercontent.com',
             'client_secret': os.environ.get('google_client_secret'),
             'grant_type': 'authorization_code',
-            'redirect_uri': 'http://localhost:8000/integrations/google_callback' 
+            'redirect_uri': url1
 
         }
         response = requests.post(url, params=data, data=data)
-
         i = json.loads(response.text)
         g_obj.refresh_token = i['refresh_token']
         g_obj.access_token = i['access_token']
         g_obj.id_token = i['id_token']
         g_obj.save()
-        print(response, response.text)
         url = 'https://www.googleapis.com/calendar/v3/users/me/calendarList/'
         response = requests.get(url, headers={'Authorization': f"Bearer {g_obj.access_token}"})
         i = json.loads(response.text)
@@ -596,16 +585,20 @@ def google_callback(request):
 
 def notion_toics(request, user_id, hash_value):
     try:
-        IcsHashVal.objects.get(hash_user=User.objects.get(id=user_id), hash_val=hash_value)
+        user = User.objects.get(id=user_id)
+        IcsHashVal.objects.get(hash_user=user, hash_val=hash_value)
     except:
         return JsonResponse({"Error": "Not Authorized"}, status=403)
-    notion_obj = NotionData.objects.get(notion_user=request.user)
+    notion_obj = NotionData.objects.get(notion_user=user)
     url = f'https://api.notion.com/v1/databases/{notion_obj.db_id}/query'
     response = requests.post(url, headers={'Authorization': f'Bearer {notion_obj.access_token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
     if '200' not in str(response):
         return HttpResponseRedirect(reverse('notion_auth'))
     i = json.loads(response.text)
-    print(response)
+    sentry_sdk.set_context("character", {
+    "response": response,
+    "response_text": response.text,
+    })
     c = Calendar()
     for event in i['results']:
         e = Event()

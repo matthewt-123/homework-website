@@ -34,8 +34,8 @@ sentry_sdk.init(
 
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.
-    send_default_pii=True,
-    release="homework-app@7.0",
+    send_default_pii=False,
+    release="homework-app@7.1",
 )
 
 # Quick-start development settings - unsuitable for production
@@ -45,13 +45,13 @@ sentry_sdk.init(
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG')
 
 ALLOWED_HOSTS_TYPES = {
     "dev":
-    ['matthewshomeworkapp.herokuapp.com','localhost', '*.matthewtsai.games', 'matthewtsai.games', 'internal.matthewtsai.games', '10.2.0.4', '192.168.0.28'], 
+    ['matthewshomeworkapp.herokuapp.com','localhost','internal.matthewtsai.games', '10.2.0.4', '192.168.0.28'], 
      "prod":
-    ['*.matthewtsai.games', 'matthewtsai.games', 'matthewtsai.me', '10.2.0.4'], 
+    ['matthewtsai.me', '10.2.0.4'], 
 }
 
 
