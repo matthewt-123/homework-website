@@ -6,7 +6,10 @@
     {{message}}    
     </div>
 {% endif %}
-
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/ui/trumbowyg.min.css">
+  
+</head>
 
 <form method="post" action='/config/email_templates?template_id={{email_template.id}}'>
     {% csrf_token %}
@@ -15,27 +18,12 @@
 <button class='btn btn-primary'>Submit</button>
   </form>
 
-  <script>
-      tinymce.init({
-    selector: '#template_body',
-    inline: true,
-    menubar: true,
-  });
-    tinymce.init({
-      selector: 'textarea',
-      plugins: 'autolink lists media table link',
-      toolbar: 'table link',
-      toolbar_mode: 'floating',
-      tinycomments_mode: 'embedded',
-      tinycomments_author: 'Matthew',
-      relative_urls: false,
-      document_base_url: 'https://matthewtsai.games/',
-      height: '1000'
-    });
-  </script>
+
 
 {% endblock %}
-{% block javascript %}
-<script src="https://cdn.tiny.cloud/1/40sv45vzy4u71pmvmdz7wjo889ftg47y45me0eaf69471kmh/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+{% block footer %}<script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/trumbowyg.min.js"></script>
+<script>
 
-{% endblock %}
+    $('.myeditablediv').trumbowyg()
+
+</script>{% endblock %}

@@ -16,12 +16,22 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 admin.site.enable_nav_sidebar = False
-
-
+from allauth.account.views import LogoutView
+from allauth.socialaccount import providers
+from importlib import import_module
+from allauth.socialaccount.providers.auth0.provider import Auth0Provider
+from allauth.socialaccount.providers.oauth2.urls import default_urlpatterns
 urlpatterns = [
-
     path('admin/', admin.site.urls),
     path('', include('hwapp.urls')),
-    path('integrations/', include('integrations.urls'))
+    path('integrations/', include('integrations.urls')),
+    path('accounts/logout/', LogoutView.as_view()),
+    path('accounts/', include(default_urlpatterns(Auth0Provider))),
+    path('home/', include('external.urls')),
 
 ]
+
+
+
+urlpatterns += default_urlpatterns(Auth0Provider)
+

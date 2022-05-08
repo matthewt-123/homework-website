@@ -128,10 +128,20 @@ def email_user(emails, content, subject):
         "html": listed 
     }
 )
-    print(f"{os.environ.get('API_BASE_URL')}/messages")
-    print(send)
+
 def timezone_helper(u_timezone, u_datetime):
     local_time = pytz.timezone(str(u_timezone))    
     local_datetime = local_time.localize(u_datetime, is_dst=None)
     utc_datetime = local_datetime.astimezone(pytz.utc)
     return utc_datetime
+def email_admin(content):
+    send = requests.post(
+    "https://api.mailgun.net/v3/matthewtsai.me/messages",
+    auth=("api", f"{os.environ.get('mailgun_api_key')}"),
+    data={
+        "from": "Homework App <noreply@matthewtsai.me>",
+        "to": ['support@matthewtsai.me'],
+        "subject": f"[matthewtsai.me] New Help Form Submitted",
+        "text": content 
+    }
+)

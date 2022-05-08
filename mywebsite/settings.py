@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import django.contrib.gis.db.backends.mysql
 import django.db.backends.mysql
 import django.db.backends.mysql.client
@@ -35,7 +35,7 @@ sentry_sdk.init(
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.
     send_default_pii=False,
-    release="homework-app@7.1",
+    release="homework-app@8.0",
 )
 
 # Quick-start development settings - unsuitable for production
@@ -49,7 +49,7 @@ DEBUG = os.environ.get('DEBUG')
 
 ALLOWED_HOSTS_TYPES = {
     "dev":
-    ['matthewshomeworkapp.herokuapp.com','localhost','internal.matthewtsai.games', '10.2.0.4', '192.168.0.28'], 
+    ['matthewshomeworkapp.herokuapp.com','localhost','internal.matthewtsai.games', '10.2.0.4', '192.168.0.28', '127.0.0.1'], 
      "prod":
     ['matthewtsai.me', '10.2.0.4'], 
 }
@@ -71,7 +71,11 @@ INSTALLED_APPS = [
     'django.contrib.admindocs',
     'django.contrib.sites',
     'integrations',
-
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.auth0',
+    'external'
 ]
 SITE_ID = 1
 
@@ -92,11 +96,11 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'mywebsite.urls'
-
+ACCOUNT_LOGOUT_ON_GET = True
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), os.path.join(BASE_DIR, 'templates', 'allauth')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -159,7 +163,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-#AUTHENTICATION_BACKENDS = [# Needed to login by username in Django admin, regardless of `allauth`'django.contrib.auth.backends.ModelBackend',# `allauth` specific authentication methods, such as login by e-mail'allauth.account.auth_backends.AuthenticationBackend',]
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend'
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
@@ -185,3 +194,19 @@ STATICFILES_DIRS = (
 )
 
 ADMINS = [('Matthew', 'matthew@matthewtsai.games')]
+
+ENV_FILE = find_dotenv()
+if ENV_FILE:
+    load_dotenv(ENV_FILE)
+
+
+# Load Auth0 application settings into memory
+AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN")
+AUTH0_CLIENT_ID = os.environ.get("AUTH0_CLIENT_ID")
+AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")
+
+SOCIALACCOUNT_PROVIDERS = {
+    'auth0': {
+        'AUTH0_URL': f"https://{AUTH0_DOMAIN}",
+    }
+}

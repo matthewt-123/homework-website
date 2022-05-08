@@ -1,0 +1,217 @@
+
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Homework App</title>
+<link rel='icon' type="image/png" href="{% static 'hwapp/favicon.png' %}">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://kit.fontawesome.com/ca2f5204d3.js" crossorigin="anonymous"></script>
+
+<style>
+body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif}
+.w3-bar,h1,button {font-family: "Montserrat", sans-serif}
+.fa-anchor,.fa-coffee {font-size:200px}
+</style>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+<style>
+  .column {
+  float: left;
+}
+
+/* Left and right column */
+.column.side {
+  width: 33%;
+}
+
+/* Middle column */
+.column.middle {
+  width: 67%;
+}
+
+/* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 600px) {
+  .column.side, .column.middle {
+    width: 100%;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="w3-top">
+  <div class="w3-bar w3-red w3-card w3-left-align w3-large">
+    <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-hover-white w3-large w3-red" href="javascript:void(0);" onclick="myFunction()" title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
+    <a href="#" class="w3-bar-item w3-button w3-padding-large w3-white" onclick="toggle_help('home')">Home</a>
+    <a href="#" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white" onclick="toggle_help('contact')">Contact Us</a>
+
+  </div>
+
+  <!-- Navbar on small screens -->
+  <div id="navDemo" class="w3-bar-block w3-white w3-hide w3-hide-large w3-hide-medium w3-large">
+    <a href="#" class="w3-bar-item w3-button w3-padding-large" onclick="toggle_help('contact')">Link 1</a>
+
+  </div>
+</div>
+
+<!-- Header -->
+<header class="w3-container w3-teal w3-center" style="padding:128px 16px">
+  <h1 class="w3-margin w3-jumbo">Homework App</h1>
+  <a class="w3-button w3-black w3-padding-large w3-large w3-margin-top" href="/accounts/auth0/login/">Get Started</a>
+</header>
+<div id="home" class="toggle">
+  <!-- Zeroeth Grid -->
+<div class="w3-row-padding w3-light-grey w3-padding-64 w3-container">
+  <div class="w3-content">
+    <div class="w3-third w3-center">
+      <i class="fa fa-pencil w3-text-red" style="font-size:100px; text-align:center; display:block; margin:auto; margin-top:15%"></i>
+
+    </div>
+
+    <div class="w3-twothird">
+      <h1>A FREE Integrated Task Manager</h1>
+      <h5 class="w3-padding-32">Perfect for the busy student who needs to keep track of countless to-do lists!</h5>
+
+    </div>
+  </div>
+</div>
+<!-- First Grid -->
+<div class="w3-row-padding w3-padding-64 w3-container">
+  <div class="w3-content">
+    <div class="w3-twothird">
+      <h1>Export to Your Calendar</h1>
+      <h5 class="w3-padding-32">With iCal feeds for both your Notion and Homework App events, you can easily add your tasks to your calendar</h5>
+
+    </div>
+
+    <div class="w3-third w3-center">
+    <i class="fa fa-calendar w3-padding-64 w3-text-red w3-margin-right" style='font-size:100px' ></i>
+    </div>
+  </div>
+</div>
+
+<!-- Second Grid -->
+<div class="w3-row-padding w3-light-grey w3-padding-64 w3-container">
+  <div class="w3-content">
+    <div class="w3-third w3-center">
+      <i class="fa-solid fa-check w3-text-red" style="font-size:100px; text-align:center; display:block; margin:auto; margin-top:15%"></i>
+
+    </div>
+
+    <div class="w3-twothird">
+      <h1>Notion and Google Calendar Integration</h1>
+      <h5 class="w3-padding-32">This app allows users to integrate their tasks from the app with Notion and Google Calendar</h5>
+
+    </div>
+  </div>
+</div>
+</div>
+<!-- Third Grid -->
+<div class="w3-row-padding w3-padding-64 w3-container">
+  <div class="w3-content">
+    <div class="w3-twothird">
+      <h1>Easily create tasks from your Schoology or Canvas site with a single click!</h1>
+      <h5 class="w3-padding-32">The Homework App makes it easy to keep track of homework or assignments from Schoology or Canvas</h5>
+
+    </div>
+
+    <div class="w3-third w3-center">
+    <i class="fa-solid fa-file-lines w3-padding-64 w3-text-red w3-margin-right" style='font-size:100px' ></i>
+    </div>
+  </div>
+</div>
+
+
+<h1 style="text-align:center"><b>
+  Contact Us!
+</b></h1>
+<div class="toggle" id="contact" style="display:block; clear:both">
+  <div id="alert" class="alert alert-success" role="alert" style='display:none;'></div>
+<div id='error_message' class="alert alert-danger" role="alert" style='display:none;'></div>
+  <form action='{% url "contact" %}' method='POST' class='indented' autocomplete='off' autofocus='true' onsubmit = 'return false'>
+    {% csrf_token %}
+    <table style='margin-left: 40%;'>
+      {{form.as_table}}
+    </table>
+  <button style='margin-left: 45%;' id="submit" onclick = 'submit_form()' class="btn btn-primary">Submit</button>
+</form>
+
+</div>
+
+<!-- Footer -->
+<footer class="w3-container w3-padding-64 w3-center w3-opacity">  
+ <p>Powered by <a href="https://www.w3schools.com/w3css/default.asp" target="_blank">w3.css</a></p>
+ 
+</footer>
+
+<script>
+    // Used to toggle the menu on small screens when clicking on the menu button
+    function myFunction() {
+      var x = document.getElementById("navDemo");
+      if (x.className.indexOf("w3-show") == -1) {
+        x.className += " w3-show";
+      } else { 
+        x.className = x.className.replace(" w3-show", "");
+      }
+    }
+    </script>
+    
+    <script>
+      function findPos(obj) {
+    var curtop = 0;
+    if (obj.offsetParent) {
+        do {
+            curtop += obj.offsetTop;
+        } while (obj = obj.offsetParent);
+    return [curtop];
+    }
+}
+
+        function toggle_help(page) {
+          window.scroll(0,findPos(document.getElementById(page)));
+
+
+        }
+        function submit_form() {
+          fetch(`/home/contact`, {
+            method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({
+                    first_name: document.getElementById('id_first_name').value,
+                    last_name: document.getElementById('id_last_name').value,
+                    email: document.getElementById('id_email').value,
+                    message: document.getElementById('id_message').value
+                })
+        })
+        .then(response=>response.json())
+        .then(result => {
+            if(result['status'] == 201) {
+              document.getElementById('alert').style.display = 'block'
+              document.getElementById('error_message').style.display = 'none'
+              document.getElementById('alert').innerHTML = `${result['message']}`;
+              document.getElementById('id_first_name').value = '';
+              document.getElementById('id_last_name').value = '';
+              document.getElementById('id_email').value = '';
+              document.getElementById('id_message').value = ''
+                
+            } else {
+                document.getElementById('error_message').style.display = 'block'
+                document.getElementById('alert').style.display = 'none'
+                document.getElementById('error_message').innerHTML = `${result['message']}`
+            }
+        })
+        return false  
+        }
+    </script>
+</body>
+</html>

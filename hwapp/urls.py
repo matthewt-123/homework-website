@@ -6,9 +6,6 @@ from django.urls import path, include
 urlpatterns = [
     path("", views.index, name="index"),
     path("", views.index, name="homework"),
-    path("login", views.login_view, name="login"),
-    path("logout", views.logout_view, name="logout"),
-    path("register", views.register, name="register"),
     path("classes", views.classes, name="classes"),
     path("preferences", views.preferences, name="preferences"),
     path("addhw", views.addhw, name="addhw"),
@@ -33,6 +30,8 @@ urlpatterns = [
     path('communications', views.email_all, name='communications'),
     path('privacy', views.privacy, name='privacy'),
     path('termsandconditions', views.terms, name='terms'),
-
+    #path('accounts/', include('allauth.urls')),
+    path('login', views.login_view, name='login'),
+    path('home', views.home, name='home')
 ]
 

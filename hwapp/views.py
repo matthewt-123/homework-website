@@ -1,8 +1,8 @@
 from django.http.response import JsonResponse
 from django.shortcuts import render
-from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError, connection
 from django.forms import ModelForm
+from django.contrib.auth import authenticate, login, logout
 from .models import EmailTemplate, User, Class, Homework, Preferences, PWReset, IcsId
 from django.http import HttpResponseRedirect
 import requests
@@ -27,12 +27,13 @@ sys.path.append("..")
 from integrations.models import CalendarEvent, IcsHashVal, NotionData
 from integrations.views import notion_auth, refresh_ics
 from integrations.helper import notion_push, notion_status_push
+from external.forms import HelpForm1
 
 load_dotenv()
 def user_check(user):
     return user.username == "Automate"
 def matthew_check(user):
-    return user.id == 1
+    return user.is_superuser
 @user_passes_test(user_check, login_url='/')
 def refresh(request, occurence, hash_value):
     sys_hash = os.environ.get('email_hash_val')
@@ -43,8 +44,14 @@ def refresh(request, occurence, hash_value):
     #email feature
     send_email(occurence)
     return HttpResponseRedirect(reverse('logout'))
-
-@login_required(login_url='/login')
+def login_view(request):
+    return HttpResponseRedirect('/accounts/auth0/login/')
+def home(request):
+    return render(request, 'hwapp/homepage.html', {
+        'html_db': EmailTemplate.objects.get(id=6).template_body,
+        'form': HelpForm1()
+    })
+@login_required(login_url='/home')
 def index(request):
     #index feature
     page_size = request.GET.get('page_size')
@@ -75,61 +82,6 @@ def index(request):
         'website_root': os.environ.get('website_root')
     })
 
-
-
-def login_view(request):
-    if request.method == "POST":
-
-        # Attempt to sign user in
-        username = request.POST["username"]
-        password = request.POST["password"]
-        user = authenticate(request, username=username, password=password)
-
-        # Check if authentication successful
-        if user is not None:
-            login(request, user)
-            return HttpResponseRedirect(reverse("index"), status=302)
-        else:
-            return render(request, "hwapp/login.html", {
-                "message": "Invalid username and/or password."
-            })
-    else:
-        return render(request, "hwapp/login.html")
-
-
-def logout_view(request):
-    logout(request)
-    return HttpResponseRedirect(reverse("index"))
-
-
-def register(request):
-    if request.method == "POST":
-        username = request.POST["username"]
-        email = request.POST["email"]
-
-        # Ensure password matches confirmation
-        password = request.POST["password"]
-        confirmation = request.POST["confirmation"]
-        if password != confirmation:
-            return render(request, "hwapp/register.html", {
-                "message": "Passwords must match."
-            })
-
-        # Attempt to create new user
-        
-        try:
-            user = User.objects.create_user(username, email, password)
-            user.save()
-        except IntegrityError:
-            return render(request, "hwapp/register.html", {
-                "message": "Username already taken."
-            })
-        login(request, user)
-
-        return HttpResponseRedirect(reverse("new_user_view"))
-    else:
-        return render(request, "hwapp/register.html")
-# Create your views here.
 
 @login_required(login_url='/login')
 def classes(request):

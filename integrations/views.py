@@ -465,7 +465,13 @@ def admin_notion(request):
 @login_required(login_url='/login')
 @user_passes_test(google_check)
 def google_info(request): 
-    return render(request, 'hwapp/google_auth.html')
+    try:
+        g_data = GoogleData.objects.get(google_user=request.user)
+    except:
+        g_data = False
+    return render(request, 'hwapp/google_auth.html', {
+        'int_status': g_data
+    })
 @login_required(login_url='/login')
 @user_passes_test(google_check)
 def google_view(request):
