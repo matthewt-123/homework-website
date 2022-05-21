@@ -69,3 +69,7 @@ class EmailTemplate(models.Model):
 class IcsId(models.Model):
     icsID_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='icsID_user')
     icsID = models.CharField(max_length=512)
+class AllAuth(models.Model):
+    allauth_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='allauth_user')
+    uid = models.CharField(max_length=512)
+    extra_data = models.TextField()

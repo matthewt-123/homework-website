@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.db import IntegrityError, connection
 from django.forms import ModelForm
 from django.contrib.auth import authenticate, login, logout
-from .models import EmailTemplate, User, Class, Homework, Preferences, PWReset, IcsId
+from .models import EmailTemplate, User, Class, Homework, Preferences, PWReset, AllAuth
 from django.http import HttpResponseRedirect
 import requests
 from django.urls import reverse
@@ -14,12 +14,20 @@ from ics import Event
 from .forms import PreferencesForm, AddClassForm
 from dotenv import load_dotenv
 import json
+import string
+import random
 from datetime import datetime, time, timedelta
 from django.utils import timezone
 from django.core.paginator import Paginator
 from .email_helper import pw_reset_email, send_email, overdue_check, timezone_helper, text_refresh, email_user
 import arrow
 from . import helpers
+
+from authlib.integrations.django_client import OAuth
+from django.conf import settings
+from django.shortcuts import redirect, render, redirect
+from django.urls import reverse
+from urllib.parse import quote_plus, urlencode
 
 #allow python to access Calendar data model
 import sys
@@ -30,27 +38,67 @@ from integrations.helper import notion_push, notion_status_push
 from external.forms import HelpForm1
 
 load_dotenv()
-def user_check(user):
-    return user.username == "Automate"
+
 def matthew_check(user):
     return user.is_superuser
-@user_passes_test(user_check, login_url='/')
-def refresh(request, occurence, hash_value):
-    sys_hash = os.environ.get('email_hash_val')
-    if str(hash_value) == str(sys_hash):
-        pass
-    else:
-        return JsonResponse({'error': 'access denied'}, status=403)
-    #email feature
-    send_email(occurence)
-    return HttpResponseRedirect(reverse('logout'))
+oauth = OAuth()
+oauth.register(
+    "auth0",
+    client_id=settings.AUTH0_CLIENT_ID,
+    client_secret=settings.AUTH0_CLIENT_SECRET,
+    client_kwargs={
+        "scope": "openid profile email",
+    },
+    server_metadata_url=f"https://{settings.AUTH0_DOMAIN}/.well-known/openid-configuration",
+)
+def sso_login(request):
+    return oauth.auth0.authorize_redirect(
+        request, request.build_absolute_uri(reverse("callback"))
+    )
+def callback(request):
+    token = oauth.auth0.authorize_access_token(request)
+    request.session["user"] = token
+    request.user = token
+    e_info = token.get("userinfo")
+    a_id = e_info.get('sub')
+    try:
+        user1 = AllAuth.objects.get(uid=a_id).allauth_user
+    except:
+        try:
+            user1 = User.objects.create_user(e_info.get('nickname'), e_info.get('email'), ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.punctuation) for _ in range(256)))
+            user1.save()
+        except:
+            s=False
+            c=1
+            while s==False:
+                try:
+                    user1 = User.objects.create_user(f"{e_info.get('nickname')}{c}", e_info.get('email'), ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.punctuation) for _ in range(256)))
+                    user1.save()
+                    s = True
+                except:
+                    c+=1
+        a_auth = AllAuth.objects.create(uid=a_id, extra_data = e_info, allauth_user=user1)
+        a_auth.save()
+    login(request, user1)
+    return redirect(request.build_absolute_uri(reverse("index")))
 def login_view(request):
     return HttpResponseRedirect('/accounts/auth0/login/')
 def home(request):
     return render(request, 'hwapp/homepage.html', {
-        'html_db': EmailTemplate.objects.get(id=6).template_body,
         'form': HelpForm1()
     })
+def sso_logout(request):
+    request.session.clear()
+    return redirect(
+        f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
+        + urlencode(
+            {
+                "returnTo": request.build_absolute_uri(reverse("index")),
+                "client_id": settings.AUTH0_CLIENT_ID,
+            },
+            quote_via=quote_plus,
+        ),
+    )
 @login_required(login_url='/home')
 def index(request):
     #index feature

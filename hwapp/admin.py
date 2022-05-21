@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Recurrence, Day, Class, Homework, Preferences, Carrier, Timezone, PWReset, IcsLink, EmailTemplate, IcsId
+from .models import User, Recurrence, Day, Class, Homework, Preferences, Carrier, Timezone, PWReset, IcsLink, EmailTemplate, IcsId, AllAuth
 
 # Register your models here.
 class ClassAdmin(admin.ModelAdmin):
@@ -20,3 +20,4 @@ admin.site.register(IcsLink)
 admin.site.register(Timezone)
 admin.site.register(EmailTemplate)
 admin.site.register(IcsId)
+admin.site.register(AllAuth)

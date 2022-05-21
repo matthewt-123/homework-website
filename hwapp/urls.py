@@ -18,7 +18,6 @@ urlpatterns = [
     path("calendar/", views.calendar, name="calendar"),
     path("completion/<int:hw_id>", views.completion, name="completion"),
     path("deleteclass/<int:id>", views.deleteclass, name='delete_a_class'),
-    path("refresh/<str:occurence>/<str:hash_value>", views.refresh, name='refresh'),
     path("getclasstime/<int:class_id>", views.getclasstime, name='getclasstime'),
     path("reset_password", views.reset_password, name='reset_password'),
     path('admin_view', views.admin_console, name='admin_view'),
@@ -31,7 +30,11 @@ urlpatterns = [
     path('privacy', views.privacy, name='privacy'),
     path('termsandconditions', views.terms, name='terms'),
     #path('accounts/', include('allauth.urls')),
-    path('login', views.login_view, name='login'),
-    path('home', views.home, name='home')
+
+    path('home', views.home, name='home'),
+    path('callback', views.callback, name='callback'),
+    path('login', views.sso_login, name='login'),
+    path('logout', views.sso_logout, name='logout'),
+
 ]
 

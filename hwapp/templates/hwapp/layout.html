@@ -93,7 +93,7 @@
                             <a href="{% url 'about' %}" style="text-decoration: none;"><div class="nav_item">
                                 &nbsp About This Website &nbsp
                             </div></a>         
-                            <a href="https://dev-q8234yaa.us.auth0.com/v2/logout?client_id=15WEGCjmQHcILgBxWGNjdgiVoUPbxYsp&returnTo=http%3A%2F%2Flocalhost%3A8000%2Faccounts%2Flogout" style="text-decoration: none;"><div class="nav_item">
+                            <a href="{% url 'logout' %}" style="text-decoration: none;"><div class="nav_item">
                                 &nbsp Logout &nbsp
                             </div></a>                    
                         </div>
@@ -200,7 +200,7 @@
                                         </a>
                                     </li>                                    
                                     <li>
-                                        <a style='font-size:20px' href='/logout'>
+                                        <a style='font-size:20px' href="{% url 'logout' %}">
                                             Log Out
                                         </a>
                                     </li>

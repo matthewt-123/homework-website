@@ -134,7 +134,8 @@ def timezone_helper(u_timezone, u_datetime):
     local_datetime = local_time.localize(u_datetime, is_dst=None)
     utc_datetime = local_datetime.astimezone(pytz.utc)
     return utc_datetime
-def email_admin(content):
+def email_admin(f_name, l_name, email, message):
+    content = f"First Name: {f_name}\nLast Name: {l_name}\nEmail: {email}\nMessage: {message}"
     send = requests.post(
     "https://api.mailgun.net/v3/matthewtsai.me/messages",
     auth=("api", f"{os.environ.get('mailgun_api_key')}"),
