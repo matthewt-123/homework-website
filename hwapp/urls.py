@@ -19,7 +19,7 @@ urlpatterns = [
     path("completion/<int:hw_id>", views.completion, name="completion"),
     path("deleteclass/<int:id>", views.deleteclass, name='delete_a_class'),
     path("getclasstime/<int:class_id>", views.getclasstime, name='getclasstime'),
-    path("reset_password", views.reset_password, name='reset_password'),
+    #path("reset_password", views.reset_password, name='reset_password'),
     path('admin_view', views.admin_console, name='admin_view'),
     path('welcome', views.new_user_view, name='new_user_view'),
     path('homework/<int:hw_id>', views.homework_entry, name='homework_entry'),
@@ -29,8 +29,6 @@ urlpatterns = [
     path('communications', views.email_all, name='communications'),
     path('privacy', views.privacy, name='privacy'),
     path('termsandconditions', views.terms, name='terms'),
-    #path('accounts/', include('allauth.urls')),
-
     path('home', views.home, name='home'),
     path('callback', views.callback, name='callback'),
     path('login', views.sso_login, name='login'),

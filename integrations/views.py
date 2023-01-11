@@ -10,7 +10,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 import os
 from django.views.decorators.csrf import csrf_exempt
 import re
-from .models import CalendarEvent, GoogleData, IcsHashVal, NotionData, GoogleCalendar
+from .models import CalendarEvent, GoogleData, IcsHashVal, NotionData, GoogleCalendar, SchoologyClasses, SchoologyAuth
 from dotenv import load_dotenv
 import datetime
 import json
@@ -27,6 +27,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import google.oauth2.credentials
 import sentry_sdk
+import secrets
+from time import time
 
 import google_auth_oauthlib.flow
 
@@ -61,7 +63,7 @@ def schoology_init(request):
                 'error': 'Please copy the full link from Schoology with the instructions below and include the "webcal" portion of the link'
             })
         #SETUP: create Schoology Class instance if not already existing(since Schoology does not provide class names with HW assignments)
-        dt_str = '00:00'
+        dt_str = '23:59'
         dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
         try:
             class1 = Class.objects.get(class_user=request.user, class_name='Schoology Integration', time=dt_obj, period=999999, ics_link=link)
@@ -113,7 +115,8 @@ def schoology_init(request):
             if ics_uid in uid_list:
                 pass
             else:
-                Homework.objects.create(hw_user=request.user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)        
+                l = Homework.objects.create(hw_user=request.user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)  
+                notion_push(hw=l, user=request.user)      
                 IcsId.objects.create(icsID_user=request.user, icsID = ics_uid)
         return render(request, 'hwapp/success.html', {
             'message': "Schoology feed integrated successfully. Please <a href='/'>return home</a>"
@@ -134,7 +137,7 @@ def canvas_init(request):
                 'error': 'Please copy the full link from Canvas with the instructions below and include the "webcal" portion of the link'
             })
         #SETUP: create Canvas Class instance if not already existing(since Canvas does not provide class names with HW assignments)
-        dt_str = '00:00'
+        dt_str = '23:59'
         dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
         try:
             class2 = Class.objects.get(class_user=request.user, class_name='Canvas Integration', time=dt_obj, period=999999, ics_link=link)
@@ -186,7 +189,8 @@ def canvas_init(request):
             if ics_uid in uid_list:
                 pass
             else:
-                Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
+                l = Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
+                notion_push(hw=l, user=request.user)  
                 IcsId.objects.create(icsID_user=request.user, icsID = ics_uid)
 
         return render(request, 'hwapp/success.html', {
@@ -207,7 +211,7 @@ def other_init(request):
                 'error': 'Please copy the full ICS link from the external integration with the instructions below and include the "webcal" portion of the link'
             })
         #SETUP: create new Class instance if not already existing(since Canvas does not provide class names with HW assignments)
-        dt_str = '00:00'
+        dt_str = '23:59'
         dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
         class_name = request.POST.get('integration_name')
         try:
@@ -260,7 +264,8 @@ def other_init(request):
             if ics_uid in uid_list:
                 pass
             else:
-                Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
+                l = Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
+                notion_push(hw=l, user=request.user)  
                 IcsId.objects.create(icsID_user=request.user, icsID = ics_uid)
         return render(request, 'hwapp/success.html', {
             'message': "Feed integrated successfully. Please <a href='/'>return home</a>"
@@ -307,7 +312,7 @@ def refresh_ics():
         except:
             pass
         #SETUP: create new Class instance if not already existing(since Canvas does not provide class names with HW assignments)
-        dt_str = '00:00'
+        dt_str = '23:59'
         dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
         #pull prior integrated events:
         uids = IcsId.objects.filter(icsID_user=class1.class_user)
@@ -323,13 +328,14 @@ def refresh_ics():
             if event.end:
                 time=(event.end).to(str(timezone))
                 time.format('YYYY-MM-DD')
-                time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
+                time = datetime.datetime.strptime(str(time)[0:10] + ' 11:59', '%Y-%m-%d %H:%M')
             elif event.begin:
                 time=(event.begin).to(str(timezone))
                 time.format('YYYY-MM-DD')
-                time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
+                time = datetime.datetime.strptime(str(time)[0:10] + ' 11:59', '%Y-%m-%d %H:%M')
             else:
                 time=dt_obj
+            time = time
             hw_name = str(event.name)
             try:
                 notes = str(event.description)
@@ -344,7 +350,8 @@ def refresh_ics():
                 pass
             else:
                 IcsId.objects.create(icsID_user=class1.class_user, icsID = ics_uid)
-                Homework.objects.create(hw_user=class1.class_user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
+                l = Homework.objects.create(hw_user=class1.class_user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
+                notion_push(hw=l, user=class1.class_user)  
 
 @login_required(login_url='/login')
 def notion_auth(request):
@@ -424,7 +431,7 @@ def notion_callback(request):
                         
                     },
                     "Status": {
-                        "select": {
+                        "status": {
                             "name":"Not started"
                         }
                     },
@@ -549,7 +556,7 @@ def google_callback(request):
                 cal = GoogleCalendar.objects.create(google_user=request.user, calendar_id=i[num], calendar_name=j[num])
                 cal.save()
         all_objs = GoogleCalendar.objects.filter(google_user=request.user)
-        dt_str = '00:00'
+        dt_str = '23:59'
         dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
         for obj in all_objs:
             try:
@@ -611,10 +618,74 @@ def notion_toics(request, user_id, hash_value):
         try:
             e.name = event['properties']['Name']['title'][0]['plain_text']
             e.begin = event['properties']['Due']['date']['start']
-            e.description = f"Class: {event['properties']['Class']['select']['name']}; Status: {event['properties']['Status']['select']['name']}"
+            e.description = f"Class: {event['properties']['Class']['select']['name']}; Status: {event['properties']['Status']['status']['name']}"
             c.events.add(e)
         except:
             pass
     return render(request, 'hwapp/export.html', {
         'ics': c
     })
+@login_required(login_url='/login')
+def schoology_class(request):
+    print(True)
+    try:
+        print(1)
+        s = SchoologyAuth.objects.get(h_user= request.user)
+    except:
+        print(False)
+        return render(request, 'hwapp/error.html', {
+            'error': 'No Schoology Classes found. Please contact website admin for access'
+        })
+    url = f'https://api.schoology.com/v1/users/{s.user_id}/sections'
+    headers = {
+        "Authorization": f'OAuth realm="Schoology API",oauth_consumer_key="{s.s_consumer_key}",oauth_token="",oauth_nonce="{secrets.token_urlsafe()}",oauth_timestamp="{int(time())}",oauth_signature_method="PLAINTEXT",oauth_version="1.0",oauth_signature="{s.s_secret_key}%26"'
+    }
+    response = requests.get(url, headers=headers)
+    print(response)
+    response = json.loads(response.text)
+    s_class = SchoologyClasses.objects.filter(schoology_user=request.user)
+    classes = []
+    for i in s_class:
+        classes.append(i.class_id)
+    for i in response['section']:
+        if i['id'] in classes:
+            pass
+        else:
+            c = Class.objects.create(class_user=request.user, class_name=i['course_title'], external_src="Schoology", external_id=i['id'])
+            SchoologyClasses.objects.create(schoology_user=request.user, class_id=i['id'], s_class_name=i['course_title'],s_grading_period=i['grading_periods'][0], linked_class=c)
+@login_required(login_url='/login')
+def schoology_hw(request):
+    try:
+        s = SchoologyAuth.objects.get(h_user= request.user)
+        c = SchoologyClasses.objects.filter(schoology_user=request.user).exclude(update=False)
+    except:
+        return render(request, 'hwapp/error.html', {
+            'error': 'No Schoology Classes found. Please contact website admin for access'
+        })
+    existing_hws = Class.objects.filter(class_user=request.user, external_src="Schoology")
+    z = []
+    print('fail1')
+
+    for existing_hw in existing_hws:
+        z.append(existing_hw.external_id)
+    print('fail2')
+    
+    for class1 in c:
+        print('fail3')
+        url = f"https://api.schoology.com/v1/sections/{class1.class_id}/assignments?start=0&limit=1000"
+        headers = {
+            "Authorization": f'OAuth realm="Schoology API",oauth_consumer_key="{s.s_consumer_key}",oauth_token="",oauth_nonce="{secrets.token_urlsafe()}",oauth_timestamp="{int(time())}",oauth_signature_method="PLAINTEXT",oauth_version="1.0",oauth_signature="{s.s_secret_key}%26"'
+        }   
+        response = requests.get(url, headers=headers)
+        print(response.text)
+        data = json.loads(response.text)
+        for hw in data['assignment']:
+            if hw['id'] not in z:
+                print(hw['due'])
+                try:
+                    l = datetime.datetime.strptime(hw['due'], "%Y-%m-%d %H:%M:%S")
+                except:
+                    l = datetime.datetime.now()
+                h = Homework.objects.create(hw_user=request.user,hw_class=class1.linked_class,hw_title=hw['title'], external_id=hw['id'], external_src="Schoology", due_date=l,notes=f"{hw['description']}, {hw['web_url']}",completed=False, overdue=False)
+                notion_push(hw=h,user=request.user)
+            pass

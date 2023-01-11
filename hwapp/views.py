@@ -33,7 +33,7 @@ from urllib.parse import quote_plus, urlencode
 import sys
 sys.path.append("..")
 from integrations.models import CalendarEvent, IcsHashVal, NotionData
-from integrations.views import notion_auth, refresh_ics
+from integrations.views import notion_auth, refresh_ics, schoology_class, schoology_hw
 from integrations.helper import notion_push, notion_status_push
 from external.forms import HelpForm1
 
@@ -99,6 +99,7 @@ def sso_logout(request):
             quote_via=quote_plus,
         ),
     )
+
 @login_required(login_url='/home')
 def index(request):
     #index feature
@@ -106,10 +107,15 @@ def index(request):
     if not page_size:
         page_size = 10
     if not request.GET.get('class'):
-        hwlist = Homework.objects.filter(hw_user = request.user, completed=False).order_by('due_date', 'hw_class__period', 'priority')
+        l = Homework.objects.filter(hw_user = request.user, completed=False).order_by('due_date', 'hw_class__period', 'priority')
+        hwlist = []
+        for hw in l:
+            if hw.hw_class.archived == False:
+                hwlist.append(hw)
+
     else:
         try:
-            class1 = Class.objects.get(class_user=request.user, id=request.GET.get('class'))
+            class1 = Class.objects.get(class_user=request.user, id=request.GET.get('class'), archived = False)
         except:
             return JsonResponse({
                 "message": "Access Denied"
@@ -120,7 +126,7 @@ def index(request):
     if not page_number:
         page_number=1
     page_obj = h.get_page(page_number)
-    class_list = Class.objects.filter(class_user = request.user).order_by('period')
+    class_list = Class.objects.filter(class_user = request.user, archived = False).order_by('period')
     load_dotenv()
     return render(request, 'hwapp/index.html', {
         'hwlist': page_obj,
@@ -133,7 +139,7 @@ def index(request):
 
 @login_required(login_url='/login')
 def classes(request):
-    classes = Class.objects.filter(class_user=request.user).order_by('period')
+    classes = Class.objects.filter(class_user=request.user, archived = False).order_by('period')
     return render(request, 'hwapp/classes.html', {
         'classes': classes
     })
@@ -149,7 +155,7 @@ def addhw(request):
         #actual code
         try:
             try:
-                hw_class = Class.objects.get(id=data['hw_class'], class_user =request.user)
+                hw_class = Class.objects.get(id=data['hw_class'], class_user =request.user, archived=False)
             except:
                 return JsonResponse({
                     "message": "error: not authorized",
@@ -370,7 +376,7 @@ def edit_hw(request, hw_id):
 
         return render(request, 'hwapp/edit_hw.html', {
             'hw_id': hw_id,
-            'classes': Class.objects.filter(class_user=request.user),
+            'classes': Class.objects.filter(class_user=request.user, archived=False),
             'hw': hw,
             'website_root': os.environ.get("website_root"),
             'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M")
@@ -686,6 +692,12 @@ def admin_console(request):
         elif json_val['function'] == 'send_text':
             text_refresh()
             return JsonResponse({"status": 200}, status=200)
+        elif json_val['function'] == 'schoology_class':
+            schoology_class(request) 
+            return JsonResponse({"status": 200}, status=200)
+        elif json_val['function'] == 'schoology_hw':
+            schoology_hw(request) 
+            return JsonResponse({"status": 200}, status=200)           
 
     elif request.method == "GET":
         return render(request, "hwapp/admin_console.html")

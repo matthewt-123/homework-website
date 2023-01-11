@@ -16,8 +16,11 @@ class Class(models.Model):
     class_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='class_owner')
     class_name = models.CharField(max_length=128)
     period = models.IntegerField(null=True, blank=True,)
-    time = models.TimeField()
+    time = models.TimeField(null=True, blank=True)
     ics_link = models.CharField(blank=True, null=True, max_length=512)
+    archived = models.BooleanField(blank=False, default=False, null=False)
+    external_id = models.CharField(null=True, blank=True,max_length=128)
+    external_src = models.CharField(null=True, blank=True,max_length=128)
     def __str__(self):
         return f"{self.class_name}"
 class Homework(models.Model):
@@ -32,6 +35,8 @@ class Homework(models.Model):
     notion_migrated = models.BooleanField(blank=True, default=False, null=True)
     notion_id = models.CharField(blank=True, default=False, null=True, max_length=256)
     ics_id = models.CharField(blank=True, default=False, null=True, max_length=256)
+    external_id = models.CharField(blank=True, default=False, null=True, max_length=128)
+    external_src = models.CharField(null=True, blank=True,max_length=128)
     def __str__(self):
         return f"{self.hw_title}"
 class Carrier(models.Model):

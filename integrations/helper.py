@@ -19,7 +19,7 @@ def notion_push(hw, user):
                 
             },
             "Status": {
-                "select": {
+                "status": {
                     "name":"Not started"
                 }
             },
@@ -62,7 +62,7 @@ def full_notion_refresh(user):
                     
                 },
                 "Status": {
-                    "select": {
+                    "status": {
                         "name":"Not started"
                     }
                 },
@@ -94,7 +94,7 @@ def full_notion_refresh(user):
         data = {
         "properties": {
             "Status": {
-                "select": {
+                "status": {
                     "name":"Completed"
                 }
             },    
@@ -115,7 +115,7 @@ def notion_status_push(hw, user, status):
                 
             },
             "Status": {
-                "select": {
+                "status": {
                     "name":status
                 }
             },

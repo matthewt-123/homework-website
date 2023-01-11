@@ -35,7 +35,7 @@ sentry_sdk.init(
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.
     send_default_pii=False,
-    release="homework-app@8.0",
+    release="homework-app@8.3",
 )
 
 # Quick-start development settings - unsuitable for production

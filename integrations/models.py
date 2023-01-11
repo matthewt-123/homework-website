@@ -39,3 +39,19 @@ class GoogleCalendar(models.Model):
     sync_token = models.CharField(max_length=512, default=None, blank=True, null=True)
     def __str__(self):
         return f"{self.calendar_name}"
+class SchoologyClasses(models.Model):
+    schoology_user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
+    class_id = models.IntegerField(default=None, blank=True, null=True)
+    s_class_name =  models.CharField(max_length=512, default=None, blank=True, null=True)
+    s_grading_period = models.IntegerField(default=None, blank=True, null=True)
+    update = models.BooleanField(null=True, blank=True)
+    linked_class = models.ForeignKey('hwapp.Class', on_delete=models.CASCADE,default=None, blank=True, null=True)
+    def __str__(self):
+        return f"{self.schoology_user}- {self.s_class_name}-{self.update}"
+class SchoologyAuth(models.Model):
+    h_user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
+    s_consumer_key =  models.CharField(max_length=512, default=None, blank=True, null=True)
+    s_secret_key = models.CharField(max_length=512, default=None, blank=True, null=True)
+    user_id = models.IntegerField(default=None, blank=True, null=True)
+    def __str__(self):
+        return f"{self.h_user}"

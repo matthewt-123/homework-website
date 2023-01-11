@@ -25,9 +25,8 @@ def send_email(interval):
     load_dotenv()
     #refresh ICS
     refresh_ics()
-    interval_instance = Recurrence.objects.get(basis=str(interval))
     try:
-        recipients = Preferences.objects.filter(email_notifications=True, email_recurrence=interval_instance)
+        recipients = Preferences.objects.filter(email_notifications=True)
         for recipient in recipients:
             listed= f'Homework email for {recipient.preferences_user.username}'
             #get all hw for recipient
