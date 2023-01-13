@@ -2,10 +2,14 @@ from django.contrib import admin
 from .models import User, Recurrence, Day, Class, Homework, Preferences, Carrier, Timezone, PWReset, IcsLink, EmailTemplate, IcsId, AllAuth
 
 # Register your models here.
+@admin.action(description='Unpush Notion')
+def unpush_notion(modeladmin, request, queryset):
+    queryset.update(notion_migrated=False)
 class ClassAdmin(admin.ModelAdmin):
     list_display = ("id", "class_user", "class_name", "period", "time")
 class HomeworkAdmin(admin.ModelAdmin):
     list_display = ("id", "hw_class", "hw_user", "hw_title", "priority", "notes", "completed")
+    actions=[unpush_notion]
 class PreferencesAdmin(admin.ModelAdmin):
     list_display = ("id", "preferences_user", "email_notifications", "email_recurrence")
 admin.site.register(User)

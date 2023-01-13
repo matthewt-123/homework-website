@@ -627,10 +627,8 @@ def notion_toics(request, user_id, hash_value):
     })
 @login_required(login_url='/login')
 def schoology_class(request):
-    print(True)
     try:
-        print(1)
-        s = SchoologyAuth.objects.get(h_user= request.user)
+        s = SchoologyAuth.objects.get(h_user= request.user, src='Schoology')
     except:
         print(False)
         return render(request, 'hwapp/error.html', {
@@ -641,9 +639,8 @@ def schoology_class(request):
         "Authorization": f'OAuth realm="Schoology API",oauth_consumer_key="{s.s_consumer_key}",oauth_token="",oauth_nonce="{secrets.token_urlsafe()}",oauth_timestamp="{int(time())}",oauth_signature_method="PLAINTEXT",oauth_version="1.0",oauth_signature="{s.s_secret_key}%26"'
     }
     response = requests.get(url, headers=headers)
-    print(response)
     response = json.loads(response.text)
-    s_class = SchoologyClasses.objects.filter(schoology_user=request.user)
+    s_class = SchoologyClasses.objects.filter(schoology_user=request.user, src='Schoology')
     classes = []
     for i in s_class:
         classes.append(i.class_id)
@@ -652,40 +649,93 @@ def schoology_class(request):
             pass
         else:
             c = Class.objects.create(class_user=request.user, class_name=i['course_title'], external_src="Schoology", external_id=i['id'])
-            SchoologyClasses.objects.create(schoology_user=request.user, class_id=i['id'], s_class_name=i['course_title'],s_grading_period=i['grading_periods'][0], linked_class=c)
+            SchoologyClasses.objects.create(schoology_user=request.user, class_id=i['id'], s_class_name=i['course_title'],s_grading_period=i['grading_periods'][0], linked_class=c, src='Schoology', auth_data=s)
 @login_required(login_url='/login')
 def schoology_hw(request):
     try:
-        s = SchoologyAuth.objects.get(h_user= request.user)
-        c = SchoologyClasses.objects.filter(schoology_user=request.user).exclude(update=False)
+        c = SchoologyClasses.objects.filter(schoology_user=request.user, src='Schoology').exclude(update=False)
     except:
         return render(request, 'hwapp/error.html', {
             'error': 'No Schoology Classes found. Please contact website admin for access'
         })
-    existing_hws = Class.objects.filter(class_user=request.user, external_src="Schoology")
+    existing_hws = Homework.objects.filter(hw_user=request.user, external_src="Schoology")
     z = []
-    print('fail1')
-
+    s = c.auth_data
     for existing_hw in existing_hws:
-        z.append(existing_hw.external_id)
-    print('fail2')
-    
+        z.append(str(existing_hw.external_id))
     for class1 in c:
-        print('fail3')
         url = f"https://api.schoology.com/v1/sections/{class1.class_id}/assignments?start=0&limit=1000"
         headers = {
             "Authorization": f'OAuth realm="Schoology API",oauth_consumer_key="{s.s_consumer_key}",oauth_token="",oauth_nonce="{secrets.token_urlsafe()}",oauth_timestamp="{int(time())}",oauth_signature_method="PLAINTEXT",oauth_version="1.0",oauth_signature="{s.s_secret_key}%26"'
         }   
         response = requests.get(url, headers=headers)
-        print(response.text)
         data = json.loads(response.text)
         for hw in data['assignment']:
-            if hw['id'] not in z:
+            if str(hw['id']) not in z:
                 print(hw['due'])
                 try:
                     l = datetime.datetime.strptime(hw['due'], "%Y-%m-%d %H:%M:%S")
                 except:
                     l = datetime.datetime.now()
                 h = Homework.objects.create(hw_user=request.user,hw_class=class1.linked_class,hw_title=hw['title'], external_id=hw['id'], external_src="Schoology", due_date=l,notes=f"{hw['description']}, {hw['web_url']}",completed=False, overdue=False)
+                notion_push(hw=h,user=request.user)
+            pass
+@login_required(login_url='/login')
+def canvas_class(request):
+    try:
+        all = SchoologyAuth.objects.filter(h_user= request.user, src='Canvas')
+    except:
+        return render(request, 'hwapp/error.html', {
+            'error': 'No Canvas Classes found. Please contact website admin for access'
+        })
+
+    for s in all:
+        url = f'https://canvas.instructure.com/api/v1/courses?access_token={s.s_secret_key}'
+        headers = {
+            "Authorization": f'Bearer {s.s_secret_key}'
+        }
+        response = requests.get(url, headers=headers)
+        #print(response.text)
+        response = json.loads(response.text)
+        s_class = SchoologyClasses.objects.filter(schoology_user=request.user, src='Canvas')
+        classes = []
+        for i in s_class:
+            classes.append(str(i.class_id))
+        for i in response:
+            try:
+                assert i['access_restricted_by_date'] == True
+            except KeyError:
+                if str(i['id']) not in classes:
+                    print(i['id'])
+                    print(False)
+                    c = Class.objects.create(class_user=request.user, class_name=i['name'], external_src="Canvas", external_id=i['id'])
+                    SchoologyClasses.objects.create(schoology_user=request.user, class_id=i['id'], s_class_name=i['name'],s_grading_period=i['enrollment_term_id'], linked_class=c, src='Canvas', auth_data=s)
+@login_required(login_url='/login')
+def canvas_hw(request):
+    try:
+        c = SchoologyClasses.objects.filter(schoology_user=request.user, src='Canvas').exclude(update=False)
+    except:
+        return render(request, 'hwapp/error.html', {
+            'error': 'No Canvas Classes found. Please contact website admin for access'
+        })
+    existing_hws = Homework.objects.filter(hw_user=request.user, external_src="Canvas")
+    z = []
+
+    for existing_hw in existing_hws:
+        z.append(str(existing_hw.external_id))
+    for class1 in c:
+        url = f"https://canvas.instructure.com/api/v1/courses/{class1.class_id}/assignments?access_token={class1.auth_data.s_secret_key}"
+        headers = {
+            "Authorization": f'Bearer {class1.auth_data.s_secret_key}'
+        }   
+        response = requests.get(url, headers=headers)
+        data = json.loads(response.text)
+        for hw in data:
+            if str(hw['id']) not in z:
+                try:
+                    l = datetime.datetime.strptime(hw['due_at'], "%Y-%m-%dT%H:%M:%S%z")
+                except:
+                    l = datetime.datetime.now()
+                h = Homework.objects.create(hw_user=request.user,hw_class=class1.linked_class,hw_title=hw['name'], external_id=hw['id'], external_src="Canvas", due_date=l,notes=f"{hw['description']}",completed=False, overdue=False)
                 notion_push(hw=h,user=request.user)
             pass

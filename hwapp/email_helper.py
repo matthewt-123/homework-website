@@ -3,13 +3,16 @@ from datetime import date
 import datetime
 from .models import Recurrence, User, Homework, Class, Preferences, Carrier, EmailTemplate
 import requests
+from time import time
 from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
 import sys
 import pytz 
+import secrets
+import json
 sys.path.append("..")
-from integrations.views import refresh_ics
-
+from integrations.views import refresh_ics, notion_push
+from integrations.models import SchoologyAuth, SchoologyClasses
 def overdue_check():
     my_date = datetime.datetime.now()
     day = my_date.strftime("%d")
@@ -145,3 +148,97 @@ def email_admin(f_name, l_name, email, message):
         "text": content 
     }
 )
+
+def schoology_class():
+    users = SchoologyAuth.objects.filter(src='Schoology')
+    for s in users:
+        url = f'https://api.schoology.com/v1/users/{s.user_id}/sections'
+        headers = {
+            "Authorization": f'OAuth realm="Schoology API",oauth_consumer_key="{s.s_consumer_key}",oauth_token="",oauth_nonce="{secrets.token_urlsafe()}",oauth_timestamp="{int(time())}",oauth_signature_method="PLAINTEXT",oauth_version="1.0",oauth_signature="{s.s_secret_key}%26"'
+        }
+        response = requests.get(url, headers=headers)
+        response = json.loads(response.text)
+        s_class = SchoologyClasses.objects.filter(schoology_user=s.h_user)
+        classes = []
+        for i in s_class:
+            classes.append(i.class_id)
+        for i in response['section']:
+            if f"{i['id']}" not in str(classes):
+                c = Class.objects.create(class_user=s.h_user, class_name=i['course_title'], external_src="Schoology", external_id=i['id'])
+                SchoologyClasses.objects.create(schoology_user=s.h_user, class_id=i['id'], s_class_name=i['course_title'],s_grading_period=i['grading_periods'][0], linked_class=c)
+
+def schoology_hw():
+    users = SchoologyAuth.objects.filter(src='Schoology')
+    for s in users:
+        c = SchoologyClasses.objects.filter(schoology_user=s.h_user, src='Schoology').exclude(update=False)
+        try:
+            existing_hws = Homework.objects.filter(hw_user=s.h_user, external_src="Schoology")
+            z = []
+
+            for existing_hw in existing_hws:
+                z.append(str(existing_hw.external_id))
+            for class1 in c:
+                url = f"https://api.schoology.com/v1/sections/{class1.class_id}/assignments?start=0&limit=1000"
+                headers = {
+                    "Authorization": f'OAuth realm="Schoology API",oauth_consumer_key="{s.s_consumer_key}",oauth_token="",oauth_nonce="{secrets.token_urlsafe()}",oauth_timestamp="{int(time())}",oauth_signature_method="PLAINTEXT",oauth_version="1.0",oauth_signature="{s.s_secret_key}%26"'
+                }   
+                response = requests.get(url, headers=headers)
+                data = json.loads(response.text)
+                for hw in data['assignment']:                  
+                    if str(hw['id']) not in z:
+                        print(str(hw['id']))
+                        print('stupid bitch')
+                        try:
+                            l = datetime.datetime.strptime(hw['due'], "%Y-%m-%d %H:%M:%S")
+                        except:
+                            l = datetime.datetime.now()
+                        h = Homework.objects.create(hw_user=s.h_user,hw_class=class1.linked_class,hw_title=hw['title'], external_id=hw['id'], external_src="Schoology", due_date=l,notes=f"{hw['description']}, {hw['web_url']}",completed=False, overdue=False)
+                        notion_push(hw=h,user=s.h_user)
+                    pass
+        except:
+            pass
+def canvas_class():
+    all = SchoologyAuth.objects.filter(src='Canvas')
+    for s in all:
+        url = f'https://canvas.instructure.com/api/v1/courses?access_token={s.s_secret_key}'
+        headers = {
+            "Authorization": f'Bearer {s.s_secret_key}'
+        }
+        response = requests.get(url, headers=headers)
+        #print(response.text)
+        response = json.loads(response.text)
+        s_class = SchoologyClasses.objects.filter(schoology_user=all.h_user, src='Canvas')
+        classes = []
+        for i in s_class:
+            classes.append(str(i.class_id))
+        for i in response:
+            try:
+                assert i['access_restricted_by_date'] == True
+            except KeyError:
+                if str(i['id']) not in classes:
+                    c = Class.objects.create(class_user=all.h_user, class_name=i['name'], external_src="Canvas", external_id=i['id'])
+                    SchoologyClasses.objects.create(schoology_user=all.h_user, class_id=i['id'], s_class_name=i['name'],s_grading_period=i['enrollment_term_id'], linked_class=c, src='Canvas', auth_data=s)
+
+def canvas_hw():
+    c = SchoologyClasses.objects.filter(src='Canvas').exclude(update=False)
+    for class1 in c:
+        existing_hws = Homework.objects.filter(hw_user=class1.schoology_user, external_src="Canvas")
+        z = []
+        for existing_hw in existing_hws:
+            z.append(str(existing_hw.external_id))
+
+        url = f"https://canvas.instructure.com/api/v1/courses/{class1.class_id}/assignments?access_token={class1.auth_data.s_secret_key}"
+        headers = {
+            "Authorization": f'Bearer {class1.auth_data.s_secret_key}'
+        }   
+        response = requests.get(url, headers=headers)
+        data = json.loads(response.text)
+        for hw in data:
+            if str(hw['id']) not in z:
+                try:
+                    l = datetime.datetime.strptime(hw['due_at'], "%Y-%m-%dT%H:%M:%S%z")
+                except:
+                    l = datetime.datetime.now()
+                h = Homework.objects.create(hw_user=class1.schoology_user,hw_class=class1.linked_class,hw_title=hw['name'], external_id=hw['id'], external_src="Canvas", due_date=l,notes=f"{hw['description']}",completed=False, overdue=False)
+                notion_push(hw=h,user=class1.schoology_user)
+            pass

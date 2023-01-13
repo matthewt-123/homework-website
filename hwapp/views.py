@@ -33,7 +33,7 @@ from urllib.parse import quote_plus, urlencode
 import sys
 sys.path.append("..")
 from integrations.models import CalendarEvent, IcsHashVal, NotionData
-from integrations.views import notion_auth, refresh_ics, schoology_class, schoology_hw
+from integrations.views import notion_auth, refresh_ics, schoology_class, schoology_hw, canvas_class, canvas_hw
 from integrations.helper import notion_push, notion_status_push
 from external.forms import HelpForm1
 
@@ -697,7 +697,14 @@ def admin_console(request):
             return JsonResponse({"status": 200}, status=200)
         elif json_val['function'] == 'schoology_hw':
             schoology_hw(request) 
-            return JsonResponse({"status": 200}, status=200)           
+            return JsonResponse({"status": 200}, status=200)    
+        elif json_val['function'] == 'canvas_class':
+            canvas_class(request) 
+            return JsonResponse({"status": 200}, status=200)     
+        elif json_val['function'] == 'canvas_hw':
+            canvas_hw(request) 
+            return JsonResponse({"status": 200}, status=200)     
+                              
 
     elif request.method == "GET":
         return render(request, "hwapp/admin_console.html")

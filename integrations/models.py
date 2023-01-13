@@ -46,6 +46,8 @@ class SchoologyClasses(models.Model):
     s_grading_period = models.IntegerField(default=None, blank=True, null=True)
     update = models.BooleanField(null=True, blank=True)
     linked_class = models.ForeignKey('hwapp.Class', on_delete=models.CASCADE,default=None, blank=True, null=True)
+    src = models.CharField(max_length=512, default=None, blank=True, null=True) 
+    auth_data = models.ForeignKey('SchoologyAuth', on_delete=models.CASCADE,default=None, blank=True, null=True)
     def __str__(self):
         return f"{self.schoology_user}- {self.s_class_name}-{self.update}"
 class SchoologyAuth(models.Model):
@@ -53,5 +55,7 @@ class SchoologyAuth(models.Model):
     s_consumer_key =  models.CharField(max_length=512, default=None, blank=True, null=True)
     s_secret_key = models.CharField(max_length=512, default=None, blank=True, null=True)
     user_id = models.IntegerField(default=None, blank=True, null=True)
+    src = models.CharField(max_length=512, default=None, blank=True, null=True)
+    url = models.CharField(max_length=512, default=None, blank=True, null=True)  
     def __str__(self):
-        return f"{self.h_user}"
+        return f"{self.h_user}- {self.url}"
