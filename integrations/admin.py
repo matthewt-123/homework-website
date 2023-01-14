@@ -11,6 +11,9 @@ def enable(modeladmin, request, queryset):
 @admin.action(description='Set src=Schoology')
 def schoology(modeladmin, request, queryset):
     queryset.update(src='Schoology')
+@admin.action(description='Set auth=Schoology')
+def schoology(modeladmin, request, queryset):
+    queryset.update(auth_data=1)
 
 class SchoologyClassesAdmin(admin.ModelAdmin):
     list_display = ("schoology_user", "s_class_name", "class_id", "s_grading_period","update")

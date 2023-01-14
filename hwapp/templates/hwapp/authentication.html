@@ -1,0 +1,47 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+<h1>{{user}}</h1>
+<hr>
+<table>
+    <thead>
+<tr>
+    <td>Platform</td>
+    <td>
+        School
+    </td>
+    <td>
+        Secret Key
+    </td>
+    <td>
+        Consumer Key
+    </td>
+    <td>
+        User ID
+    </td>
+</tr>
+    </thead>
+    <form method="POST" action="/edit_hw">
+
+        {% for i in users %}
+        <tr>
+            <td><input id='{{i.id}}_src' type="text" value="{{i.src}}"></td>
+            <td><input id='{{i.id}}_school' type="text" value="{{i.url}}"></td>
+            <td><input id='{{i.id}}_secret_key' type="password"></td>
+            <td><input id='{{i.id}}_consumer_key' type="password"></td>
+            <td><input id='{{i.id}}_userid' type="password"></td>
+
+        </tr>
+        {% endfor %}
+        <tr>
+            <td>
+                <button class="btn btn-primary" type="submit">Submit</button>
+
+            </td>
+
+        </tr>
+    </form>
+
+</table>
+
+{% endblock %}

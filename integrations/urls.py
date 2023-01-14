@@ -16,6 +16,7 @@ urlpatterns = [
     path('google_callback', views.google_callback, name='google_callback'),
     path('google_info', views.google_info, name='google_info'),
     #path('notion_to_ics', views.notion_toics, name='notion_toics'),
-    path('notionexport/<int:user_id>/<int:hash_value>', views.notion_toics, name='notionicsfeed')
+    path('notionexport/<int:user_id>/<int:hash_value>', views.notion_toics, name='notionicsfeed'),
+    #path('authentication_manager/<int:user_id>', views.authentication_manager, name='authentication_manager'),
 
 ]

@@ -4,6 +4,7 @@ import sys
 from .models import NotionData
 sys.path.append("..")
 from hwapp.models import Homework
+import pytz
 
 def notion_push(hw, user):
     token = NotionData.objects.get(notion_user=user).access_token
@@ -42,6 +43,47 @@ def notion_push(hw, user):
     }
     response = requests.post(url, data=json.dumps(body), headers={'Authorization': f'Bearer {token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
     hw.notion_migrated = True
+    hw.notion_id = json.loads(response.text)['id']
+    hw.save()
+    return 0
+def canvas_notion_push(hw, user, timezone):
+    token = NotionData.objects.get(notion_user=user).access_token
+    page_id = NotionData.objects.get(notion_user=user).db_id
+    url = 'https://api.notion.com/v1/pages'
+    body = {
+        "parent": {
+            "database_id": f"{page_id}"
+        },
+        "properties": {
+            "Name": {
+                "title": [{"type":"text","text":{"content":f"{hw.hw_title}","link":None},"plain_text":f"{hw.hw_title}","href":None}]
+                
+            },
+            "Status": {
+                "status": {
+                    "name":"Not started"
+                }
+            },
+            "Class": {
+                "type": f"select",
+                "select": {
+                    "name": f"{hw.hw_class.class_name}"
+                }
+            },
+            "Due": {
+                "type": "date",
+                "date": {
+                    "start": f"{hw.due_date.astimezone(pytz.timezone(f'{timezone}')).replace(tzinfo=None)}",
+                    "end": None,
+                    "time_zone": "US/Pacific"
+                }
+            }
+            
+        }
+    }
+    response = requests.post(url, data=json.dumps(body), headers={'Authorization': f'Bearer {token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
+    hw.notion_migrated = True
+    print(json.loads(response.text))
     hw.notion_id = json.loads(response.text)['id']
     hw.save()
     return 0

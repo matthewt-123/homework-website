@@ -14,12 +14,13 @@ from .models import CalendarEvent, GoogleData, IcsHashVal, NotionData, GoogleCal
 from dotenv import load_dotenv
 import datetime
 import json
+import pytz
 import requests
 from ics import Calendar, Event
 from dateutil import tz
 from pathlib import Path
 import base64
-from .helper import full_notion_refresh, notion_push
+from .helper import full_notion_refresh, notion_push, canvas_notion_push
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -660,10 +661,10 @@ def schoology_hw(request):
         })
     existing_hws = Homework.objects.filter(hw_user=request.user, external_src="Schoology")
     z = []
-    s = c.auth_data
     for existing_hw in existing_hws:
         z.append(str(existing_hw.external_id))
     for class1 in c:
+        s = class1.auth_data
         url = f"https://api.schoology.com/v1/sections/{class1.class_id}/assignments?start=0&limit=1000"
         headers = {
             "Authorization": f'OAuth realm="Schoology API",oauth_consumer_key="{s.s_consumer_key}",oauth_token="",oauth_nonce="{secrets.token_urlsafe()}",oauth_timestamp="{int(time())}",oauth_signature_method="PLAINTEXT",oauth_version="1.0",oauth_signature="{s.s_secret_key}%26"'
@@ -672,7 +673,6 @@ def schoology_hw(request):
         data = json.loads(response.text)
         for hw in data['assignment']:
             if str(hw['id']) not in z:
-                print(hw['due'])
                 try:
                     l = datetime.datetime.strptime(hw['due'], "%Y-%m-%d %H:%M:%S")
                 except:
@@ -730,12 +730,30 @@ def canvas_hw(request):
         }   
         response = requests.get(url, headers=headers)
         data = json.loads(response.text)
+        t = Preferences.objects.get(preferences_user=request.user)
         for hw in data:
             if str(hw['id']) not in z:
                 try:
                     l = datetime.datetime.strptime(hw['due_at'], "%Y-%m-%dT%H:%M:%S%z")
                 except:
                     l = datetime.datetime.now()
+                try:
+                    l = l.astimezone(pytz.timezone(f'{t.user_timezone}')).replace(tzinfo=None)
+                except:
+                    return render(request, 'hwapp/error.html', {
+                        "error": "Please set timezone <a href='/preferences'>here</a>"
+                    })
                 h = Homework.objects.create(hw_user=request.user,hw_class=class1.linked_class,hw_title=hw['name'], external_id=hw['id'], external_src="Canvas", due_date=l,notes=f"{hw['description']}",completed=False, overdue=False)
                 notion_push(hw=h,user=request.user)
             pass
+@user_passes_test(matthew_check, login_url='/login')
+def authentication_manager(request, user_id):
+    if request.method == 'POST':
+        pass
+    else:
+        c = SchoologyAuth.objects.filter(h_user=user_id)
+        user = User.objects.get(id=user_id)
+        return render(request, 'hwapp/authentication.html', {
+            "users": c,
+            "user": user
+        })
