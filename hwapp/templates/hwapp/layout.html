@@ -58,23 +58,14 @@
                         <div id="dropdown_all_init" class="dropdown_all_init">
                         <a class="nav-link dropdown_all" href = "/integrations">Integrations</a>
                         <div id="init_dropdown" style='display:none' class="dropdown_all_init">
-                            <a href="{% url 'schoology_init' %}" style="text-decoration: none;"><div class="nav_item">
-                                Schoology
-                            </div></a>
-                            <a href="{% url 'canvas_init' %}" style="text-decoration: none;"><div class="nav_item">
-                                Canvas
-                            </div></a>
                             <a href="{% url 'notion_auth' %}" style="text-decoration: none;"><div class="nav_item">
                                 Notion
                             </div></a>
-                            {% if request.user|has_group:"Authorized Google Users" %} 
-                            <a href="{% url 'google_info' %}" style="text-decoration: none;"><div class="nav_item">
-                                Google
+                            <a href="{% url 'schoology_api' %}" style="text-decoration: none;"><div class="nav_item">
+                                Schoology
                             </div></a>
-                            {% endif %}
-
-                            <a href="{% url 'other_init' %}" style="text-decoration: none;"><div class="nav_item">
-                                Other
+                            <a href="{% url 'canvas_api' %}" style="text-decoration: none;"><div class="nav_item">
+                                Canvas
                             </div></a>
                         </div>
                     </div>
@@ -151,12 +142,12 @@
                                         </a>
                                     </li>
                                     <li>
-                                        <a style='font-size:20px' href='{% url "schoology_init" %}'>
+                                        <a style='font-size:20px' href='{% url "schoology_api" %}'>
                                             Schoology
                                         </a>
                                     </li>
                                     <li>
-                                        <a style='font-size:20px' href='{% url "canvas_init" %}'>
+                                        <a style='font-size:20px' href='{% url "canvas_api" %}'>
                                             Canvas
                                         </a>
                                     </li>  
@@ -165,18 +156,6 @@
                                             Notion
                                         </a>
                                     </li>          
-                            {% if request.user|has_group:"Authorized Google Users" %} 
-                                    <li>
-                                        <a style='font-size:20px' href='{% url "google_info" %}'>
-                                            Google
-                                        </a>
-                                    </li>
-                            {% endif %}
-                                    <li>
-                                        <a style='font-size:20px' href='{% url "other_init" %}'>
-                                            Other
-                                        </a>
-                                    </li>
 
                                 </ul>
 
@@ -258,11 +237,10 @@
     <footer>
         <style>
         .footer {
-            position: fixed;
             left: 0;
             bottom: 0;
             width: 100%;
-            text-align: center;
+
           }
         </style>
 

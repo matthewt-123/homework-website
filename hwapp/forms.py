@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from .models import Homework, Preferences, Class, Day
+from .models import Homework, Preferences, Class, Day, EmailTemplate
 from django import forms
 from django.contrib.admin import widgets
 
@@ -16,10 +16,14 @@ class HomeworkForm(ModelForm):
 class PreferencesForm(ModelForm):
     class Meta:
         model = Preferences
-        fields = ['email_notifications', 'email_recurrence', 'text_notifications', 'phone_number', 'carrier', 'calendar_output', 'user_timezone']
+        fields = ['calendar_output', 'user_timezone']
 
 class AddClassForm(ModelForm):
     class Meta:
         model = Class
         fields = ['class_name', 'period', 'time']
     time = forms.TimeInput()
+class AddTemplateForm(ModelForm):
+    class Meta:
+        model = EmailTemplate
+        fields = ['template_name', 'template_body']

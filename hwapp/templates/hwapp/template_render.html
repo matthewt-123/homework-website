@@ -1,0 +1,11 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}
+{{header}}
+{% endblock %}
+{% block body %}
+{{template|safe}}
+{% if user.is_superuser %}
+<hr>
+<a href="{% url 'email_template_editor' %}?template_id={{id}}" class="btn btn-primary">Edit</a>
+{% endif %}
+{% endblock %}

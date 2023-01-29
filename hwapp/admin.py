@@ -5,6 +5,9 @@ from .models import User, Recurrence, Day, Class, Homework, Preferences, Carrier
 @admin.action(description='Unpush Notion')
 def unpush_notion(modeladmin, request, queryset):
     queryset.update(notion_migrated=False)
+@admin.action(description='Archive Class')
+def archive_class(modeladmin, request, queryset):
+    queryset.update(archived=True)
 class ClassAdmin(admin.ModelAdmin):
     list_display = ("id", "class_user", "class_name", "period", "time")
 class HomeworkAdmin(admin.ModelAdmin):

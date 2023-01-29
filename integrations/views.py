@@ -757,3 +757,21 @@ def authentication_manager(request, user_id):
             "users": c,
             "user": user
         })
+@login_required(login_url='/login')
+def canvas_api(request):
+    if request.method == 'POST':
+        pass
+    else:
+        return render(request, 'hwapp/add_edit_api.html', {
+            'service': 'Canvas',
+            'location': 'Profile -> Settings -> Add New Access Token'
+        })
+@login_required(login_url='/login')
+def schoology_api(request):
+    if request.method == 'POST':
+        pass
+    else:
+        return render(request, 'hwapp/add_edit_api.html', {
+            'service': 'Schoology',
+            'location': '{Schoology URL}/api'
+        })

@@ -1,0 +1,13 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}Error{% endblock %}
+
+
+
+{% block body %}
+<form method="POST" action="/integrations/schoology_api">
+    {{csrf_token}}
+    <label for='consumer_key'>Consumer Key</label><input type="text" name="consumer_key" id="consumer_key">
+    <label for='secret_key'>Secret Key</label><input type="text" name="secret_key" id="secret_key">
+
+</form>
+{% endblock %}

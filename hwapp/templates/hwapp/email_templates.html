@@ -10,14 +10,21 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/ui/trumbowyg.min.css">
   
 </head>
-
+{% if email_template %}
 <form method="post" action='/config/email_templates?template_id={{email_template.id}}'>
     {% csrf_token %}
     <h1>Edit the {{email_template.template_name}} Template</h1>
     <textarea cols='100' class="myeditablediv" id="template_body" name='template_body'>{{email_template.template_body}}</textarea>
 <button class='btn btn-primary'>Submit</button>
   </form>
-
+{% else %}
+<form method="post" action='{% url "email_add_template" %}'>
+    {% csrf_token %}
+    <label for='template_name'>Template Name: </label><input type="text" id="template_name" name="template_name">
+    <textarea cols='100' class="myeditablediv" id="template_body" name='template_body'></textarea>
+<button class='btn btn-primary'>Submit</button>
+  </form>
+{% endif %}
 
 
 {% endblock %}

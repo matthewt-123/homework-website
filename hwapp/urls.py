@@ -25,6 +25,7 @@ urlpatterns = [
     path('homework/<int:hw_id>', views.homework_entry, name='homework_entry'),
     path('500error', views.fivehundrederror, name='500error'),
     path('config/email_templates', views.email_template_editor, name='email_template_editor'),
+    path('config/add_template', views.add_template, name='email_add_template'),
     path('config', views.experience, name='experience_manager'),
     path('communications', views.email_all, name='communications'),
     path('privacy', views.privacy, name='privacy'),
@@ -33,6 +34,8 @@ urlpatterns = [
     path('callback', views.callback, name='callback'),
     path('login', views.sso_login, name='login'),
     path('logout', views.sso_logout, name='logout'),
+    path('version/<int:version_id>', views.version_manager, name='version_manager'),
+    #path('terms', views.termsflow, name='termsflow'),
 
 ]
 

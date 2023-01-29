@@ -783,3 +783,37 @@ def privacy(request):
     return render(request, 'hwapp/privacy.html')
 def terms(request):
     return render(request, 'hwapp/terms.html')
+@login_required(redirect_field_name='/login')
+def version_manager(request, version_id):
+    if version_id < 7:
+        return render(request, 'hwapp/error.html', {
+            'error': 'invalid version id'
+        })
+    try:
+        template = EmailTemplate.objects.get(id=version_id - 2)
+    except:
+        return render(request, 'hwapp/error.html', {
+            'error': 'invalid version id'
+        }) 
+    return render(request, 'hwapp/template_render.html', {
+        'template': template.template_body,
+        'id': version_id - 2,
+        'header': f'HW App: Version {version_id}'
+    })
+@user_passes_test(matthew_check)
+def add_template(request):
+    if request.method =='GET':
+        return render(request, 'hwapp/email_templates.html')
+    elif request.method == 'POST':
+        for i in request.POST:
+            print(i)
+        to_edit = EmailTemplate.objects.create(template_body=request.POST['template_body'], template_name=request.POST['template_name'])
+        to_edit.save()
+        return render(request, 'hwapp/email_templates.html', {
+            'message': 'Template Successfully Saved',
+            'email_template': to_edit,
+            'website_root': os.environ.get('website_root')
+        })
+@login_required(redirect_field_name='/login')
+def termsflow(request):
+    return render(request, 'hwapp/termsflow.html')
