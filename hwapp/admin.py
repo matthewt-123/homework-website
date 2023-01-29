@@ -14,7 +14,7 @@ class HomeworkAdmin(admin.ModelAdmin):
     list_display = ("id", "hw_class", "hw_user", "hw_title", "priority", "notes", "completed")
     actions=[unpush_notion]
 class PreferencesAdmin(admin.ModelAdmin):
-    list_display = ("id", "preferences_user", "email_notifications", "email_recurrence")
+    list_display = ("id", "preferences_user")
 admin.site.register(User)
 admin.site.register(Recurrence)
 admin.site.register(Day)

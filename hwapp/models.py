@@ -50,11 +50,6 @@ class Timezone(models.Model):
         return f"{self.timezone}"
 class Preferences(models.Model):
     preferences_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='preferences_user')
-    email_notifications = models.BooleanField(default=False)
-    email_recurrence = models.ForeignKey(Recurrence, null=True, blank=True, on_delete=models.CASCADE, related_name="recurrence")
-    text_notifications = models.BooleanField(default=False)
-    phone_number = models.BigIntegerField(blank=True, null=True )
-    carrier = models.ForeignKey(Carrier, on_delete=models.CASCADE, null=True, blank=True)
     calendar_output = models.BooleanField(default=True)
     user_timezone = models.ForeignKey(Timezone, null=True, blank=True, on_delete=models.CASCADE)
 class PWReset(models.Model):
@@ -69,6 +64,8 @@ class IcsLink(models.Model):
 class EmailTemplate(models.Model):
     template_name = models.CharField(max_length=64)
     template_body = models.TextField()
+    type = models.CharField(max_length=64, default=False, blank=False, null=True)
+    version_id = models.IntegerField(default=False, blank=False, null=True)
     def __str__(self):
         return f"{self.template_name}"
 class IcsId(models.Model):

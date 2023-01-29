@@ -577,6 +577,11 @@ def getclasstime(request, class_id):
                 'status': 403,
             }, message=403)
         date_def = datetime.now()
+        if class_instance.time is None:
+            return JsonResponse({
+                'message': 'This class does not have a class time',
+                'status': 404
+            }, status=404)
         dt = datetime.combine(date_def, class_instance.time)
         dt = dt.strftime('%Y-%m-%dT%H:%M')
         return JsonResponse({
@@ -736,10 +741,16 @@ def fivehundrederror(request):
 def email_template_editor(request):
     if request.method == 'GET':
         template_id = request.GET.get('template_id')
+        type1 = request.GET.get('type')
         if template_id == None:
-            return render(request, 'hwapp/template_selector.html', {
-                'templates': EmailTemplate.objects.all()
-            })
+            if type1 is not None:
+                return render(request, 'hwapp/template_selector.html', {
+                    'templates': EmailTemplate.objects.filter(type=type1)
+                })
+            else:
+                return render(request, 'hwapp/template_selector.html', {
+                    'templates': EmailTemplate.objects.all()
+                })               
         return render(request, 'hwapp/email_templates.html', {
             'email_template': EmailTemplate.objects.get(id=template_id),
             'website_root': os.environ.get('website_root')
@@ -754,6 +765,8 @@ def email_template_editor(request):
             to_edit = EmailTemplate.objects.get(id=template_id)
             form_val = request.POST['template_body']
             to_edit.template_body = form_val
+            to_edit.version_id = request.POST['version_id']
+            to_edit.type = request.POST['type']
             to_edit.save()
             return render(request, 'hwapp/email_templates.html', {
                 'message': 'Template Successfully Saved',
@@ -785,19 +798,15 @@ def terms(request):
     return render(request, 'hwapp/terms.html')
 @login_required(redirect_field_name='/login')
 def version_manager(request, version_id):
-    if version_id < 7:
-        return render(request, 'hwapp/error.html', {
-            'error': 'invalid version id'
-        })
     try:
-        template = EmailTemplate.objects.get(id=version_id - 2)
+        template = EmailTemplate.objects.get(version_id=version_id, type='version')
     except:
         return render(request, 'hwapp/error.html', {
             'error': 'invalid version id'
         }) 
     return render(request, 'hwapp/template_render.html', {
         'template': template.template_body,
-        'id': version_id - 2,
+        'id': version_id,
         'header': f'HW App: Version {version_id}'
     })
 @user_passes_test(matthew_check)
@@ -805,15 +814,10 @@ def add_template(request):
     if request.method =='GET':
         return render(request, 'hwapp/email_templates.html')
     elif request.method == 'POST':
-        for i in request.POST:
-            print(i)
-        to_edit = EmailTemplate.objects.create(template_body=request.POST['template_body'], template_name=request.POST['template_name'])
+        to_edit = EmailTemplate.objects.create(template_body=request.POST['template_body'], template_name=request.POST['template_name'], version_id=request.POST['version_id'], type=request.POST['type'])
         to_edit.save()
         return render(request, 'hwapp/email_templates.html', {
             'message': 'Template Successfully Saved',
             'email_template': to_edit,
             'website_root': os.environ.get('website_root')
         })
-@login_required(redirect_field_name='/login')
-def termsflow(request):
-    return render(request, 'hwapp/termsflow.html')
