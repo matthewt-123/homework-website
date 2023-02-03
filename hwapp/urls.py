@@ -35,6 +35,8 @@ urlpatterns = [
     path('logout', views.sso_logout, name='logout'),
     path('version/<int:version_id>', views.version_manager, name='version_manager'),
     #path('terms', views.termsflow, name='termsflow'),
+    path('recurring', views.recurring, name='recurring'),
+    path('addrecurring', views.recurring_add_edit, name='addrecurring'),
 
 ]
 

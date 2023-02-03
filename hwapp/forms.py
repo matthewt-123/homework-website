@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from .models import Homework, Preferences, Class, Day, EmailTemplate
+from .models import Homework, Preferences, Class, Day, EmailTemplate, Recurring
 from django import forms
 from django.contrib.admin import widgets
 
@@ -27,3 +27,7 @@ class AddTemplateForm(ModelForm):
     class Meta:
         model = EmailTemplate
         fields = ['template_name', 'template_body']
+class AddRecurrenceForm(ModelForm):
+    class Meta:
+        model = Recurring
+        fields = ['hw_title','hw_class','days', 'time','notes']

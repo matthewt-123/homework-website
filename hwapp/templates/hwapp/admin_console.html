@@ -30,16 +30,10 @@ Admin Console
 <div id="alert" class='alert alert-success' style="display: none;"></div>
 <div class='flex-container' style='display:flex;height:100px;align-items: space-around;justify-content: center;flex-direction: row;gap:5%;flex-wrap: wrap;'>
     <div>
-        <button class='btn btn-primary' onclick="admin(function1='refresh')">Refresh ICS/Email</button>
-    </div>
-    <div>
         <button class='btn btn-primary' onclick="admin(function1='overdue')">Refresh Overdue</button>
     </div>
     <div>
         <button class='btn btn-primary' onclick="admin(function1='ics_refresh')">Refresh ICS</button>
-    </div>
-    <div>
-        <button class='btn btn-primary' onclick="admin(function1='send_text')">Send Text</button>
     </div>
     <div>
         <a class='btn btn-primary' target="_blank" href='https://matthew-homeworkapp.atlassian.net/jira/software/projects/HOM/boards/1'>Jira Board</a>
@@ -59,9 +53,6 @@ Admin Console
         <a class='btn btn-primary' href='{% url "matthew_notion" %}'>Refresh Notion Integration</a>
     </div>
     <div>
-        <a class='btn btn-primary' href='{% url "communications" %}'>Send Mass Email</a>
-    </div>
-    <div>
         <a class='btn btn-primary' href='https://sentry.io/organizations/homework-app/issues/?project=6359235'>Sentry</a>
     </div>
     <div>
@@ -78,6 +69,9 @@ Admin Console
     </div>
     <div>
         <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='canvas_hw')">Canvas HW</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='recurring_events')">Recurring Events</a>
     </div>
 </div>
 

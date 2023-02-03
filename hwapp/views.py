@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.db import IntegrityError, connection
 from django.forms import ModelForm
 from django.contrib.auth import authenticate, login, logout
-from .models import EmailTemplate, User, Class, Homework, Preferences, PWReset, AllAuth
+from .models import EmailTemplate, User, Class, Homework, Preferences, PWReset, AllAuth,Recurring, Day
 from django.http import HttpResponseRedirect
 import requests
 from django.urls import reverse
@@ -11,7 +11,7 @@ from django import forms
 from django.contrib.auth.decorators import login_required, user_passes_test
 import os
 from ics import Event
-from .forms import PreferencesForm, AddClassForm
+from .forms import PreferencesForm, AddClassForm, AddRecurrenceForm
 from dotenv import load_dotenv
 import json
 import string
@@ -19,7 +19,7 @@ import random
 from datetime import datetime, time, timedelta
 from django.utils import timezone
 from django.core.paginator import Paginator
-from .email_helper import pw_reset_email, send_email, overdue_check, timezone_helper, text_refresh, email_user
+from .email_helper import pw_reset_email, send_email, overdue_check, timezone_helper, text_refresh, email_user,recurring_events
 import arrow
 from . import helpers
 
@@ -224,38 +224,15 @@ def preferences(request):
     if request.method == 'POST':
         form = PreferencesForm(request.POST) 
         if form.is_valid():
-            email_recurrence=form.cleaned_data['email_recurrence']
-            email_notifications=form.cleaned_data['email_notifications']
-            phone_number=form.cleaned_data['phone_number']
-            carrier=form.cleaned_data['carrier']
-            text_notifications = form.cleaned_data['text_notifications']
             calendar_output = form.cleaned_data['calendar_output']
             user_timezone = form.cleaned_data['user_timezone']
-            if phone_number and not carrier:
-                return render(request, 'hwapp/preferences.html', {
-                    'form': form,
-                    'error': "The carrier field is required."
-                })
-            if phone_number:
-                try:
-                    int(phone_number)
-                except:
-                    return render(request, 'hwapp/preferences.html', {
-                        'form': form,
-                        'error': "Please type in your phone number with numbers only(no dashes or parentheses)."
-                    })
             try:
                 preferences = Preferences.objects.get(preferences_user=request.user)
-                preferences.email_notifications = email_notifications
-                preferences.email_recurrence = email_recurrence
-                preferences.phone_number = phone_number
-                preferences.carrier = carrier    
-                preferences.text_notifications = text_notifications  
                 preferences.calendar_output = calendar_output      
                 preferences.user_timezone = user_timezone    
                 preferences.save()
             except:
-                new_pref = Preferences(preferences_user=request.user, email_recurrence=email_recurrence, email_notifications=email_notifications, carrier=carrier, phone_number=phone_number, text_notifications=text_notifications)
+                new_pref = Preferences(preferences_user=request.user)
                 new_pref.save()
             return render(request, 'hwapp/preferences.html', {
                 'form': form,
@@ -267,14 +244,7 @@ def preferences(request):
     else:
         try: 
             preferences = Preferences.objects.get(preferences_user=request.user)
-            email_notifications = preferences.email_notifications
-            email_recurrence = preferences.email_recurrence
             initial = {
-                'email_notifications': email_notifications,
-                'email_recurrence': email_recurrence,
-                'carrier': preferences.carrier,
-                'phone_number': preferences.phone_number,
-                'text_notifications': preferences.text_notifications,
                 'calendar_output': preferences.calendar_output,
                 'user_timezone': preferences.user_timezone
             }
@@ -709,8 +679,9 @@ def admin_console(request):
         elif json_val['function'] == 'canvas_hw':
             canvas_hw(request) 
             return JsonResponse({"status": 200}, status=200)     
-                              
-
+        elif json_val['function'] == 'recurring_events':
+            recurring_events()                
+            return JsonResponse({"status": 200}, status=200) 
     elif request.method == "GET":
         return render(request, "hwapp/admin_console.html")
     else:
@@ -821,3 +792,61 @@ def add_template(request):
             'email_template': to_edit,
             'website_root': os.environ.get('website_root')
         })
+@login_required(login_url='/login')
+def recurring(request):
+    try:
+        recurrings = Recurring.objects.filter(user=request.user)
+        print(recurrings)
+        return render(request, 'hwapp/recurring.html', {
+            'recurrings': recurrings,
+            })
+    except:
+        return render(request, 'hwapp/recurring.html')
+
+@login_required(login_url='/login')
+def recurring_add_edit(request):
+    if request.method == 'POST':
+        try:
+            #find existing record
+            r = Recurring.objects.get(user=request.user, id=request.GET.get('recurring_id'))
+        except:
+            #Create a new one if not found
+            r = Recurring()
+        r.hw_title = request.POST['hw_title']
+        try:
+            c = Class.objects.get(id=request.POST['hw_class'], class_user=request.user)
+        except:
+            return render(request, 'hwapp/error.html', {
+                'error': 'Unauthorized'
+            })
+        r.hw_class = c
+        r.hw_title = request.POST['hw_title']   
+        r.time = request.POST['time']
+        r.notes = request.POST['notes']
+        days = request.POST.getlist('days')
+        r.days.clear()
+        for day in days:
+            r.days.add(day) 
+        r.save()
+        return render(request, 'hwapp/success.html', {
+            'message':'Assignment updated successfully. Click <a href="/recurring">here</a> to return to the recurring assignments'
+        })
+    else:
+        if request.GET.get('recurring_id'):
+            try:
+                recurring = Recurring.objects.get(user=request.user, id=request.GET.get('recurring_id'))
+            except:
+                return render(request, 'hwapp/error.html', {
+                    'error': 'Unauthorized'
+                })
+            return render(request, 'hwapp/recurringedit.html',{
+                'recurring': recurring,
+                'classes':Class.objects.filter(class_user=request.user, archived=False),
+                'days': Day.objects.all(),
+                'time1': recurring.time.strftime("%H:%M:%S")
+            })
+        else:
+            return render(request, 'hwapp/recurringedit.html', {
+                'classes':Class.objects.filter(class_user=request.user, archived=False),
+                'days': Day.objects.all()
+            })

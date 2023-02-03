@@ -4,12 +4,10 @@ from django.db import models
 # Create your models here.
 class User(AbstractUser):
     pass
-class Recurrence(models.Model):
-    basis = models.CharField(max_length=128)
-    def __str__(self):
-        return f"{self.basis}"
+
 class Day(models.Model):
     days = models.CharField(max_length=128)
+    abbreviation = models.CharField(max_length=128)
     def __str__(self):
         return f"{self.days}"
 class Class(models.Model):
@@ -23,6 +21,13 @@ class Class(models.Model):
     external_src = models.CharField(null=True, blank=True,max_length=128)
     def __str__(self):
         return f"{self.class_name}"
+class Recurring(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    days = models.ManyToManyField(Day)
+    time = models.TimeField(blank=True,null=True)
+    hw_class = models.ForeignKey(Class, on_delete=models.CASCADE, blank=True, null=True)
+    hw_title = models.CharField(blank=True, max_length=256, null=True)
+    notes = models.TextField(blank=True, null=True)
 class Homework(models.Model):
     hw_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hw_user')
     hw_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='hw_class1', blank=True, null=True)
@@ -37,6 +42,7 @@ class Homework(models.Model):
     ics_id = models.CharField(blank=True, default=False, null=True, max_length=256)
     external_id = models.CharField(blank=True, default=False, null=True, max_length=128)
     external_src = models.CharField(null=True, blank=True,max_length=128)
+    recurring = models.ForeignKey(Recurring, on_delete=models.CASCADE,null=True, blank=True)
     def __str__(self):
         return f"{self.hw_title}"
 class Carrier(models.Model):

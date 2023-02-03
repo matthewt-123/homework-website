@@ -1,0 +1,42 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}
+Add Recurring
+{% endblock %}
+{% block javascript %}
+<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+{% endblock %}
+{% block body %}
+
+<div id="alert" class="alert alert-success" role="alert" style='display:none;'></div>
+<div id='error_message' class="alert alert-danger" role="alert" style='display:none;'></div>
+<h1  class='django_forms'>Add Recurring</h1>
+<hr>
+
+<form action="/addrecurring{% if recurring %}?recurring_id={{recurring.id}}{% endif %}" class="indented add_hw_form" method='POST'>
+    {% csrf_token %}
+    {% if recurring %}
+    <table class='django_forms'><tbody>
+        <tr><th><label for="id_hw_title">Hw title:</label></th><td><input type="text" name="hw_title"maxlength="256" required="" id="hw_title" value="{{recurring.hw_title}}"></td></tr>
+            <tr><th><label for="id_hw_class">Hw class:</label></th><td><select name="hw_class" required id="hw_class"><option value="" selected disabled>---------</option>{% for class in classes %}<option {% if class.id == recurring.hw_class.id %} selected {% endif %} value={{class.id}}>{{class.class_name}}</option>{% endfor %}</select></td></tr>
+        <tr><th><label for="id_hw_title">Days:</label></th><td>        <select class="form-select" name='days' multiple>{% for day in days %}<option {% if day in recurring.days.all %} selected {% endif %} value="{{day.id}}">{{day}}</option>{% endfor %}</select></td></tr>
+        <tr><th><label for="id_due_date">Time:</label></th><td><input type="time" name="time" required="" id="due_date" value="{{time1}}"></td></tr>
+        <tr><th><label for="id_notes">Notes:</label></th><td><textarea name="notes" cols="40" rows="10" id="notes">{{recurring.notes}}</textarea></td></tr> 
+        </tbody></table>
+
+    {% else %}
+    <table class='django_forms'><tbody>
+        <tr><th><label for="id_hw_title">Hw title:</label></th><td><input type="text" name="hw_title"maxlength="256" required="" id="hw_title"></td></tr>
+            <tr><th><label for="id_hw_class">Hw class:</label></th><td><select name="hw_class" required="" id="hw_class"><option value="" selected disabled>---------</option>{% for class in classes %}<option value={{class.id}}>{{class.class_name}}</option>{% endfor %}</select></td></tr>
+        <tr><th><label for="id_hw_title">Days:</label></th><td>        <select class="form-select" multiple>{% for day in days %}<option value="{{day}}">{{day}}</option>{% endfor %}</select></td></tr>
+        <tr><th><label for="id_due_date">Time:</label></th><td><input type="time" name="due_date" required="" id="due_date"></td></tr>
+        <tr><th><label for="id_notes">Notes:</label></th><td><textarea name="notes" cols="40" rows="10" id="notes"></textarea></td></tr> 
+        </tbody></table>
+    {% endif %}
+    <button style="margin-left: 45%" type="submit" class="btn btn-primary">Submit</button>
+
+</form>
+
+
+{% endblock %}
+

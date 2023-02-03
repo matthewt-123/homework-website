@@ -1,7 +1,7 @@
 import os
 from datetime import date
 import datetime
-from .models import Recurrence, User, Homework, Class, Preferences, Carrier, EmailTemplate
+from .models import User, Homework, Class, Preferences, Carrier, EmailTemplate, Recurring, Day
 import requests
 from time import time
 from requests.auth import HTTPBasicAuth
@@ -10,16 +10,18 @@ import sys
 import pytz 
 import secrets
 import json
+from dateutil.relativedelta import relativedelta, MO
 sys.path.append("..")
 from integrations.views import refresh_ics, notion_push
-from integrations.models import SchoologyAuth, SchoologyClasses
+from integrations.models import SchoologyAuth, SchoologyClasses, NotionData
+from mywebsite.settings import DEBUG
 def overdue_check():
     my_date = datetime.datetime.now()
     day = my_date.strftime("%d")
     month = my_date.strftime("%m")
     year = my_date.strftime("%Y")
     #day-1 as this refresh runs midnight PST/0700 UTC for all hw due previous day
-    allhw = Homework.objects.filter(due_date__date=datetime.datetime(int(year), int(month), int(day)-1), completed=False)
+    allhw = Homework.objects.filter(due_date__date__lt=datetime.datetime(int(year), int(month), int(day)-1), completed=False)
     for hw in allhw:
         hw.overdue = True
         hw.save()
@@ -242,3 +244,48 @@ def canvas_hw():
                 h = Homework.objects.create(hw_user=class1.schoology_user,hw_class=class1.linked_class,hw_title=hw['name'], external_id=hw['id'], external_src="Canvas", due_date=l,notes=f"{hw['description']}",completed=False, overdue=False)
                 notion_push(hw=h,user=class1.schoology_user)
             pass
+def recurring_events():
+    #run every sunday
+    r = Recurring.objects.all()
+    dt = datetime.datetime.now() 
+    sunday = dt + relativedelta(weekday=MO(0)) + datetime.timedelta(days=-1)
+    for each in r:
+        user = each.user
+        hw = each
+        for day in each.days.all():
+            dt = sunday + datetime.timedelta(days=day.id - 1)
+            token = NotionData.objects.get(notion_user=user).access_token
+            page_id = NotionData.objects.get(notion_user=user).db_id
+            url = 'https://api.notion.com/v1/pages'
+            body = {
+                "parent": {
+                    "database_id": f"{page_id}"
+                },
+                "properties": {
+                    "Name": {
+                        "title": [{"type":"text","text":{"content":f"{hw.hw_title}","link":None},"plain_text":f"{hw.hw_title}","href":None}]
+                        
+                    },
+                    "Status": {
+                        "status": {
+                            "name":"Not started"
+                        }
+                    },
+                    "Class": {
+                        "type": f"select",
+                        "select": {
+                            "name": f"{hw.hw_class.class_name}"
+                        }
+                    },
+                    "Due": {
+                        "type": "date",
+                        "date": {
+                            "start": f"{dt}",
+                            "end": None,
+                            "time_zone": "US/Pacific"
+                        }
+                    }
+                    
+                }
+            }
+            requests.post(url, data=json.dumps(body), headers={'Authorization': f'Bearer {token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})

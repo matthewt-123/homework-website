@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Recurrence, Day, Class, Homework, Preferences, Carrier, Timezone, PWReset, IcsLink, EmailTemplate, IcsId, AllAuth
+from .models import User, Day, Class, Homework, Preferences, Carrier, Timezone, PWReset, IcsLink, EmailTemplate, IcsId, AllAuth, Recurring
 
 # Register your models here.
 @admin.action(description='Unpush Notion')
@@ -16,7 +16,6 @@ class HomeworkAdmin(admin.ModelAdmin):
 class PreferencesAdmin(admin.ModelAdmin):
     list_display = ("id", "preferences_user")
 admin.site.register(User)
-admin.site.register(Recurrence)
 admin.site.register(Day)
 admin.site.register(Class, ClassAdmin)
 admin.site.register(Homework, HomeworkAdmin)
@@ -28,3 +27,4 @@ admin.site.register(Timezone)
 admin.site.register(EmailTemplate)
 admin.site.register(IcsId)
 admin.site.register(AllAuth)
+admin.site.register(Recurring)
