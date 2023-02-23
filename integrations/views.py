@@ -422,6 +422,8 @@ def notion_callback(request):
         url = 'https://api.notion.com/v1/pages'
         to_post = Homework.objects.filter(hw_user=request.user, completed=False, notion_migrated=False)
         for hw in to_post:
+            hw.due_date = datetime.datetime.strftime(hw.due_date, '%Y-%m-%dT%H:%M')
+            print(dd)
             body = {
                 "parent": {
                     "database_id": f"{page_id}"
@@ -454,6 +456,8 @@ def notion_callback(request):
                 }
             }
             response = requests.post(url, data=json.dumps(body), headers={'Authorization': f'Bearer {token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
+            print(response)
+            print(response.text)
             hw.notion_migrated = True
             hw.notion_id = json.loads(response.text)['id']
             hw.save()

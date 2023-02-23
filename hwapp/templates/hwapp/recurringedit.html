@@ -20,7 +20,7 @@ Add Recurring
         <tr><th><label for="id_hw_title">Hw title:</label></th><td><input type="text" name="hw_title"maxlength="256" required="" id="hw_title" value="{{recurring.hw_title}}"></td></tr>
             <tr><th><label for="id_hw_class">Hw class:</label></th><td><select name="hw_class" required id="hw_class"><option value="" selected disabled>---------</option>{% for class in classes %}<option {% if class.id == recurring.hw_class.id %} selected {% endif %} value={{class.id}}>{{class.class_name}}</option>{% endfor %}</select></td></tr>
         <tr><th><label for="id_hw_title">Days:</label></th><td>        <select class="form-select" name='days' multiple>{% for day in days %}<option {% if day in recurring.days.all %} selected {% endif %} value="{{day.id}}">{{day}}</option>{% endfor %}</select></td></tr>
-        <tr><th><label for="id_due_date">Time:</label></th><td><input type="time" name="time" required="" id="due_date" value="{{time1}}"></td></tr>
+        <tr><th><label for="id_due_date">Time:</label></th><td><input type="time" name="due_date" required="" id="due_date" value="{{time1}}"></td></tr>
         <tr><th><label for="id_notes">Notes:</label></th><td><textarea name="notes" cols="40" rows="10" id="notes">{{recurring.notes}}</textarea></td></tr> 
         </tbody></table>
 
@@ -28,7 +28,7 @@ Add Recurring
     <table class='django_forms'><tbody>
         <tr><th><label for="id_hw_title">Hw title:</label></th><td><input type="text" name="hw_title"maxlength="256" required="" id="hw_title"></td></tr>
             <tr><th><label for="id_hw_class">Hw class:</label></th><td><select name="hw_class" required="" id="hw_class"><option value="" selected disabled>---------</option>{% for class in classes %}<option value={{class.id}}>{{class.class_name}}</option>{% endfor %}</select></td></tr>
-        <tr><th><label for="id_hw_title">Days:</label></th><td>        <select class="form-select" multiple>{% for day in days %}<option value="{{day}}">{{day}}</option>{% endfor %}</select></td></tr>
+        <tr><th><label for="id_hw_title">Days:</label></th><td>        <select name='days' class="form-select" multiple>{% for day in days %}<option value="{{day.id}}">{{day}}</option>{% endfor %}</select></td></tr>
         <tr><th><label for="id_due_date">Time:</label></th><td><input type="time" name="due_date" required="" id="due_date"></td></tr>
         <tr><th><label for="id_notes">Notes:</label></th><td><textarea name="notes" cols="40" rows="10" id="notes"></textarea></td></tr> 
         </tbody></table>

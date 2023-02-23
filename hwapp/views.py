@@ -811,7 +811,7 @@ def recurring_add_edit(request):
             r = Recurring.objects.get(user=request.user, id=request.GET.get('recurring_id'))
         except:
             #Create a new one if not found
-            r = Recurring()
+            r = Recurring(user=request.user)
         r.hw_title = request.POST['hw_title']
         try:
             c = Class.objects.get(id=request.POST['hw_class'], class_user=request.user)
@@ -821,9 +821,11 @@ def recurring_add_edit(request):
             })
         r.hw_class = c
         r.hw_title = request.POST['hw_title']   
-        r.time = request.POST['time']
+        r.time = request.POST['due_date']
         r.notes = request.POST['notes']
+        r.save()
         days = request.POST.getlist('days')
+        print(days)
         r.days.clear()
         for day in days:
             r.days.add(day) 
