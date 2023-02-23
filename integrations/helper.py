@@ -5,12 +5,13 @@ from .models import NotionData
 sys.path.append("..")
 from hwapp.models import Homework
 import pytz
+from datetime import datetime
 
 def notion_push(hw, user):
     token = NotionData.objects.get(notion_user=user).access_token
     page_id = NotionData.objects.get(notion_user=user).db_id
     url = 'https://api.notion.com/v1/pages'
-    hw.due_date = datetime.datetime.strftime(hw.due_date, '%Y-%m-%dT%H:%M')
+    hw.due_date = datetime.strftime(hw.due_date, '%Y-%m-%dT%H:%M')
     body = {
         "parent": {
             "database_id": f"{page_id}"
@@ -52,7 +53,7 @@ def canvas_notion_push(hw, user, timezone):
     token = NotionData.objects.get(notion_user=user).access_token
     page_id = NotionData.objects.get(notion_user=user).db_id
     url = 'https://api.notion.com/v1/pages'
-    hw.due_date = datetime.datetime.strftime(hw.due_date, '%Y-%m-%dT%H:%M')
+    hw.due_date = datetime.strftime(hw.due_date, '%Y-%m-%dT%H:%M')
     body = {
         "parent": {
             "database_id": f"{page_id}"
@@ -97,7 +98,7 @@ def full_notion_refresh(user):
     to_post = Homework.objects.filter(hw_user=user, completed=False, notion_migrated=False)
     m = []
     for hw in to_post:
-        hw.due_date = datetime.datetime.strftime(hw.due_date, '%Y-%m-%dT%H:%M')
+        hw.due_date = datetime.strftime(hw.due_date, '%Y-%m-%dT%H:%M')
         body = {
             "parent": {
                 "database_id": f"{page_id}"
@@ -151,7 +152,7 @@ def notion_status_push(hw, user, status):
     token = NotionData.objects.get(notion_user=user).access_token
     page_id = hw.notion_id
     url = f'https://api.notion.com/v1/pages/{page_id}'
-    hw.due_date = datetime.datetime.strftime(hw.due_date, '%Y-%m-%dT%H:%M')
+    hw.due_date = datetime.strftime(hw.due_date, '%Y-%m-%dT%H:%M')
     body = {
         "parent": {
             "database_id": f"{page_id}"
