@@ -43,6 +43,7 @@ class Homework(models.Model):
     external_id = models.CharField(blank=True, default=False, null=True, max_length=128)
     external_src = models.CharField(null=True, blank=True,max_length=128)
     recurring = models.ForeignKey(Recurring, on_delete=models.CASCADE,null=True, blank=True)
+    archive = models.BooleanField(blank=False, default=False, null=False)
     def __str__(self):
         return f"{self.hw_title}"
 class Carrier(models.Model):

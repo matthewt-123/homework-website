@@ -35,10 +35,42 @@
                     alert.style.display='block'
                     }
                 })
-        } else {
-
         }}
-        
+        function archive_class(class_id){
+        name_data = document.getElementById(`class_name_${class_id}`)
+        name = name_data.dataset.value
+        if(confirm(`Are you sure you want to archive ${name}?`)) {
+            fetch(`/archive/${class_id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                },
+                credentials: 'same-origin',
+            })
+            .then(response => response.json())
+            .then(result => {
+                if(result['status'] == 200) {
+                    /* hide error message if any */
+                    document.getElementById('error_message').innerHTML=''
+                    document.getElementById('error_message').style.display='none'
+                    /* show alert */
+                    const alert = document.getElementById('alert')
+                    alert.innerHTML = result['message']
+                    alert.style.display='block'
+
+                    /* remove element */
+                    document.getElementById(`row_${class_id}`).remove()
+
+                } else {
+                    document.getElementById('alert').innerHTML=''
+                    document.getElementById('alert').style.display='none'
+
+                    const alert = document.getElementById('error_message')
+                    alert.innerHTML = result['message']
+                    alert.style.display='block'
+                    }
+                })
+        }}     
 
 
 </script>
@@ -52,8 +84,8 @@ Homework List for {{user.username}}
 <table class="classes" width='100%'>
     <thead class="classes">
         <strong><tr class="classes">
-            <td class='classes' with=10%></td>
-            <td class="classes" width='40%'>
+            <td class='classes' with=5%></td>
+            <td class="classes" width='35%'>
                 <strong>Class Name</strong>
             </td width = '10%'>
             <td class="classes" width="10%">
@@ -66,6 +98,7 @@ Homework List for {{user.username}}
                 <strong>Edit</strong>
             </td>
             <td class="classes" width=10%><strong>Delete</strong></td>
+            <td class="classes" width=10%><strong>Archive</strong></td>
 
         </tr></strong>
     </thead>
@@ -83,13 +116,19 @@ Homework List for {{user.username}}
                     {{class.time}}
                 </a></td>
                 <td class="classes">
-                    <a href='/editclass/{{class.id}}'>
-                        <img id="edit_logo" src='/static/hwapp/edit.png' width='20%'>
+                    <a href='/editclass/{{class.id}}' color="black">
+                        <i class="fa-solid fa-pencil" color="black"></i>
+
                     </a>
+
                 </td>
                 <td class="classes">
-                    <img src='/static/hwapp/delete-48.png' onclick='delete_class({{class.id}})' width=20%>
+                    <i class="fa-solid fa-trash" onclick='delete_class({{class.id}})'></i>
+                    <i class="glyphicon glyphicon-trash" onclick='delete_class({{class.id}})'></i>
                     {% csrf_token %}
+                </td>
+                <td class="classes">
+                    <i class="fas fa-archive" onclick='archive_class({{class.id}})'></i>
                 </td>
                 <td class='classes' with=5%></td>
 

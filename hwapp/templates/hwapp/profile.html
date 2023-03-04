@@ -13,9 +13,19 @@ My Profile
 <hr>
     <form action='{% url "profile" %}' method='POST' class='indented'>
         {% csrf_token %}
-        <table style='margin-left:35%;'>
-            {{form.as_table}} 
-        </table>
+        <div style='margin-left:35%;'>
+
+                <label for="first_name">First Name</label>
+                <input type="text" class="form-control"  id="first_name" name = "first_name" style="width:50%" placeholder="John" value="{{first_name}}">
+
+                <label for="last_name">Last Name</label>
+                <input type="text" class="form-control" id="last_name" name="last_name" style="width:50%" placeholder="Doe" value="{{last_name}}">
+
+
+                <label for="email">Email address</label>
+                <input type="email" class="form-control" id="email" name="email" style="width:50%" placeholder="Enter email" value="{{email}}">
+
+        </div>
         <button style='margin-left: 35%' type="submit" class="btn btn-primary">Submit</button>
     </form>
 

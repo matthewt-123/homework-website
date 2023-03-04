@@ -1,17 +1,15 @@
 from django.http.response import JsonResponse
 from django.shortcuts import render
-from django.db import IntegrityError, connection
 from django.forms import ModelForm
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login
 from .models import EmailTemplate, User, Class, Homework, Preferences, PWReset, AllAuth,Recurring, Day
 from django.http import HttpResponseRedirect
 import requests
 from django.urls import reverse
-from django import forms
 from django.contrib.auth.decorators import login_required, user_passes_test
 import os
 from ics import Event
-from .forms import PreferencesForm, AddClassForm, AddRecurrenceForm
+from .forms import PreferencesForm, AddClassForm
 from dotenv import load_dotenv
 import json
 import string
@@ -107,12 +105,10 @@ def index(request):
     if not page_size:
         page_size = 10
     if not request.GET.get('class'):
-        l = Homework.objects.filter(hw_user = request.user, completed=False).order_by('due_date', 'hw_class__period', 'priority')
-        hwlist = []
-        for hw in l:
-            if hw.hw_class.archived == False:
-                hwlist.append(hw)
-
+        hwlist = Homework.objects.filter(hw_user = request.user, completed=False, archive=False).order_by('due_date', 'hw_class__period', 'priority')
+        class1 = False
+        if request.GET.get('start') or request.GET.get('end'):
+            hwlist = Homework.objects.filter(hw_user = request.user, completed=False, archive=False, due_date__range = [request.GET.get('start'), request.GET.get('end')]).order_by('due_date', 'hw_class__period', 'priority')
     else:
         try:
             class1 = Class.objects.get(class_user=request.user, id=request.GET.get('class'), archived = False)
@@ -121,6 +117,16 @@ def index(request):
                 "message": "Access Denied"
             }, status=403)
         hwlist = Homework.objects.filter(hw_user = request.user, completed=False, hw_class=class1).order_by('due_date', 'hw_class__period', 'priority')
+        if request.GET.get('start') or request.GET.get('end'):
+            hwlist = Homework.objects.filter(hw_user = request.user, completed=False, hw_class=class1).order_by('due_date', 'hw_class__period', 'priority')
+        else:
+            hwlist = Homework.objects.filter(hw_user = request.user, completed=False, hw_class=class1).order_by('due_date', 'hw_class__period', 'priority')
+    # else:
+    #     pass
+    # if not request.GET.get('end'):
+    #     pass
+    # else:
+    #     pass
     h = Paginator(hwlist, page_size)
     page_number = request.GET.get('page')
     if not page_number:
@@ -133,7 +139,8 @@ def index(request):
         'class_list': class_list,
         'page_obj': page_obj,
         'length': list(h.page_range),
-        'website_root': os.environ.get('website_root')
+        'website_root': os.environ.get('website_root'),
+        'class1': class1
     })
 
 
@@ -417,22 +424,49 @@ def editclass(request, class_id):
 
 @login_required(login_url='/login')
 def allhw(request):
-    user = request.user
-    hwall = Homework.objects.filter(hw_user = user).order_by('due_date', 'hw_class__period', 'priority')
-    class_list = Class.objects.filter(class_user = request.user).order_by('period')
-    hwlist = []
-    completed = []
-    for hw in hwall:
-        if hw.completed == True:
-            completed.append(hw)
+    page_size = request.GET.get('page_size')
+    if not page_size:
+        page_size = 10
+    if not request.GET.get('class'):
+        hwlist = Homework.objects.filter(hw_user = request.user).order_by('due_date', 'hw_class__period', 'priority')
+        class1 = False
+        if request.GET.get('start') or request.GET.get('end'):
+            hwlist = Homework.objects.filter(hw_user = request.user, due_date__range = [request.GET.get('start'), request.GET.get('end')]).order_by('due_date', 'hw_class__period', 'priority')
+    else:
+        try:
+            class1 = Class.objects.get(class_user=request.user, id=request.GET.get('class'))
+        except:
+            return JsonResponse({
+                "message": "Access Denied"
+            }, status=403)
+        hwlist = Homework.objects.filter(hw_user = request.user, hw_class=class1).order_by('due_date', 'hw_class__period', 'priority')
+        if request.GET.get('start') or request.GET.get('end'):
+            hwlist = Homework.objects.filter(hw_user = request.user, hw_class=class1).order_by('due_date', 'hw_class__period', 'priority')
         else:
-            hwlist.append(hw)
+            hwlist = Homework.objects.filter(hw_user = request.user, hw_class=class1).order_by('due_date', 'hw_class__period', 'priority')
+    # else:
+    #     pass
+    # if not request.GET.get('end'):
+    #     pass
+    # else:
+    #     pass
+    h = Paginator(hwlist, page_size)
+    page_number = request.GET.get('page')
+    if not page_number:
+        page_number=1
+    page_obj = h.get_page(page_number)
+    class_list = Class.objects.filter(class_user = request.user).order_by('period')
+    load_dotenv()
     return render(request, 'hwapp/index.html', {
-        'hwlist': hwlist,
-        'completed': completed,
+        'hwlist': page_obj,
         'class_list': class_list,
-        'website_root': os.environ.get('website_root')
+        'page_obj': page_obj,
+        'length': list(h.page_range),
+        'website_root': os.environ.get('website_root'),
+        'class1': class1,
+        'completed': True
     })
+
 def about(request):
     template = EmailTemplate.objects.get(id=4)
     return render(request, 'hwapp/aboutme.html', {
@@ -440,30 +474,28 @@ def about(request):
     })
 @login_required(login_url='/login')
 def profile(request):
-    class UserForm(ModelForm):
-        class Meta:
-            model = User
-            fields = ['first_name', 'last_name', 'email']
+
     if request.method == 'POST':
-        form = UserForm(request.POST)
-        if form.is_valid():
-            request.user.first_name = form.cleaned_data['first_name']
-            request.user.last_name = form.cleaned_data['last_name']
-            request.user.email = form.cleaned_data['email']
-            request.user.save()
-            return render(request, 'hwapp/profile.html', {
-                'form': form,
-                'message': "Success!"
-            })
+        request.user.first_name = request.POST['first_name']
+        request.user.last_name = request.POST['last_name']
+        request.user.email = request.POST['email']
+        request.user.save()
+        return render(request, 'hwapp/profile.html', {
+            'message': "Success!",
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+            'email': request.user.email,
+        })
     else:
         initial = {
             'first_name': request.user.first_name,
             'last_name': request.user.last_name,
             'email': request.user.email,
         }
-        form = UserForm(initial = initial)
         return render(request, 'hwapp/profile.html', {
-            'form': form
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+            'email': request.user.email,
         })
 @login_required(login_url='/login')
 def calendar(request):
@@ -852,3 +884,14 @@ def recurring_add_edit(request):
                 'classes':Class.objects.filter(class_user=request.user, archived=False),
                 'days': Day.objects.all()
             })
+def archiveclass(request, id):
+    try:
+        c = Class.objects.get(class_user=request.user, id=id)
+        c.archived = True
+        c.save()
+        h = Homework.objects.filter(hw_class = c, hw_user=request.user)
+        for hw in h:
+            hw.archive = True
+            hw.save()
+    except:
+        return JsonResponse({'error': 'Access Denied', 'status': 400}, status=400)

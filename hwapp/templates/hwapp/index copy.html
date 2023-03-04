@@ -1,14 +1,19 @@
 {% extends 'hwapp/layout.html' %}
 {% load static %}
+{% block javascript %}<script src="{% static 'hwapp/sortable.js' %}"></script>{% endblock %}
 
 {% block body %}
 <h1>
-    {% if class1 %}
-    Homework for {{class1.class_name}}
-    {% else %}
-    Homework List for {{user.username}}
-    {% endif %}   
+Homework List for {{user.username}}
 </h1>
+<img id='page_size_button' alt='class filter' class='btn btn-default dropdown-toggle index_filter' data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style='height:6%;width:6%;position:relative;margin-top:-4%;float:right;margin-right:5%;' src="{% static 'hwapp/filter.png' %}">
+<div class='dropdown-menu' id='class_filter' aria-labelledby="page_size_label">
+    <b>Class Filter</b>
+    <a onclick='class_filters()' class="dropdown-item class_filter_items" href='/' >All Classes</a>
+    {% for class in class_list %}
+    <a onclick='class_filters()' class="dropdown-item class_filter_items" href='?class={{class.id}}' value='{{class.id}}'>{{class.class_name}}</a>
+    {% endfor %}
+</div>
 
 
 <script>
@@ -180,7 +185,7 @@
 </script>
 <div id="alert" class="alert alert-success" role="alert" style='display:none;'></div>
 <div id='error_message' class="alert alert-danger" role="alert" style='display:none;'></div>
-<table class='index table table-hover table-sm' width='100%'>
+<table class='index sortable' width='100%'>
     <thead class='index'>
         <tr class='index'>
             <td class='index' width=5%></td>
@@ -188,25 +193,10 @@
                 <strong>Assignment Name</strong>
             </td>
             <td class='index' width='25%'>
-                
-                <div class="dropdown">
-                    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <strong>Class Name</strong> 
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        <a onclick='class_filters(0)' class="dropdown-item class_filter_items" href='/' >All Classes</a>
-                        {% for class in class_list %}
-                        <a onclick='class_filters({{class.id}})' class="dropdown-item class_filter_items" value='{{class.id}}'>{{class.class_name}}</a>
-                        {% endfor %}
-                    </div>
-                  </div>
-
-
+                <strong>Class Name</strong>
             </td>
             <td class='index' width=15%>
-                <button type="button" class="btn dropdown-toggle" data-toggle="modal" data-target="#exampleModal">
-                    <strong>Due Date</strong>
-                  </button>        
+                <strong>Due Date </strong>
             </td>
             <td class='index' width=5%>
                 <strong>Completed?</strong>        
@@ -214,10 +204,10 @@
             <td width=5%></td>
         </tr>
     </thead>
-    <tbody id="incomplete_table" class='index'>
+    <tbody id="incomplete_table" class='index sortable'>
         {% for hw in hwlist %}
         {% if hw.overdue %}
-        <tr class='index table-danger' id="hwentry_{{hw.id}}" >
+        <tr class='index' id="hwentry_{{hw.id}}" style='background-color: rgb(255, 210, 209);'>
             <td class='index'></td>
             <td class='index'>
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_title}}</a>
@@ -293,30 +283,43 @@
             </form>
         </tfoot>
     </table>
-
-      <!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">Due Date Range</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <label for="due_date_start"><strong>Due Date Start: </strong> </label> <input type="date" name="due_date_start" id="due_date_start"> <br>
-          <label for="due_date_end"><strong>Due Date End: </strong></label> <input type="date" name="due_date_end" id="due_date_end">
-
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="date_filter_submit" onclick="due_date_filter()" data-dismiss="modal">Save changes</button>
-        </div>
-      </div>
-    </div>
-  </div>
     <a href='/addhw' id='mobile_add_hw'>Add Homework</a>
+        {% if completed %}
+        <hr>
+<strong>Completed Assignments</strong>
+    <table width='100%' id="completed_table"><tbody>
+        {% for item in completed %}
+            <tr id="hwentry_{{item.id}}">
+                <td width='5%'></td>
+                <td width='45%'>
+                    <a href = '{% url "edit_hw" item.id %}'>{{item.hw_title}}</a>
+                </td>
+                <td width='25%'>
+                    <a href = '{% url "edit_hw" item.id %}'>{{item.hw_class}}</a>
+                </td>
+                <td width='15%'>
+                    <a href = '{% url "edit_hw" item.id %}'>{{item.due_date}}</a>
+                </td>
+ 
+                    <td width='5%'>
+                        <form action='/' method="POST" id="hwform" class="hwform" name='{{item.id}}'>
+                            {% csrf_token %}
+                            {% if not item.completed %}
+                                <input type='checkbox' onclick='completioncall({{item.id}})' class='completed' id='{{item.id}}' name='hw_completion' value='{{item.completed}}'>
+                            {% else %}
+                            <input type='checkbox' onclick='completioncall({{item.id}})' class='completed' id='{{item.id}}' name='hw_completion' value='{{item.completed}}'  checked='{{item.completed}}'>
+                            {% endif %}
+                            
+                            <input type='hidden' class='completed' name='hw_id'  value={{item.id}}>
+                        </form>
+                    <td width=5%></td>
+                    <td></td>
+            </tr>
+        {% endfor %}
+        {% endif %}
+    </tbody>
+
+</table>
 
 <hr>
 <nav aria-label="Page navigation">
@@ -339,11 +342,11 @@
         10
     </button>
     <div class='dropdown-menu' id='dropdown_menu_page_size' aria-labelledby="page_size_label">
-        <a class="dropdown-item" onclick = 'page_size(10)'>10</a>
-        <a class="dropdown-item" onclick = 'page_size(15)'>15</a>
-        <a class="dropdown-item" onclick = 'page_size(20)'>20</a>
-        <a class="dropdown-item" onclick = 'page_size(25)'>25</a>
-        <a class="dropdown-item" onclick = 'page_size(50)'>50</a>
+        <a class="dropdown-item" href='?page_size=10'>10</a>
+        <a class="dropdown-item" href='?page_size=15'>15</a>
+        <a class="dropdown-item" href='?page_size=20'>20</a>
+        <a class="dropdown-item" href='?page_size=25'>25</a>
+        <a class="dropdown-item" href='?page_size=50'>50</a>
     </div>
 </div>
 
@@ -369,28 +372,18 @@ function page_nav_size() {
         }
     } else {}
 }
-function class_filters(id) {
-    var url = new URL(window.location.href);
-    if (id==0){
-        url.searchParams.set('class', '')
-    } else {
-    url.searchParams.set('class', id)
-
+function class_filters() {
+    filters = document.getElementsByClassName('class_filter_items')
+    if(urlParams.get('page_size') != null) {
+        for(i=0; i<filters.length; i++) {
+            filters[i].href += `&page_size=${urlParams.get('page_size')}`
+        }
     }
-    window.location.href=url   
+    
 
 }
-function due_date_filter() {
-    var url = new URL(window.location.href);
-    url.searchParams.set('start', document.getElementById('due_date_start').value)
-    url.searchParams.set('end', document.getElementById('due_date_end').value)
-    window.location.href=url
-}
-function page_size(size) {
-    var url = new URL(window.location.href);
-    url.searchParams.set('page_size', size)
-    window.location.href=url   
-}
+
+
 
 </script>
 
@@ -401,7 +394,7 @@ function page_size(size) {
 {% if completed %}
 <a href='/'>Show Only Active Assignments</a>
 {% else %}
-<a href='/allhw'>Show Inactive Homework</a>
+<a href='/allhw'>Show All Homework(Including Inactive)</a>
 {% endif %}
 
 

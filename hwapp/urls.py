@@ -37,6 +37,6 @@ urlpatterns = [
     #path('terms', views.termsflow, name='termsflow'),
     path('recurring', views.recurring, name='recurring'),
     path('addrecurring', views.recurring_add_edit, name='addrecurring'),
-
+    path('archive/<int:id>', views.archiveclass)
 ]
 
