@@ -184,8 +184,10 @@
     <thead class='index'>
         <tr class='index'>
             <td class='index' width=5%></td>
-            <td class='index'width='45%'>
-                <strong>Assignment Name</strong>
+            <td class='index'width='40%'>
+                <button type="button" class="btn dropdown-toggle" data-toggle="modal" data-target="#assignment_search">
+                    <strong>Assignment Name</strong>
+                  </button>   
             </td>
             <td class='index' width='25%'>
                 
@@ -208,10 +210,24 @@
                     <strong>Due Date</strong>
                   </button>        
             </td>
-            <td class='index' width=5%>
-                <strong>Completed?</strong>        
+            <td class='index' width=10%>
+                <div class="dropdown">
+                    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <strong>Complete?</strong> 
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a onclick='completed(0)' class="dropdown-item class_filter_items">No</a>
+                        <a onclick='completed(1)' class="dropdown-item class_filter_items" >Yes</a>
+                        <a onclick='completed(2)' class="dropdown-item class_filter_items">All</a>
+
+                    </div>
+                  </div>
             </td>
-            <td width=5%></td>
+            <td class='index' width=5%>
+                <button class="btn btn-secondary" type="button" onclick="reset()">
+                    <strong>Reset</strong> 
+                </button>
+            </td>
         </tr>
     </thead>
     <tbody id="incomplete_table" class='index'>
@@ -294,7 +310,7 @@
         </tfoot>
     </table>
 
-      <!-- Modal -->
+      <!-- due date search -->
 <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -316,19 +332,41 @@
       </div>
     </div>
   </div>
+  <!-- assignment search -->
+  <div class="modal fade" id="assignment_search" tabindex="-1" role="dialog" aria-labelledby="assignment_search_label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="assignment_search_label">Assignment Search</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label for="assignment_name"><strong>Assignment Name Contains: </strong> </label> <input type="text" class="form-control" name="assignment_name" id="assignment_name"> <br>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="assignment_filter()" data-dismiss="modal">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
     <a href='/addhw' id='mobile_add_hw'>Add Homework</a>
 
 <hr>
 <nav aria-label="Page navigation">
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" onclick='page_nav_size()' href="?page={{page_obj.previous_page_number}}">&laquo;</a></li>
+        <li class="page-item"><a class="page-link" href='#' onclick='page_nav_size({{page_obj.previous_page_number}})'>&laquo;</a></li>
         {% endif %}
         {% for page in length %}
-            <li class="page-item"><a class="page-link" onclick='page_nav_size()' href="?page={{page}}">{{page}}</a></li>
+            <li class="page-item"><a class="page-link" href='#' onclick='page_nav_size({{page}})' >{{page}}</a></li>
         {% endfor %}
         {% if page_obj.has_next %}
-        <li class="page-item"><a class="page-link" onclick='page_nav_size()' href="?page={{page_obj.next_page_number}}">&raquo;</a></li>
+        <li class="page-item"><a class="page-link" href='#' onclick='page_nav_size({{page_obj.next_page_number}})' >&raquo;</a></li>
         
     {% endif %}
     </ul>
@@ -354,20 +392,10 @@ if(urlParams.get('page_size') == null) {
 } else {
     document.getElementById('page_size_button').innerHTML = urlParams.get('page_size')
 }
-function page_nav_size() {
-    if(urlParams.get('page_size') != null) {
-        links = document.getElementsByClassName('page-link')
-        for(i=0; i<links.length; i++) {
-            links[i].href += `&page_size=${urlParams.get('page_size')}`
-        }
-
-    } else {}
-    if(urlParams.get('class') != null) {
-        links = document.getElementsByClassName('page-link')
-        for(i=0; i<links.length; i++) {
-            links[i].href += `&class=${urlParams.get('class')}`
-        }
-    } else {}
+function page_nav_size(page) {
+    var url = new URL(window.location.href);
+    url.searchParams.set('page', page)
+    window.location.href=url
 }
 function class_filters(id) {
     var url = new URL(window.location.href);
@@ -386,28 +414,33 @@ function due_date_filter() {
     url.searchParams.set('end', document.getElementById('due_date_end').value)
     window.location.href=url
 }
+function assignment_filter() {
+    var url = new URL(window.location.href);
+    url.searchParams.set('assignment', document.getElementById('assignment_name').value)
+    window.location.href=url
+}
 function page_size(size) {
     var url = new URL(window.location.href);
     url.searchParams.set('page_size', size)
     window.location.href=url   
 }
+function completed(val) {
+    var url = new URL(window.location.href);
+    if(val == 1) {
+        url.searchParams.set('inactive', 'true')
+    } else if(val == 2) {
+        url.searchParams.set('inactive', 'all')
+
+    }
+    window.location.href=url   
+}
+function reset() {
+    var url = new URL(window.location.href);
+    url.search = ''
+    window.location.href=url   
+}
+
 
 </script>
-
-
-
-
-<hr>
-{% if completed %}
-<a href='/'>Show Only Active Assignments</a>
-{% else %}
-<a href='/allhw'>Show Inactive Homework</a>
-{% endif %}
-
-
-
-
-
-
 
 {% endblock %}

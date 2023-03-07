@@ -15,17 +15,17 @@ My Profile
         {% csrf_token %}
         <div style='margin-left:35%;'>
 
-                <label for="first_name">First Name</label>
+                <label for="first_name"><strong>First Name</strong></label>
                 <input type="text" class="form-control"  id="first_name" name = "first_name" style="width:50%" placeholder="John" value="{{first_name}}">
 
-                <label for="last_name">Last Name</label>
+                <label for="last_name"><strong>Last Name</strong></label>
                 <input type="text" class="form-control" id="last_name" name="last_name" style="width:50%" placeholder="Doe" value="{{last_name}}">
 
 
-                <label for="email">Email address</label>
+                <label for="email"><strong>Email address</strong></label>
                 <input type="email" class="form-control" id="email" name="email" style="width:50%" placeholder="Enter email" value="{{email}}">
 
-        </div>
+        </div><br>
         <button style='margin-left: 35%' type="submit" class="btn btn-primary">Submit</button>
     </form>
 

@@ -58,6 +58,9 @@ ALLOWED_HOSTS_TYPES = {
 ALLOWED_HOSTS = ALLOWED_HOSTS_TYPES['dev' if DEBUG else 'prod']
 
 
+## for dev purposes only
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 # Application definition
 
 INSTALLED_APPS = [

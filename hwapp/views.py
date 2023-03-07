@@ -21,6 +21,10 @@ from .email_helper import pw_reset_email, send_email, overdue_check, timezone_he
 import arrow
 from . import helpers
 
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import get_template
+from django.template import Context
+
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
 from django.shortcuts import redirect, render, redirect
@@ -104,29 +108,43 @@ def index(request):
     page_size = request.GET.get('page_size')
     if not page_size:
         page_size = 10
-    if not request.GET.get('class'):
-        hwlist = Homework.objects.filter(hw_user = request.user, completed=False, archive=False).order_by('due_date', 'hw_class__period', 'priority')
-        class1 = False
-        if request.GET.get('start') or request.GET.get('end'):
-            hwlist = Homework.objects.filter(hw_user = request.user, completed=False, archive=False, due_date__range = [request.GET.get('start'), request.GET.get('end')]).order_by('due_date', 'hw_class__period', 'priority')
+    #date range filter
+    if request.GET.get('start') or request.GET.get('end'):
+        if not request.GET.get('start'):
+            hwlist = Homework.objects.filter(hw_user = request.user).order_by('due_date', 'hw_class__period', 'priority')
+        elif not request.GET.get('end'):
+            hwlist = Homework.objects.filter(hw_user = request.user, due_date__gte = request.GET.get('start')).order_by('due_date', 'hw_class__period', 'priority')
+        else:
+            hwlist = Homework.objects.filter(hw_user = request.user, due_date__range = [request.GET.get('start'), request.GET.get('end')]).order_by('due_date', 'hw_class__period', 'priority')
     else:
+        hwlist = Homework.objects.filter(hw_user = request.user).order_by('due_date', 'hw_class__period', 'priority')
+    #class filter
+    if request.GET.get('class'):
         try:
             class1 = Class.objects.get(class_user=request.user, id=request.GET.get('class'), archived = False)
+            hwlist = hwlist.filter(hw_class = class1)
         except:
             return JsonResponse({
                 "message": "Access Denied"
             }, status=403)
-        hwlist = Homework.objects.filter(hw_user = request.user, completed=False, hw_class=class1).order_by('due_date', 'hw_class__period', 'priority')
-        if request.GET.get('start') or request.GET.get('end'):
-            hwlist = Homework.objects.filter(hw_user = request.user, completed=False, hw_class=class1).order_by('due_date', 'hw_class__period', 'priority')
-        else:
-            hwlist = Homework.objects.filter(hw_user = request.user, completed=False, hw_class=class1).order_by('due_date', 'hw_class__period', 'priority')
-    # else:
-    #     pass
-    # if not request.GET.get('end'):
-    #     pass
-    # else:
-    #     pass
+    else:
+        class1 = False
+    #active filter
+    if request.GET.get('inactive') == 'true':
+        hwlist = hwlist.filter(completed=True)
+    elif request.GET.get('inactive'):
+        pass
+    else:
+        hwlist = hwlist.filter(completed=False, archive=False)
+    #assignment filter
+    if request.GET.get('assignment'):
+        tmp = []
+        q = str(request.GET.get('assignment')).lower()
+        for hw in hwlist:
+            if q in hw.hw_title.lower():
+                tmp.append(hw)
+        hwlist = tmp
+
     h = Paginator(hwlist, page_size)
     page_number = request.GET.get('page')
     if not page_number:
@@ -422,50 +440,7 @@ def editclass(request, class_id):
             'class_id': class_id
         })
 
-@login_required(login_url='/login')
-def allhw(request):
-    page_size = request.GET.get('page_size')
-    if not page_size:
-        page_size = 10
-    if not request.GET.get('class'):
-        hwlist = Homework.objects.filter(hw_user = request.user).order_by('due_date', 'hw_class__period', 'priority')
-        class1 = False
-        if request.GET.get('start') or request.GET.get('end'):
-            hwlist = Homework.objects.filter(hw_user = request.user, due_date__range = [request.GET.get('start'), request.GET.get('end')]).order_by('due_date', 'hw_class__period', 'priority')
-    else:
-        try:
-            class1 = Class.objects.get(class_user=request.user, id=request.GET.get('class'))
-        except:
-            return JsonResponse({
-                "message": "Access Denied"
-            }, status=403)
-        hwlist = Homework.objects.filter(hw_user = request.user, hw_class=class1).order_by('due_date', 'hw_class__period', 'priority')
-        if request.GET.get('start') or request.GET.get('end'):
-            hwlist = Homework.objects.filter(hw_user = request.user, hw_class=class1).order_by('due_date', 'hw_class__period', 'priority')
-        else:
-            hwlist = Homework.objects.filter(hw_user = request.user, hw_class=class1).order_by('due_date', 'hw_class__period', 'priority')
-    # else:
-    #     pass
-    # if not request.GET.get('end'):
-    #     pass
-    # else:
-    #     pass
-    h = Paginator(hwlist, page_size)
-    page_number = request.GET.get('page')
-    if not page_number:
-        page_number=1
-    page_obj = h.get_page(page_number)
-    class_list = Class.objects.filter(class_user = request.user).order_by('period')
-    load_dotenv()
-    return render(request, 'hwapp/index.html', {
-        'hwlist': page_obj,
-        'class_list': class_list,
-        'page_obj': page_obj,
-        'length': list(h.page_range),
-        'website_root': os.environ.get('website_root'),
-        'class1': class1,
-        'completed': True
-    })
+
 
 def about(request):
     template = EmailTemplate.objects.get(id=4)
@@ -714,6 +689,20 @@ def admin_console(request):
         elif json_val['function'] == 'recurring_events':
             recurring_events()                
             return JsonResponse({"status": 200}, status=200) 
+        elif json_val['function'] == 'email':
+            plaintext = 'This is an important message.'
+            htmly     = '<p>This is an <strong>important</strong> message.</p>'
+
+            d = Context({ 'username': request.user.username })
+
+            subject, from_email, to = 'hello', 'matthew@matthewtsai.me', 'matthew@matthewtsai.me'
+            # text_content = plaintext.render(d)
+            # html_content = htmly.render(d)
+            text_content = plaintext
+            html_content = htmly
+            msg = EmailMultiAlternatives(subject, text_content, from_email, [to])
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
     elif request.method == "GET":
         return render(request, "hwapp/admin_console.html")
     else:
@@ -808,8 +797,7 @@ def version_manager(request, version_id):
             'error': 'invalid version id'
         }) 
     return render(request, 'hwapp/template_render.html', {
-        'template': template.template_body,
-        'id': version_id,
+        'template': template,
         'header': f'HW App: Version {version_id}'
     })
 @user_passes_test(matthew_check)

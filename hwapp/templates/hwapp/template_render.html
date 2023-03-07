@@ -3,9 +3,9 @@
 {{header}}
 {% endblock %}
 {% block body %}
-{{template|safe}}
+{{template.template_body|safe}}
 {% if user.is_superuser %}
 <hr>
-<a href="{% url 'email_template_editor' %}?template_id={{id}}" class="btn btn-primary">Edit</a>
+<a href="{% url 'email_template_editor' %}?template_id={{template.id}}" class="btn btn-primary">Edit</a>
 {% endif %}
 {% endblock %}
