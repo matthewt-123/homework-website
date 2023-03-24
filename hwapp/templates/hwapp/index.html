@@ -239,7 +239,7 @@
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_title}}</a>
             </td>
             <td class='index'>
-                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_class}}</a>
+                <a href = '#' onclick = 'class_filters({{hw.hw_class.id}})'>{{hw.hw_class}}</a>
             </td>
             <td class='index date_field'>
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>

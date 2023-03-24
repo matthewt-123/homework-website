@@ -41,6 +41,9 @@ from external.forms import HelpForm1
 
 load_dotenv()
 
+#for da class check ONLY
+from bs4 import BeautifulSoup
+
 def matthew_check(user):
     return user.is_superuser
 oauth = OAuth()
@@ -883,3 +886,20 @@ def archiveclass(request, id):
             hw.save()
     except:
         return JsonResponse({'error': 'Access Denied', 'status': 400}, status=400)
+
+def daclasscheck(request):
+    url = 'https://www.deanza.edu/schedule/listings.html?dept=MATH&t=S2023'
+    response = requests.post(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    r = soup.find_all('tr')
+    a = r[68]
+    soup = BeautifulSoup(str(a), 'html.parser')
+    out = {
+        "LinearAlg": {
+            "CRN": soup.find_all('td')[0].text,
+            "Status": soup.find_all('td')[3].text
+        }
+    }
+    if soup.find_all('td')[0].text != "47506":
+        return JsonResponse({"status": "Fail"})
+    return JsonResponse(out)

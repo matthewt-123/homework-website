@@ -15,7 +15,7 @@ urlpatterns = [
     #path('notion_to_ics', views.notion_toics, name='notion_toics'),
     path('notionexport/<int:user_id>/<int:hash_value>', views.notion_toics, name='notionicsfeed'),
     #path('authentication_manager/<int:user_id>', views.authentication_manager, name='authentication_manager'),
-    # path('schoology_api', views.schoology_api, name='schoology_api'),
-    # path('canvas_api', views.canvas_api, name='canvas_api'),
+    path('schoology_api', views.schoology_api, name='schoology_api'),
+    path('canvas_api', views.canvas_api, name='canvas_api'),
 
 ]
