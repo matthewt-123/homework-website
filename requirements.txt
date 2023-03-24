@@ -1,5 +1,5 @@
 appdirs==1.4.4
-arrow==0.14.7
+arrow==0.15.1
 authlib
 backcall==0.2.0
 bs4
