@@ -1,0 +1,38 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}
+Preferences
+{% endblock %}
+{% block body %}
+{% if message %}
+<div class="alert alert-success" role="alert">
+    {{message}}    
+    </div>
+
+{% endif %}
+{% if error %}
+<div class="alert alert-danger" role="alert">
+    {{error}}    
+    </div>
+{% endif %}
+    <h2>Preferences</h2>
+
+
+    <form action='{% url "preferences" %}' method='POST'>
+        {% csrf_token %}
+        <table style='margin-left: 35%;'>
+          {{form.as_table}}
+        </table>
+        <button style='margin-left: 35%' type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+    <hr>
+    <h5>
+        Information
+    </h5>
+    <ul>
+        <li>
+            Calendar Output: Output to ICS File to use with calendar
+        </li>
+    </ul>
+
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "hwapp/layout.html" %}
+
+{% block title %}
+Calendar Export
+{% endblock %}
+
+{% block body %}
+<h1 style='text-align: center;'>Link to ICS Feed</h1>
+<hr>
+<table style='text-align:center;margin:auto'>
+    <thead>
+        <td width="10%">
+            <b>
+                Integration
+            </b>
+        </td>
+        <td width="90%">
+            <b>
+                ICS Link
+            </b>
+        </td>
+    </thead>
+    {% if n_ics_link %}
+    <tr>
+        <td >
+            Notion  <i onclick="copyText('hw')" style="font-size:24px" class="fa" title="Click to Copy">&#xf0c5;</i>
+        </td>
+        <td style='background-color: rgb(255, 173, 228)' >
+            <input id="hw" readonly disabled value="webcal://{{n_ics_link}}" style="width: 100%;">
+        </td>
+    </tr>
+    {% endif %}
+    {% if p_ics_link %}
+    <tr>
+        <td >
+            Personal <a onclick="copyText('personal')" style="font-size:24px" class="fa" title="Click to Copy">&#xf0c5;</i>
+        </td>
+        <td style='background-color: rgb(255, 187, 148)'>
+            <input id="personal" readonly disabled value="webcal://{{p_ics_link}}" style="width: 100%;"> 
+
+        </td>
+    </tr>
+    {% endif %}
+</table>
+<hr>
+{% if n_ics_link %}
+
+<div id="btn_container" style='text-align:center;margin:auto' >
+    If your Notion workplace was created following <a href="{% url 'notion_auth' %}">these instructions</a>, you may use the Notion ICS export to export your Notion events to your personal calendar<br>
+    If you are redirected back to the Notion Authorization page, your session has expired and you will need to re-sign into the website with the "Integrate With Notion" button
+</div>
+
+{% endif %}
+<h3>
+    <b>Important Information:</b>
+</h3>
+
+<ul>
+    <li>
+        This export does NOT contain the Schoology, Canvas, or Other integrated events
+    </li>
+    <li>
+        To add this calendar feed to Outlook, navigate to your calendar, press Add Calendar, and copy and paste the above link into the subscribe from web option
+    </li>
+    <li>
+        To add this calendar feed to Google Calendar, please navigate to your calendar, press the + sign next to "Other Calendars," press "From URL," and copy and paste the above link into the provided field
+    </li>
+    <li>
+        If you did not select "Calendar Output," no events will be visible on your calendar.
+    </li>
+</ul>
+<script>
+    function copyText(identifier) {
+  // Get the text field
+  var copyText = document.getElementById(identifier);
+
+  // Select the text field
+  copyText.select();
+  copyText.setSelectionRange(0, 99999); // For mobile devices
+
+   // Copy the text inside the text field
+  navigator.clipboard.writeText(copyText.value);
+
+  // Alert the copied text
+}
+    </script>
+{% endblock %}
+

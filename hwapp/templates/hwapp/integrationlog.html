@@ -1,0 +1,98 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}
+Admin Console
+{% endblock %}
+{% block body %}
+{% if user.is_superuser %}
+<table style="width: 96%;margin-left:2%;margin-right:2%">
+    <thead>
+        <tr>
+            <td>
+                <b>ID</b>
+            </td>
+            <td>
+                <b>User</b>
+            </td>
+            <td>
+                <b>Name</b>
+            </td>
+            <td>
+                <b>Source</b>
+            </td>
+            <td>&#8594;</td>
+            <td>
+                <b>Destination</b>
+            </td>
+            <td>
+                <b>Date</b>
+            </td>
+            <td>
+                <div class="dropdown">
+                    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <b>Error?</b> 
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a onclick='errorVal(0)' class="dropdown-item class_filter_items">No</a>
+                        <a onclick='errorVal(1)' class="dropdown-item class_filter_items" >Yes</a>
+
+                    </div>
+                  </div>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{log.id}}</td>
+            <td>{{log.user.username}}</td>
+            {% if log.hw_name %}
+            <td>{{log.hw_name}}</td>
+            {% else %}
+            <td></td>
+            {% endif %}
+            {% if log.src == "hwapp" %}
+            <td style="color:teal">{{log.src}}</td>
+
+            {% elif log.src == "canvas" %}
+            <td style="color:red">{{log.src}}</td>
+
+            {% else %}
+            <td style="color:blue">{{log.src}}</td>
+            {% endif %}
+            <td>&#8594;</td>
+            {% if log.dest == "hwapp" %}
+            <td style="color:teal">{{log.dest}}</td>
+
+            {% elif log.dest == "canvas" %}
+            <td style="color:red">{{log.dest}}</td>
+
+            {% else %}
+            <td style="color:blue">{{log.dest}}</td>
+            {% endif %}
+            <td>{{log.date}}</td>
+            {% if log.error == True %}
+            <td style="color: red">{{log.error}}</td>
+            {% else %}
+            <td>{{log.error}}</td>
+
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<script>
+    function errorVal(val) {
+    var url = new URL(window.location.href);
+    if(val == 1) {
+        url.searchParams.set('error', 'true')
+    } else {
+        url.searchParams.delete('error')
+
+    }
+    window.location.href=url   
+}
+</script>
+{% else %}
+<div class="alert alert-danger" role="alert">Error: Access Denied</div>
+{% endif %}
+{% endblock %}

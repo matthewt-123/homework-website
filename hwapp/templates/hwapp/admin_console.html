@@ -1,0 +1,87 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}
+Admin Console
+{% endblock %}
+{% block body %}
+{% if user.is_superuser %}
+<script>
+    function admin(function1) {
+        fetch(`/admin_view`, {
+            method: 'POST',
+            headers: {
+                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+                'function': `${function1}`
+            })
+        })
+        .then(response=>response.json())
+        .then(result => {
+            if(result['status'] == 200) {
+                const alert = document.getElementById('alert')
+                alert.innerHTML = `${function1} completed successfully`
+                alert.style.display='block'
+            }
+        })
+    }
+</script>
+{% csrf_token %}
+<div id="alert" class='alert alert-success' style="display: none;"></div>
+<div class='flex-container' style='display:flex;height:100px;align-items: space-around;justify-content: center;flex-direction: row;gap:5%;flex-wrap: wrap;'>
+    <div>
+        <button class='btn btn-primary' onclick="admin(function1='overdue')">Refresh Overdue</button>
+    </div>
+    <div>
+        <button class='btn btn-primary' onclick="admin(function1='ics_refresh')">Refresh ICS</button>
+    </div>
+    <div>
+        <a class='btn btn-primary' target="_blank" href='https://matthew-homeworkapp.atlassian.net/jira/software/projects/HOM/boards/1'>Jira Board</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' target="_blank" href='https://matthew-homeworkapp.atlassian.net/jira/servicedesk/projects/IP/queues/custom/15'>
+            ITSM Console
+        </a>
+    </div>
+    <div>
+        <button class='btn btn-primary' onclick='window.location.href="/500error"'>Test 500</button>
+    </div>
+    <div>
+        <a class='btn btn-primary' href='/config'>Experience Manager</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' href='{% url "matthew_notion" %}'>Refresh Notion Integration</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' href='https://sentry.io/organizations/homework-app/issues/?project=6359235'>Sentry</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' href='cronitor.io/app/?env=production'>Cronitor</a>
+    </div>    
+    <div>
+        <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='schoology_class')">Schoology Classes</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='schoology_hw')">Schoology HW</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='canvas_class')">Canvas Classes</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='canvas_hw')">Canvas HW</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='recurring_events')">Recurring Events</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' style ="color: white;" href="/integrations/integration_log">Integration Log</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='notion_pull')">Notion Pull</a>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-danger" role="alert">Error: Access Denied</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,375 @@
+{% extends 'hwapp/layout.html' %}
+{% load static %}
+
+{% block body %}
+<h1>
+    {% if class1 %}
+    Homework for {{class1.class_name}}
+    {% else %}
+    Homework List for {{user.username}}
+    {% endif %}   
+</h1>
+
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+        row_id = 0
+        document.getElementById('non_functional_form').addEventListener('submit', () => {
+            fetch(`/addhw`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                hw_class: document.getElementById('hw_class').value,
+                hw_title: document.getElementById('hw_title').value,
+                due_date: `${document.getElementById('due_date').value}`,
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if(result['status'] == 400) {
+                /* show error message if error*/
+                const alert = document.getElementById('error_message')
+                alert.innerHTML = result['message']
+                alert.style.display='block'
+
+                /* hide success message if any */
+                document.getElementById('alert').style.display='none'
+            } else {
+                /* show success message if success*/
+                const alert = document.getElementById('alert');
+                alert.innerHTML = result['message'];
+                alert.style.display='block';
+
+                /* hide any error messages*/
+                document.getElementById('error_message').style.display='none';
+
+                /* add new row to end of table */
+                /* add new empty row to end of table */
+                empty = document.getElementById(`new_hw_${row_id}`);
+                table = document.getElementById('incomplete_table');
+
+
+
+                /* update link and innerHTML */
+                var new_class = document.getElementById(`new_hw_class_${row_id}`);
+                new_class.innerHTML = result['class_name'] ;
+                new_class.href = `/edit_hw/${result['hw_id']}`;
+                
+
+                var new_hw_title = document.getElementById(`new_hw_title_${row_id}`);
+                new_hw_title.innerHTML = document.getElementById('hw_title').value;
+                new_hw_title.href = `/edit_hw/${result['hw_id']}`;
+
+                var new_due_date = document.getElementById(`new_due_date_${row_id}`);
+                new_due_date.innerHTML = result['formatted_date'];
+                new_due_date.href = `/edit_hw/${result['hw_id']}`;
+
+                
+                /*increment id values*/
+                table.innerHTML += `<tr id="new_hw_${row_id + 1}" class='index'> <td></td> <td><a id='new_hw_title_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_hw_class_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_due_date_${row_id + 1}' class='new_hw_link'></a></td> <td id="checkbox_${row_id + 1}" style='display:none;'> <form action='/' method="POST" class="hwform" > {% csrf_token %} <input type='hidden' class='completed' name='hw_id'> </form></td> </tr>`;
+
+                /* show new checkbox */
+                document.getElementById(`checkbox_${row_id}`).style.display = 'block';
+                
+                /* rename new_hw_rowid to hwentry for checkbox function */
+                document.getElementById(`new_hw_${row_id}`).id = `hwentry_${result['hw_id']}`
+
+                /* increment row ID, create new row with new row ID */
+                row_id++;
+
+                
+                
+                /* clear out fields */
+                document.getElementById('hw_class').value = '';
+                document.getElementById('hw_title').value = '';
+                document.getElementById('due_date').value = '';
+
+                /* autofocus on new row*/
+                document.getElementById('hw_title').focus();
+            }
+        })
+        return false
+    })})
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('hw_class').onchange = () => {
+            const class_ins = document.getElementById('hw_class')
+            if(document.getElementById('hw_class').value == 'add_new_class') {
+                window.location.href='https://{{website_root}}/addclass'
+            } else {
+                    fetch(`/getclasstime/${class_ins.value}`, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                })
+                .then(response=>response.json())
+                .then(result => {
+                    if(result['status'] == 200){
+                        document.getElementById('due_date').value = result['class_time']
+                    } else {
+                        console.log(result['message'])
+                    }
+                })
+            }
+
+        }
+    })
+
+
+</script>
+<div id="alert" class="alert alert-success" role="alert" style='display:none;'></div>
+<div id='error_message' class="alert alert-danger" role="alert" style='display:none;'></div>
+<table class='index table table-hover table-sm' width='100%'>
+    <thead class='index'>
+        <tr class='index'>
+            <td class='index' width=5%></td>
+            <td class='index'width='40%'>
+                <button type="button" class="btn dropdown-toggle" data-toggle="modal" data-target="#assignment_search">
+                    <strong>Assignment Name</strong>
+                  </button>   
+            </td>
+            <td class='index' width='25%'>
+                
+                <div class="dropdown">
+                    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <strong>Class Name</strong> 
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a onclick='class_filters(0)' class="dropdown-item class_filter_items" href='/' >All Classes</a>
+                        {% for class in class_list %}
+                        <a onclick='class_filters({{class.id}})' class="dropdown-item class_filter_items" value='{{class.id}}'>{{class.class_name}}</a>
+                        {% endfor %}
+                    </div>
+                  </div>
+
+
+            </td>
+            <td class='index' width=15%>
+                <button type="button" class="btn dropdown-toggle" data-toggle="modal" data-target="#exampleModal">
+                    <strong>Due Date</strong>
+                  </button>        
+            </td>
+            <td class='index' width=10%>
+                <div class="dropdown">
+                    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <strong>Complete?</strong> 
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a onclick='completed(0)' class="dropdown-item class_filter_items">No</a>
+                        <a onclick='completed(1)' class="dropdown-item class_filter_items" >Yes</a>
+                        <a onclick='completed(2)' class="dropdown-item class_filter_items">All</a>
+
+                    </div>
+                  </div>
+            </td>
+            <td class='index' width=5%>
+                <button class="btn btn-secondary" type="button" onclick="reset()">
+                    <strong>Reset</strong> 
+                </button>
+            </td>
+        </tr>
+    </thead>
+    <tbody id="incomplete_table" class='index'>
+        {% for hw in hwlist %}
+        {% if hw.overdue %}
+        <tr class='index table-danger' id="hwentry_{{hw.id}}" >
+            <td class='index'></td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_title}}</a>
+            </td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_class}}</a>
+            </td>
+            <td class='index date_field'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>
+            </td>
+
+            {% else %}
+        <tr class='index' id="hwentry_{{hw.id}}">
+            <td class='index'></td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_title}}</a>
+            </td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_class}}</a>
+            </td>
+            <td class='index date_field'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>
+            </td>
+            {% endif %}
+                <td></td>
+            </tr>
+            {% endfor %}
+            <!--blank row-->
+            <tr id="new_hw_0" class='index'>
+                <td ></td>
+                <td><a id='new_hw_title_0' class='new_hw_link'></a></td>
+                <td><a id='new_hw_class_0' class='new_hw_link'></a></td>
+                <td><a id='new_due_date_0' class='new_hw_link'></a></td>
+                <td id="checkbox_0" style='display:none;'>
+                    <form action='/' method="POST"   class="hwform" name='{{item.id}}'>
+                        {% csrf_token %}
+                        <input type='hidden' class='completed' name='hw_id'  value={{item.id}}>
+                    </form></td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <!--New HW Form-->
+            <form action='/addhw' method='POST' id='non_functional_form'>
+                {% csrf_token %}
+            <tr class='index'>
+                <td style='text-align: center;' id='index_plus_sign' class='mobile_hide'>+</td>
+                <td class='mobile_hide'><input id='hw_title' autofocus autocomplete="off" type='text' class='input1' placeholder="Assignment Name"></td>
+                <td class='mobile_hide'><select id='hw_class' class='input1 form-select'>
+                    <option disabled selected>Class Name</option>
+                    {% for class in class_list %}
+                    <option value={{class.id}}>{{class.class_name}}</option>
+                    {% endfor %}
+                    <option value='add_new_class'>Add New Class</option>
+                </select></td>
+                <td class='mobile_hide'><input autocomplete="off" id='due_date' type='datetime-local' class='input1'></td>
+                <td class='mobile_hide'>
+                    <button id='add_hw' hidden type="submit"></button>
+                </td>
+            </tr>
+            </form>
+        </tfoot>
+    </table>
+
+      <!-- due date search -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Due Date Range</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label for="due_date_start"><strong>Due Date Start: </strong> </label> <input type="date" name="due_date_start" id="due_date_start"> <br>
+          <label for="due_date_end"><strong>Due Date End: </strong></label> <input type="date" name="due_date_end" id="due_date_end">
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="date_filter_submit" onclick="due_date_filter()" data-dismiss="modal">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- assignment search -->
+  <div class="modal fade" id="assignment_search" tabindex="-1" role="dialog" aria-labelledby="assignment_search_label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="assignment_search_label">Assignment Search</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label for="assignment_name"><strong>Assignment Name Contains: </strong> </label> <input type="text" class="form-control" name="assignment_name" id="assignment_name"> <br>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="assignment_filter()" data-dismiss="modal">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+    <a href='/addhw' id='mobile_add_hw'>Add Homework</a>
+
+<hr>
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href='#' onclick='page_nav_size({{page_obj.previous_page_number}})'>&laquo;</a></li>
+        {% endif %}
+        {% for page in length %}
+            <li class="page-item"><a class="page-link" href='#' onclick='page_nav_size({{page}})' >{{page}}</a></li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href='#' onclick='page_nav_size({{page_obj.next_page_number}})' >&raquo;</a></li>
+        
+    {% endif %}
+    </ul>
+</nav>
+<div style='margin-left:2%'>
+    <label id='page_size_label' for='page_size'>Results per page:</label>
+    <button type='button' id='page_size_button' class='btn btn-default dropdown-toggle' data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+        10
+    </button>
+    <div class='dropdown-menu' id='dropdown_menu_page_size' aria-labelledby="page_size_label">
+        <a class="dropdown-item" onclick = 'page_size(10)'>10</a>
+        <a class="dropdown-item" onclick = 'page_size(15)'>15</a>
+        <a class="dropdown-item" onclick = 'page_size(20)'>20</a>
+        <a class="dropdown-item" onclick = 'page_size(25)'>25</a>
+        <a class="dropdown-item" onclick = 'page_size(50)'>50</a>
+    </div>
+</div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search)
+if(urlParams.get('page_size') == null) {
+    document.getElementById('page_size_button').innerHTML = 10
+} else {
+    document.getElementById('page_size_button').innerHTML = urlParams.get('page_size')
+}
+function page_nav_size(page) {
+    var url = new URL(window.location.href);
+    url.searchParams.set('page', page)
+    window.location.href=url
+}
+function class_filters(id) {
+    var url = new URL(window.location.href);
+    if (id==0){
+        url.searchParams.set('class', '')
+    } else {
+    url.searchParams.set('class', id)
+
+    }
+    window.location.href=url   
+
+}
+function due_date_filter() {
+    var url = new URL(window.location.href);
+    url.searchParams.set('start', document.getElementById('due_date_start').value)
+    url.searchParams.set('end', document.getElementById('due_date_end').value)
+    window.location.href=url
+}
+function assignment_filter() {
+    var url = new URL(window.location.href);
+    url.searchParams.set('assignment', document.getElementById('assignment_name').value)
+    window.location.href=url
+}
+function page_size(size) {
+    var url = new URL(window.location.href);
+    url.searchParams.set('page_size', size)
+    window.location.href=url   
+}
+function completed(val) {
+    var url = new URL(window.location.href);
+    if(val == 1) {
+        url.searchParams.set('inactive', 'true')
+    } else if(val == 2) {
+        url.searchParams.set('inactive', 'all')
+
+    }
+    window.location.href=url   
+}
+function reset() {
+    var url = new URL(window.location.href);
+    url.search = ''
+    window.location.href=url   
+}
+
+
+</script>
+
+{% endblock %}

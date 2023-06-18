@@ -1,0 +1,26 @@
+{% extends "hwapp/layout.html" %}
+{% load static %}
+{% block body %}
+<div class="ics_form">
+    <form action='/integrations/other_init' method='POST'>
+        {% csrf_token %}
+        <label>Name of Integration&nbsp;</label> <input style="width:60%;" type="text" name="integration_name" id="schoology_ics_link"><br>
+        <label>Other ICS Link(instructions below):&nbsp; </label> <input style="width:60%;" type="text" name="schoology_ics_link" id="schoology_ics_link"><br>
+        <button type="submit" class="btn btn-primary submit_button">Submit</button>
+    </form>
+
+</div>
+<hr><h1>Add any other ICS feed</h1>
+<ol>
+    <li>
+        Copy and paste the ICS link into the top box
+    </li>
+    <li>
+        Add a name for this integration into the lower box and click "submit"
+    </li>
+</ol>
+
+
+
+
+{% endblock %}

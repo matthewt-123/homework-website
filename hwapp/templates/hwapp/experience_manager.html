@@ -1,0 +1,29 @@
+
+{% extends "hwapp/layout.html" %}
+{% block title %}
+Experience Manager
+{% endblock %}
+{% block body %}
+{% if user.is_superuser %}
+{% csrf_token %}
+<div id="alert" class='alert alert-success' style="display: none;"></div>
+<div class='flex-container' style='display:flex;height:100px;align-items: space-around;justify-content: center;flex-direction: row;gap:5%;flex-wrap: wrap;'>
+    <div>
+        <a class='btn btn-primary' href='/config/email_templates'>Email Template Config</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' href='/config/email_templates?template_id=4'>Edit About Me</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' href='/config/email_templates?template_id=5'>Edit Landing Screen</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' href='/config/email_templates?type=version'>Version Manager</a>
+    </div>
+</div>
+
+
+{% else %}
+<div class="alert alert-danger" role="alert">Error: Access Denied</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/ui/trumbowyg.min.css">
+
+<script>
+    function hw_json() {
+        //adding timezone to time input
+        hw_id = {{hw.id}}
+        website_root = "{{website_root}}"
+        fetch(`/edit_hw/${hw_id}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                hw_class: document.getElementById('hw_class').value,
+                hw_title: document.getElementById('hw_title').value,
+                due_date: `${document.getElementById('due_date').value}`,
+                priority: document.getElementById('priority').value,
+                notes: document.getElementById('notes').value,
+                overdue: document.getElementById('overdue').checked,
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if(result['status'] == 400) {
+                /* show error message if error*/
+                const alert = document.getElementById('error_message')
+                alert.innerHTML = result['message']
+                alert.style.display='block'
+
+                /* hide success message if any */
+                document.getElementById('alert').style.display='none'
+            } else if(result['status'] == 201) {
+                window.location.href = `https://${website_root}`
+            } else {
+                /* show error message if error*/
+                const alert = document.getElementById('error_message')
+                alert.innerHTML = result['message']
+                alert.style.display='block'
+
+                /* hide success message if any */
+                document.getElementById('alert').style.display='none'
+            }
+        });
+        return false
+}
+</script>
+<div id="alert" class="alert alert-success" role="alert" style='display:none;'></div>
+<div id='error_message' class="alert alert-danger" role="alert" style='display:none;'></div>
+<h1  class='django_forms'>Edit Homework</h1>
+<hr>
+
+<form action="/edit_hw" onsubmit='return false' class="indented add_hw_form" method='POST'>
+    {% csrf_token %}
+    <table class='django_forms_v2'>
+        <tbody><tr><th><label for="id_hw_class">Hw class:</label></th><td><select name="hw_class" required="" id="hw_class">
+<option value="" disabled>---------</option>
+{% for class in classes %}
+{% if class.id == hw.hw_class.id %}
+<option selected value="{{hw.hw_class.id}}">{{hw.hw_class.class_name}}</option>
+{% else %}
+<option value={{class.id}}>{{class.class_name}}</option>
+{% endif %}
+{% endfor %}
+<option value='add_new_class'>Add New Class</option>
+
+</select></td></tr>
+<tr><th><label for="id_hw_title">Hw title:</label></th><td><input type="text" name="hw_title"maxlength="256" required="" id="hw_title" value="{{hw.hw_title}}"></td></tr>
+<tr><th><label for="id_due_date">Due date:</label></th><td><input type="datetime-local" name="due_date" required="" id="due_date" value ="{{due_date}}"></td></tr>
+<tr><th><label for="id_priority">Priority:</label></th><td><input type="number" name="priority" id="priority" value="{{hw.priority}}"></td></tr>
+<tr><th><label for="id_notes">Notes:</label></th><td><textarea name="notes" cols="40" rows="10" id="notes" class='myeditablediv' value="{{hw.notes}}">{{hw.notes}}</textarea></td></tr> 
+{% if hw.completed %}
+<tr><th><label for="id_completed">Completed:</label></th><td>    <div class="custom-control custom-switch">
+    <input type="checkbox" class="custom-control-input" id="completed" checked>
+    <label class="custom-control-label" for="completed"></label>
+  </div></tr> 
+{% else %}
+<tr><th><label for="id_completed">Completed:</label></th><td>    <div class="custom-control custom-switch">
+    <input type="checkbox" class="custom-control-input" id="completed">
+    <label class="custom-control-label" for="completed"></label>
+  </div></td></tr> 
+
+{% endif %}
+
+{% if hw.overdue %}
+
+<tr><th><label for="id_overdue">Overdue:</label></th><td>    <div class="custom-control custom-switch">
+    <input type="checkbox" class="custom-control-input" id="overdue" checked>
+    <label class="custom-control-label" for="overdue"></label>
+  </div></td></tr> 
+{% else %}
+<tr><th><label for="id_overdue">Overdue:</label></th>
+<td>
+    <div class="custom-control custom-switch">
+        <input type="checkbox" class="custom-control-input" id="overdue">
+        <label class="custom-control-label" for="overdue"></label>
+      </div>
+</td></tr> 
+{% endif %}
+    </tbody></table>
+    <button onclick='hw_json()' style="margin-left: 35%" type="submit" class="btn btn-primary">Submit</button>
+
+</form>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('hw_class').onchange = () => {
+            const class_ins = document.getElementById('hw_class')
+            if(document.getElementById('hw_class').value == 'add_new_class') {
+                window.location.href='https://{{website_root}}/addclass'
+            } 
+
+        }
+    })
+
+</script>
+
+
+
+
+
+{% endblock %}
+{% block footer %}<script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/trumbowyg.min.js"></script>
+<script>
+
+    $('.myeditablediv').trumbowyg()
+
+</script>
+{% endblock %}

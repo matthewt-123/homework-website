@@ -1,0 +1,56 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}
+Homework App Integrations
+{% endblock %}
+{% block body %}
+<h1  style="margin-left:35%"><b>Integrations for {{user.username}}</b></h1>
+<div style="margin-left:10%;margin-right:10%">
+    <h4>
+        <ul>
+            <li>
+                <a href="{% url 'schoology_api' %}">Schoology</a>
+            
+            </li>
+            <li>
+                <a href="{% url 'canvas_api' %}">Canvas</a>
+            </li>
+            <li>
+                <a href="{% url 'notion_auth' %}">Notion</a>
+            </li>
+            </ul>
+    </h4>
+    <b>
+        IMPORTANT:
+    </b>
+    <p>
+        Please follow the instructions for integrating external services to this platform. This will add the events from the external calendar(s) to your homework list, and will associate a class for them. Please do NOT edit the class. Homework is imported from the calendar, with the priority being "None."
+    </p>
+    <h3>
+        Status of integrations:
+    </h3>
+    <div>
+        {% if integrations %}
+        <b>API Integrations: </b>
+        <ul>
+        {% for integration in integrations %}
+            <li>
+                <a href="/integrations/api/{{integration.id}}">{{integration.src}} - {{integration.url}}</a>
+            </li>
+        {% endfor %}
+        </ul>
+        {% endif %}
+        {% if n_datas %}
+        <b>Notion Integrations</b>
+        <ul>
+            {% for n_data in n_datas %}
+            <li>
+                <a href="{% url 'notion_auth' %}">{{n_data.workspace_name}} - {{n_data.tag}}</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}

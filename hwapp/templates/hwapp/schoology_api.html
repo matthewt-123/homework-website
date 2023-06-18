@@ -1,0 +1,59 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}{{service}} API Key{% endblock %}
+
+
+
+{% block body %}
+<h1 style='margin-left:35%;'>
+    {{service}} API Key
+</h1><br>
+<h2 style='margin-left:35%;'>
+Location: 
+</h2>
+<p style="margin-left:35%;">
+    {Schoology URL}/api<br>user ID: Your name(top right corner) -> Your Profile -> in URL({Schoology link}/user/<b>{USER_ID}</b>/info)
+
+
+</p><br>
+<form method="POST" action="/integrations/schoology_api" autocomplete="off">
+    {% csrf_token %}
+    <table style='margin-left:35%;'>
+        <tbody>
+            <tr>
+                <td>
+                    <label for='base_url'>Name: </label>
+                </td>
+                <td>
+                    <input type="text" name="base_url" id="base_url" autocomplete = "off" value="{{integration.url}}">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for='consumer_key'>Consumer Key: </label>
+                </td>
+                <td>
+                    <input type="password" name="consumer_key" id="consumer_key" autofocus> <br>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for='secret_key'>Secret Key: </label>
+                </td>
+                <td>
+                    <input type="password" name="secret_key" id="secret_key">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for='user_id'>User ID: </label>
+                </td>
+                <td>
+                    <input type="number" name="user_id" id="user_id">
+                </td>
+            </tr>
+            
+        </tbody>
+    </table><br>
+    <button type="submit" class="btn btn-primary" style="margin-left:35%;">Submit</button>
+</form>
+{% endblock %}

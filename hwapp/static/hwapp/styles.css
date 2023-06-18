@@ -1,0 +1,335 @@
+#hwlist {
+    float: right;
+}
+#indented {
+    display: block;
+    margin: auto;
+    right:100px;
+    margin-left: 575px;
+
+}
+
+.label {
+    margin-left: 50px;
+    display: inline-block;
+    width: 200px;
+    text-align: left;
+}
+
+.class-adv {
+    display: fixed;
+    margin-left: 125px;
+    width: 42%
+}
+#mobile_add_hw { 
+  display:none;
+}
+.django_forms {
+  margin-left:35%;
+}
+.django_forms_v2 {
+  margin-left:18%;
+}
+@media
+only screen and (max-width: 760px),
+(min-device-width: 0px) and (max-device-width: 1024px) {
+    table.index, thead.index, tbody.index, th.index, td.index, tr.index {
+        display: block
+    }
+    /*remove heading*/
+    thead tr.index {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    tr.index {border: 1px solid #ccc}
+    td.index {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+    }
+    #index_plus_sign {
+      display:none;
+    }
+    #mobile_add_hw {
+      display:block;
+    }
+    td.index:before {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+    }
+    .mobile_hide {
+      display:none;
+    }
+    .django_forms {
+      margin-left:0;
+    }
+    td.index:nth-of-type(1):before { content: ""; }
+	td.index:nth-of-type(2):before { content: "Assignment Name"; }
+	td.index:nth-of-type(3):before { content: "Class Name"; }
+	td.index:nth-of-type(4):before { content: "Due Date"; }
+	td.index:nth-of-type(5):before { content: "Completed?"; }
+    td.index:nth-of-type(6):before { content: ""; }
+
+}
+
+@media
+only screen and (max-width: 760px),
+(min-device-width: 0px) and (max-device-width: 1024px) {
+    table.classes, thead.classes, tbody.classes, th.classes, td.classes, tr.classes {
+        display: block
+    }
+    thead tr.classes {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    tr.classes {border: 1px solid #ccc}
+    td.classes {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+    }
+    td.classes:before {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+    }
+    #edit_logo {
+        width: 10%;
+    }
+    td.classes:nth-of-type(1):before { content: "Class Name"; }
+	td.classes:nth-of-type(3):before { content: "Period"; }
+	td.classes:nth-of-type(4):before { content: "Class Time"; }
+	td.classes:nth-of-type(5):before { content: "Edit"; }
+	td.classes:nth-of-type(6):before { content: "Delete"; }
+
+}
+.logo {
+    display: flex;
+    margin-top: 0px;
+    max-width: 100px;
+    height:auto;
+}
+
+.signed-in {
+    margin:auto;
+    display: flex;
+    white-space:nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-left: 1000px;
+    right:0;
+    left:0;
+    margin-top: 0px;
+}
+
+/* The side navigation menu */
+.sidenav {
+    height: 100%; /* 100% Full-height */
+    width: 0; /* 0 width - change this with JavaScript */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Stay on top */
+    top: 0; /* Stay at the top */
+    left: 0;
+    background-color: #111; /* Black*/
+    overflow-x: hidden; /* Disable horizontal scroll */
+    padding-top: 60px; /* Place content 60px from the top */
+    transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+  }
+  
+  /* The navigation menu links */
+  .sidenav a {
+    padding: 8px 8px 8px 32px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #818181;
+    display: block;
+    transition: 0.3s;
+  }
+  
+  /* When you mouse over the navigation links, change their color */
+  .sidenav a:hover {
+    color: #f1f1f1;
+  }
+  
+  /* Position and style the close button (top right corner) */
+  .sidenav .closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+  }
+  
+  /* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+  #main {
+    transition: margin-left .5s;
+    padding: 20px;
+  }
+  
+  /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+  @media screen and (max-height: 450px) {
+    .sidenav {padding-top: 15px;}
+    .sidenav a {font-size: 18px;}
+  }
+#hwapp_dropdown {
+  z-index: 999;
+  display: none;
+  position: absolute;
+  background-color: white;
+  height: fit-content;
+  width: 150px;
+  border: 0.1px solid lightgray;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  text-align: center;
+  font-size: 18px;
+  font-weight:normal;
+  border-radius: 1%;
+}
+
+table tr td {
+  font-size: 18px;
+  font-family: sans-serif;
+}
+.menu_item {
+  font-weight: bold;
+}
+.nav_item {
+  color: black;
+}
+.nav_item:hover {
+  background: lightgray;
+}
+#settings_dropdown {
+  z-index: 999;
+  display: none;
+  position: absolute;
+  background-color: white;
+  height: fit-content;
+  width: fit-content;
+  border: 0.1px solid lightgray;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  text-align: center;
+  font-size: 18px;
+  font-weight:normal;
+  border-radius: 1%;
+}
+#admin_dropdown {
+  z-index: 999;
+  display: none;
+  position: absolute;
+  background-color: white;
+  height: fit-content;
+  width: fit-content;
+  border: 0.1px solid lightgray;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  text-align: center;
+  font-size: 18px;
+  font-weight:normal;
+  border-radius: 1%;
+}
+.ics_form {
+  margin-top:5%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+  text-align: center;
+}
+
+.input1 {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  border-bottom: 1px solid black;
+}
+.completed {
+  width: 20px;
+  height:20px;
+  background:white;
+  border-radius:5px;
+  border:2px solid #555;
+
+}
+
+#init_dropdown {
+  z-index: 999;
+  display: none;
+  position: absolute;
+  background-color: white;
+  height: fit-content;
+  width: 150px;
+  border: 0.1px solid lightgray;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  text-align: center;
+  font-size: 18px;
+  font-weight:normal;
+  border-radius: 1%;
+}
+.mobile_nav {
+  display:none;
+}
+@media
+only screen and (max-width: 760px),
+(min-device-width: 0px) and (max-device-width: 1024px) {
+  .nav-item {
+    display:none;
+  }
+.mobile_nav {
+    margin-left: 110%;
+    display:block;
+}
+  .sidenav {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    background-color: #111;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding-top: 60px;
+  }
+  
+  .sidenav a {
+    padding: 8px 8px 8px 32px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #818181;
+    display: block;
+    transition: 0.3s;
+  }
+  
+  .sidenav a:hover {
+    color: #f1f1f1;
+  }
+  
+  .sidenav .closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+  }
+
+}
+*{-webkit-box-sizing:border-box;box-sizing:border-box}body{padding:0;margin:0}#notfound{position:relative;height:100vh}#notfound .notfound{position:absolute;left:50%;top:50%;-webkit-transform:translate(-50%,-50%);-ms-transform:translate(-50%,-50%);transform:translate(-50%,-50%)}.notfound{max-width:920px;width:100%;line-height:1.4;text-align:center;padding-left:15px;padding-right:15px}.notfound .notfound-404{position:absolute;height:100px;top:0;left:50%;-webkit-transform:translateX(-50%);-ms-transform:translateX(-50%);transform:translateX(-50%);z-index:-1}.notfound .notfound-404 h1{font-family:maven pro,sans-serif;color:#ececec;font-weight:900;font-size:276px;margin:0;position:absolute;left:50%;top:50%;-webkit-transform:translate(-50%,-50%);-ms-transform:translate(-50%,-50%);transform:translate(-50%,-50%)}.notfound h2{font-family:maven pro,sans-serif;font-size:46px;color:#000;font-weight:900;text-transform:uppercase;margin:0}.notfound p{font-family:maven pro,sans-serif;font-size:16px;color:#000;font-weight:400;text-transform:uppercase;margin-top:15px}.notfound a{font-family:maven pro,sans-serif;font-size:14px;text-decoration:none;text-transform:uppercase;background:#189cf0;display:inline-block;padding:16px 38px;border:2px solid transparent;border-radius:40px;color:#fff;font-weight:400;-webkit-transition:.2s all;transition:.2s all}.notfound a:hover{background-color:#fff;border-color:#189cf0;color:#189cf0}@media only screen and (max-width:480px){.notfound .notfound-404 h1{font-size:162px}.notfound h2{font-size:26px}}
+
+
+tr:nth-child(even) {
+  background-color: rgb(215, 215, 222);
+}
+tr:nth-child(odd) {
+  background-color: white;
+}

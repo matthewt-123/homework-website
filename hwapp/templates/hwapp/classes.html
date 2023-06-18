@@ -1,0 +1,140 @@
+{% extends 'hwapp/layout.html' %}
+{% block javascript %}
+<script>
+    function delete_class(class_id){
+        name_data = document.getElementById(`class_name_${class_id}`)
+        name = name_data.dataset.value
+        if(confirm(`Are you sure you want to delete ${name}?`)) {
+            fetch(`/deleteclass/${class_id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                },
+                credentials: 'same-origin',
+            })
+            .then(response => response.json())
+            .then(result => {
+                if(result['status'] == 200) {
+                    /* hide error message if any */
+                    document.getElementById('error_message').innerHTML=''
+                    document.getElementById('error_message').style.display='none'
+                    /* show alert */
+                    const alert = document.getElementById('alert')
+                    alert.innerHTML = result['message']
+                    alert.style.display='block'
+
+                    /* remove element */
+                    document.getElementById(`row_${class_id}`).remove()
+
+                } else {
+                    document.getElementById('alert').innerHTML=''
+                    document.getElementById('alert').style.display='none'
+
+                    const alert = document.getElementById('error_message')
+                    alert.innerHTML = result['message']
+                    alert.style.display='block'
+                    }
+                })
+        }}
+        function archive_class(class_id){
+        name_data = document.getElementById(`class_name_${class_id}`)
+        name = name_data.dataset.value
+        if(confirm(`Are you sure you want to archive ${name}?`)) {
+            fetch(`/archive/${class_id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                },
+                credentials: 'same-origin',
+            })
+            .then(response => response.json())
+            .then(result => {
+                if(result['status'] == 200) {
+                    /* hide error message if any */
+                    document.getElementById('error_message').innerHTML=''
+                    document.getElementById('error_message').style.display='none'
+                    /* show alert */
+                    const alert = document.getElementById('alert')
+                    alert.innerHTML = result['message']
+                    alert.style.display='block'
+
+                    /* remove element */
+                    document.getElementById(`row_${class_id}`).remove()
+
+                } else {
+                    document.getElementById('alert').innerHTML=''
+                    document.getElementById('alert').style.display='none'
+
+                    const alert = document.getElementById('error_message')
+                    alert.innerHTML = result['message']
+                    alert.style.display='block'
+                    }
+                })
+        }}     
+
+
+</script>
+{% endblock %}
+{% block body %}
+<h1>
+Classes List for {{user.username}}
+</h1>
+<div id="alert" class="alert alert-success" role="alert" style='display:none;'></div>
+<div id='error_message' class="alert alert-danger" role="alert" style='display:none;'></div>
+<table class="classes" width='100%'>
+    <thead class="classes">
+        <strong><tr class="classes">
+            <td class='classes' with=5%></td>
+            <td class="classes" width='35%'>
+                <strong>Class Name</strong>
+            </td width = '10%'>
+            <td class="classes" width="10%">
+                <strong>Period</strong>
+            </td>
+            <td class="classes" width='20%'>
+                <strong>Class Time</strong>
+            </td>
+            <td class="classes" width='10%'>
+                <strong>Edit</strong>
+            </td>
+            <td class="classes" width=10%><strong>Delete</strong></td>
+            <td class="classes" width=10%><strong>Archive</strong></td>
+
+        </tr></strong>
+    </thead>
+    <tbody class="classes">
+        {% for class in classes %}
+            <tr class="classes" id="row_{{class.id}}">
+                <td class='classes' with=5%></td>
+                <td class="classes"><a id='class_name_{{class.id}}' data-value={{class.class_name}} href='/?class={{class.id}}&page=1'>
+                    {{class.class_name}}
+                </a></td>
+                <td class="classes"><a href='/?class={{class.id}}&page=1'>
+                    {{class.period}}
+                </a></td>
+                <td class="classes"><a href='/?class={{class.id}}&page=1'>
+                    {{class.time}}
+                </a></td>
+                <td class="classes">
+                    <a href='/editclass/{{class.id}}' color="black">
+                        <i class="fa-solid fa-pencil" color="black"></i>
+
+                    </a>
+
+                </td>
+                <td class="classes">
+                    <i class="fa-solid fa-trash" onclick='delete_class({{class.id}})'></i>
+                    <i class="glyphicon glyphicon-trash" onclick='delete_class({{class.id}})'></i>
+                    {% csrf_token %}
+                </td>
+                <td class="classes">
+                    <i class="fas fa-archive" onclick='archive_class({{class.id}})'></i>
+                </td>
+
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<hr>
+<a href='/addclass'>Add Class</a>
+{% endblock %}

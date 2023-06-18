@@ -1,0 +1,44 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}Communications {% endblock %}
+{% block body %}
+{% if message %}
+<div class="alert alert-danger" role="alert">
+    {{message}}    
+    </div>
+{% endif %}
+<h1 style='margin-left: 35%;'>Email All</h1>
+<hr>
+<form method="post" action='{% url "communications" %}'>
+    {% csrf_token %}
+    <h1>Send an Email</h1>
+    <label>Subject: </label>  <input name = 'subject' type="text" style="width:75%"><br>
+    <textarea cols='100' class="myeditablediv" id="template_body" name='template_body'></textarea>
+<button class='btn btn-primary'>Send</button>
+  </form>
+
+
+
+
+{% endblock %}
+{% block javascript %}
+<script src="https://cdn.tiny.cloud/1/40sv45vzy4u71pmvmdz7wjo889ftg47y45me0eaf69471kmh/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+    tinymce.init({
+  selector: '#template_body',
+  inline: true,
+  menubar: true,
+});
+  tinymce.init({
+    selector: 'textarea',
+    plugins: 'autolink lists media table link',
+    toolbar: 'table link',
+    toolbar_mode: 'floating',
+    tinycomments_mode: 'embedded',
+    tinycomments_author: 'Matthew',
+    relative_urls: false,
+    document_base_url: 'https://matthewtsai.games/',
+    height: '1000'
+  });
+</script>
+
+{% endblock %}

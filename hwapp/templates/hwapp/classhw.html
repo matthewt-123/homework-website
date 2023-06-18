@@ -1,0 +1,79 @@
+{% extends 'hwapp/layout.html' %}
+
+{% block body %}
+<h1>
+Homework for {{class1.class_name}} (Active Assignments Only)
+</h1>
+
+<table class='index' width='100%'>
+    <thead class='index'>
+        <tr class='index'>
+            <td class='index' width=5%></td>
+            <td class='index'width='40%'>
+                <strong>Assignment Name</strong>
+            </td>
+            <td class='index' width='20%'>
+                <strong>Class Name</strong>
+            </td>
+            <td class='index' width=15%>
+                <strong>Due Date </strong>
+            </td>
+            <td class='index' width='10%'>
+                <strong>Priority</strong>
+            </td>
+            <td class='index' width=5%>
+                <strong>Completed?</strong>        
+            </td>
+            <td width=5%></td>
+        </tr>
+    </thead>
+    <tbody class='index'>
+        {% for hw in hwlist %}
+        <tr class='index'>
+            <td class='index'></td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_title}}</a>
+            </td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_class}}</a>
+            </td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>
+            </td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.priority}}</a>
+            </td>
+
+                <td class='index'>
+                <form action='/' method="POST" id="hwform">
+                    {% csrf_token %}
+                    {% if not hw.completed %}
+                        <input type='checkbox' class='completed' id='hw_completion' name='hw_completion' value='{{hw.completed}}'>
+                    {% else %}
+                    <input type='checkbox' class='completed' id='hw_completion' name='hw_completion' value='{{hw.completed}}'  checked='{{hw.completed}}'>
+                    {% endif %}
+                    <input type='hidden' class='completed' name='hw_id'  value={{hw.id}}>
+                    </form>
+                </td>
+                <td></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+<hr>
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" onclick='page_nav_size()' href="?page={{page_obj.previous_page_number}}">&laquo;</a></li>
+        {% endif %}
+        {% for page in length %}
+            <li class="page-item"><a class="page-link" onclick='page_nav_size()' href="?page={{page}}">{{page}}</a></li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" onclick='page_nav_size()' href="?page={{page_obj.next_page_number}}">&raquo;</a></li>
+        
+    {% endif %}
+    </ul>
+</nav>
+<a href='/addhw'>Add Homework</a>
+{% endblock %}

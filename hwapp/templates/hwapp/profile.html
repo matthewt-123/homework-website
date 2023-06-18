@@ -1,0 +1,34 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}
+My Profile
+{% endblock %}
+{% block body %}
+
+<h1 style="margin-left:35%">Edit {{user.username}}'s Profile</h1>
+{% if message %}
+<div class="alert alert-success" role="alert">
+    {{message}}
+  </div>
+{% endif %}
+<hr>
+    <form action='{% url "profile" %}' method='POST' class='indented'>
+        {% csrf_token %}
+        <div style='margin-left:35%;'>
+
+                <label for="first_name"><strong>First Name</strong></label>
+                <input type="text" class="form-control"  id="first_name" name = "first_name" style="width:50%" placeholder="John" value="{{first_name}}">
+
+                <label for="last_name"><strong>Last Name</strong></label>
+                <input type="text" class="form-control" id="last_name" name="last_name" style="width:50%" placeholder="Doe" value="{{last_name}}">
+
+
+                <label for="email"><strong>Email address</strong></label>
+                <input type="email" class="form-control" id="email" name="email" style="width:50%" placeholder="Enter email" value="{{email}}">
+
+        </div><br>
+        <button style='margin-left: 35%' type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+
+
+{% endblock %}

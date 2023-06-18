@@ -1,0 +1,74 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+{% if message %}
+<div class="alert alert-success" role="alert">
+    {{message}}    
+    </div>
+{% endif %}
+
+<script>
+    function calselect() {
+        u = document.getElementById('calendars').selectedOptions
+        CalIDs = []
+        calnames = []
+        for(i=0;i<u.length;i++){
+            CalIDs[i] = u[i].dataset.calid
+            calnames[i] = u[i].dataset.name
+        } 
+        fetch(`{% url 'google_callback' %}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                calIDs: CalIDs,
+                calname: calnames,
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if(result['status'] == 400) {
+                /* show error message if error*/
+                const alert = document.getElementById('error_message')
+                alert.innerHTML = result['message']
+                alert.style.display='block'
+
+                /* hide success message if any */
+                document.getElementById('alert').style.display='none'
+            } else if(result['status'] == 201) {
+                const alert = document.getElementById('alert')
+                alert.innerHTML = result['message']
+                alert.style.display='block'
+            } else {
+                /* show error message if error*/
+                const alert = document.getElementById('error_message')
+                alert.innerHTML = result['message']
+                alert.style.display='block'
+
+                /* hide success message if any */
+                document.getElementById('alert').style.display='none'
+            }
+        });
+        return false
+}
+</script>
+<div id="alert" class="alert alert-success" role="alert" style='display:none;'></div>
+<div id='error_message' class="alert alert-danger" role="alert" style='display:none;'></div>
+<div id="btn_container" style='text-align:center;margin:auto' >
+
+<form method="post" onsubmit='return false' action='{% url "google_callback" %}'>
+    {% csrf_token %}
+    <h1>Choose the Calendars to Import</h1>
+    <select id = 'calendars' multiple name="calendars" height="50%">
+        {% for calendar in calendars %}
+        <option data-calid="{{calendar.id}}" id="{{calendar.id}}" data-name="{{calendar.summary}}">{{calendar.summary}}</option>
+        {% endfor %}
+    </select><br>
+<button class='btn btn-primary' onclick="calselect()">Submit</button>
+  </form>
+  </div>
+
+
+{% endblock %}

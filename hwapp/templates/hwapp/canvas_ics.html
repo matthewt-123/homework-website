@@ -1,0 +1,33 @@
+{% extends "hwapp/layout.html" %}
+{% load static %}
+{% block body %}
+<div class="alert alert-danger">This feature is no longer functional</div>
+
+<div class="ics_form">
+    <form action='/integrations/canvas_init' method='POST'>
+        {% csrf_token %}
+        <label>Canvas ICS Link(instructions below): </label><input style="width:60%;" type="text" name="schoology_ics_link" id="schoology_ics_link"><br>
+        <button type="submit" class="btn btn-primary submit_button">Submit</button>
+    </form>
+
+</div>
+<hr><h1>How to access Canvas webcal link</h1>
+<ol>
+    <li>
+        Click on the calendar icon on the left navigation menu 
+    </li>
+    <li>
+        On the right of the page, under "Undated," click "Calendar Feed"
+    </li>
+    <li>
+        Copy and paste the link into the above field, press submit
+    </li>
+    <li>
+        This may take a while
+    </li>
+</ol>
+
+
+
+
+{% endblock %}

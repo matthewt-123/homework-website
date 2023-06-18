@@ -1,0 +1,406 @@
+{% extends 'hwapp/layout.html' %}
+{% load static %}
+{% block javascript %}<script src="{% static 'hwapp/sortable.js' %}"></script>{% endblock %}
+
+{% block body %}
+<h1>
+Homework List for {{user.username}}
+</h1>
+<img id='page_size_button' alt='class filter' class='btn btn-default dropdown-toggle index_filter' data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style='height:6%;width:6%;position:relative;margin-top:-4%;float:right;margin-right:5%;' src="{% static 'hwapp/filter.png' %}">
+<div class='dropdown-menu' id='class_filter' aria-labelledby="page_size_label">
+    <b>Class Filter</b>
+    <a onclick='class_filters()' class="dropdown-item class_filter_items" href='/' >All Classes</a>
+    {% for class in class_list %}
+    <a onclick='class_filters()' class="dropdown-item class_filter_items" href='?class={{class.id}}' value='{{class.id}}'>{{class.class_name}}</a>
+    {% endfor %}
+</div>
+
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+        row_id = 0
+        document.getElementById('non_functional_form').addEventListener('submit', () => {
+            fetch(`/addhw`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                hw_class: document.getElementById('hw_class').value,
+                hw_title: document.getElementById('hw_title').value,
+                due_date: `${document.getElementById('due_date').value}`,
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if(result['status'] == 400) {
+                /* show error message if error*/
+                const alert = document.getElementById('error_message')
+                alert.innerHTML = result['message']
+                alert.style.display='block'
+
+                /* hide success message if any */
+                document.getElementById('alert').style.display='none'
+            } else {
+                /* show success message if success*/
+                const alert = document.getElementById('alert');
+                alert.innerHTML = result['message'];
+                alert.style.display='block';
+
+                /* hide any error messages*/
+                document.getElementById('error_message').style.display='none';
+
+                /* add new row to end of table */
+                /* add new empty row to end of table */
+                empty = document.getElementById(`new_hw_${row_id}`);
+                table = document.getElementById('incomplete_table');
+
+
+
+                /* update link and innerHTML */
+                var new_class = document.getElementById(`new_hw_class_${row_id}`);
+                new_class.innerHTML = result['class_name'] ;
+                new_class.href = `/edit_hw/${result['hw_id']}`;
+                
+
+                var new_hw_title = document.getElementById(`new_hw_title_${row_id}`);
+                new_hw_title.innerHTML = document.getElementById('hw_title').value;
+                new_hw_title.href = `/edit_hw/${result['hw_id']}`;
+
+                var new_due_date = document.getElementById(`new_due_date_${row_id}`);
+                new_due_date.innerHTML = result['formatted_date'];
+                new_due_date.href = `/edit_hw/${result['hw_id']}`;
+
+                
+                /*increment id values*/
+                table.innerHTML += `<tr id="new_hw_${row_id + 1}" class='index'> <td></td> <td><a id='new_hw_title_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_hw_class_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_due_date_${row_id + 1}' class='new_hw_link'></a></td> <td id="checkbox_${row_id + 1}" style='display:none;'> <form action='/' method="POST" class="hwform" > {% csrf_token %} <input type='checkbox' id="hwcheckbox_new_${row_id + 1}" class='completed' name='hw_completion' value=''> <input type='hidden' class='completed' name='hw_id'> </form></td> </tr>`;
+
+                /* create completioncall() onClick  for hw_id  */
+                document.getElementById(`hwcheckbox_new_${row_id}`).value = false;
+                document.getElementById(`hwcheckbox_new_${row_id}`).id = result['hw_id'];
+                document.getElementById(`${result['hw_id']}`).setAttribute('onclick', `completioncall(${result['hw_id']})`);
+
+                /* show new checkbox */
+                document.getElementById(`checkbox_${row_id}`).style.display = 'block';
+                
+                /* rename new_hw_rowid to hwentry for checkbox function */
+                document.getElementById(`new_hw_${row_id}`).id = `hwentry_${result['hw_id']}`
+
+                /* increment row ID, create new row with new row ID */
+                row_id++;
+
+                
+                
+                /* clear out fields */
+                document.getElementById('hw_class').value = '';
+                document.getElementById('hw_title').value = '';
+                document.getElementById('due_date').value = '';
+
+                /* autofocus on new row*/
+                document.getElementById('hw_title').focus();
+            }
+        })
+        return false
+    })})
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('hw_class').onchange = () => {
+            const class_ins = document.getElementById('hw_class')
+            if(document.getElementById('hw_class').value == 'add_new_class') {
+                window.location.href='https://{{website_root}}/addclass'
+            } else {
+                    fetch(`/getclasstime/${class_ins.value}`, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                })
+                .then(response=>response.json())
+                .then(result => {
+                    if(result['status'] == 200){
+                        document.getElementById('due_date').value = result['class_time']
+                    } else {
+                        console.log(result['message'])
+                    }
+                })
+            }
+
+        }
+    })
+    function completioncall(id) {
+        fetch(`/completion/${id}`, {
+            method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                },
+                credentials: "same-origin",
+                body: JSON.stringify({
+                    hw_id: id,
+                    completion: document.getElementById(id).value
+                })
+        })
+        .then(response=>response.json())
+        .then(result => {
+            if(result['status'] == 201) {
+                var bool = document.getElementById(id).value 
+                const elem = document.getElementById(id)
+                if(String(bool.toLowerCase()) == String(true)) {
+                    const alert = document.getElementById('alert')
+                    alert.innerHTML = `Homework unchecked successfully`
+                    alert.style.display='block'
+                    elem.value = "False"
+                    elem.removeAttribute("checked")
+                    try {
+                        const incomplete = document.getElementById('incomplete_table')
+                        var toappend = document.getElementById(`hwentry_${id}`)
+                        incomplete.append(toappend)  
+                    } catch (error) {
+                        
+                    }
+
+                } else {
+                    const alert = document.getElementById('alert')
+                    alert.innerHTML = `Yay! You completed an assignment!`
+                    alert.style.display='block'
+                    document.getElementById(id).value = "True"
+                    document.getElementById(id).setAttribute("checked", "true")
+                    try {
+                        const complete = document.getElementById('completed_table')
+                        var toappend = document.getElementById(`hwentry_${id}`)
+                        if(complete == null) {
+                            toappend.style.display = "none"
+                            
+                        } 
+                        complete.append(toappend)
+                    } catch {}
+
+                } 
+            } else {
+                document.getElementById('alert').innerHTML = `<div class="alert alert-danger" role="alert">${result['message']}</div>`
+            }
+        })
+        return false        
+    }
+
+</script>
+<div id="alert" class="alert alert-success" role="alert" style='display:none;'></div>
+<div id='error_message' class="alert alert-danger" role="alert" style='display:none;'></div>
+<table class='index sortable' width='100%'>
+    <thead class='index'>
+        <tr class='index'>
+            <td class='index' width=5%></td>
+            <td class='index'width='45%'>
+                <strong>Assignment Name</strong>
+            </td>
+            <td class='index' width='25%'>
+                <strong>Class Name</strong>
+            </td>
+            <td class='index' width=15%>
+                <strong>Due Date </strong>
+            </td>
+            <td class='index' width=5%>
+                <strong>Completed?</strong>        
+            </td>
+            <td width=5%></td>
+        </tr>
+    </thead>
+    <tbody id="incomplete_table" class='index sortable'>
+        {% for hw in hwlist %}
+        {% if hw.overdue %}
+        <tr class='index' id="hwentry_{{hw.id}}" style='background-color: rgb(255, 210, 209);'>
+            <td class='index'></td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_title}}</a>
+            </td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_class}}</a>
+            </td>
+            <td class='index date_field'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>
+            </td>
+
+            {% else %}
+        <tr class='index' id="hwentry_{{hw.id}}">
+            <td class='index'></td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_title}}</a>
+            </td>
+            <td class='index'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_class}}</a>
+            </td>
+            <td class='index date_field'>
+                <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>
+            </td>
+            {% endif %}
+                <td class='index'>
+                <form action='/' method="POST" id="hwform_{{hw.id}}" class="hwform" name='{{hw.id}}'>
+                    {% csrf_token %}
+                    {% if not hw.completed %}
+                        <input type='checkbox' onclick='completioncall({{hw.id}})' class='completed' id='{{hw.id}}' name='hw_completion' value='{{hw.completed}}'>
+                    {% else %}
+                    <input type='checkbox' onclick='completioncall({{hw.id}})' class='completed' id='{{hw.id}}' name='hw_completion' value='{{hw.completed}}'  checked='{{hw.completed}}'>
+                    {% endif %}
+                    {{form.completed}}
+                    <input type='hidden' class='completed' name='hw_id'  value={{hw.id}}>
+                    </form>
+                </td>
+                <td></td>
+            </tr>
+            {% endfor %}
+            <!--blank row-->
+            <tr id="new_hw_0" class='index'>
+                <td ></td>
+                <td><a id='new_hw_title_0' class='new_hw_link'></a></td>
+                <td><a id='new_hw_class_0' class='new_hw_link'></a></td>
+                <td><a id='new_due_date_0' class='new_hw_link'></a></td>
+                <td id="checkbox_0" style='display:none;'>
+                    <form action='/' method="POST"   class="hwform" name='{{item.id}}'>
+                        {% csrf_token %}
+                            <input type='checkbox' id="hwcheckbox_new_0" class='completed' name='hw_completion' value=''>
+                        <input type='hidden' class='completed' name='hw_id'  value={{item.id}}>
+                    </form></td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <!--New HW Form-->
+            <form action='/addhw' method='POST' id='non_functional_form'>
+                {% csrf_token %}
+            <tr class='index'>
+                <td style='text-align: center;' id='index_plus_sign' class='mobile_hide'>+</td>
+                <td class='mobile_hide'><input id='hw_title' autofocus autocomplete="off" type='text' class='input1' placeholder="Assignment Name"></td>
+                <td class='mobile_hide'><select id='hw_class' class='input1 form-select'>
+                    <option disabled selected>Class Name</option>
+                    {% for class in class_list %}
+                    <option value={{class.id}}>{{class.class_name}}</option>
+                    {% endfor %}
+                    <option value='add_new_class'>Add New Class</option>
+                </select></td>
+                <td class='mobile_hide'><input autocomplete="off" id='due_date' type='datetime-local' class='input1'></td>
+                <td class='mobile_hide'>
+                    <button id='add_hw' hidden type="submit"></button>
+                </td>
+            </tr>
+            </form>
+        </tfoot>
+    </table>
+    <a href='/addhw' id='mobile_add_hw'>Add Homework</a>
+        {% if completed %}
+        <hr>
+<strong>Completed Assignments</strong>
+    <table width='100%' id="completed_table"><tbody>
+        {% for item in completed %}
+            <tr id="hwentry_{{item.id}}">
+                <td width='5%'></td>
+                <td width='45%'>
+                    <a href = '{% url "edit_hw" item.id %}'>{{item.hw_title}}</a>
+                </td>
+                <td width='25%'>
+                    <a href = '{% url "edit_hw" item.id %}'>{{item.hw_class}}</a>
+                </td>
+                <td width='15%'>
+                    <a href = '{% url "edit_hw" item.id %}'>{{item.due_date}}</a>
+                </td>
+ 
+                    <td width='5%'>
+                        <form action='/' method="POST" id="hwform" class="hwform" name='{{item.id}}'>
+                            {% csrf_token %}
+                            {% if not item.completed %}
+                                <input type='checkbox' onclick='completioncall({{item.id}})' class='completed' id='{{item.id}}' name='hw_completion' value='{{item.completed}}'>
+                            {% else %}
+                            <input type='checkbox' onclick='completioncall({{item.id}})' class='completed' id='{{item.id}}' name='hw_completion' value='{{item.completed}}'  checked='{{item.completed}}'>
+                            {% endif %}
+                            
+                            <input type='hidden' class='completed' name='hw_id'  value={{item.id}}>
+                        </form>
+                    <td width=5%></td>
+                    <td></td>
+            </tr>
+        {% endfor %}
+        {% endif %}
+    </tbody>
+
+</table>
+
+<hr>
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" onclick='page_nav_size()' href="?page={{page_obj.previous_page_number}}">&laquo;</a></li>
+        {% endif %}
+        {% for page in length %}
+            <li class="page-item"><a class="page-link" onclick='page_nav_size()' href="?page={{page}}">{{page}}</a></li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" onclick='page_nav_size()' href="?page={{page_obj.next_page_number}}">&raquo;</a></li>
+        
+    {% endif %}
+    </ul>
+</nav>
+<div style='margin-left:2%'>
+    <label id='page_size_label' for='page_size'>Results per page:</label>
+    <button type='button' id='page_size_button' class='btn btn-default dropdown-toggle' data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+        10
+    </button>
+    <div class='dropdown-menu' id='dropdown_menu_page_size' aria-labelledby="page_size_label">
+        <a class="dropdown-item" href='?page_size=10'>10</a>
+        <a class="dropdown-item" href='?page_size=15'>15</a>
+        <a class="dropdown-item" href='?page_size=20'>20</a>
+        <a class="dropdown-item" href='?page_size=25'>25</a>
+        <a class="dropdown-item" href='?page_size=50'>50</a>
+    </div>
+</div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search)
+if(urlParams.get('page_size') == null) {
+    document.getElementById('page_size_button').innerHTML = 10
+} else {
+    document.getElementById('page_size_button').innerHTML = urlParams.get('page_size')
+}
+function page_nav_size() {
+    if(urlParams.get('page_size') != null) {
+        links = document.getElementsByClassName('page-link')
+        for(i=0; i<links.length; i++) {
+            links[i].href += `&page_size=${urlParams.get('page_size')}`
+        }
+
+    } else {}
+    if(urlParams.get('class') != null) {
+        links = document.getElementsByClassName('page-link')
+        for(i=0; i<links.length; i++) {
+            links[i].href += `&class=${urlParams.get('class')}`
+        }
+    } else {}
+}
+function class_filters() {
+    filters = document.getElementsByClassName('class_filter_items')
+    if(urlParams.get('page_size') != null) {
+        for(i=0; i<filters.length; i++) {
+            filters[i].href += `&page_size=${urlParams.get('page_size')}`
+        }
+    }
+    
+
+}
+
+
+
+</script>
+
+
+
+
+<hr>
+{% if completed %}
+<a href='/'>Show Only Active Assignments</a>
+{% else %}
+<a href='/allhw'>Show All Homework(Including Inactive)</a>
+{% endif %}
+
+
+
+
+
+
+
+{% endblock %}

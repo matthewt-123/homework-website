@@ -1,0 +1,147 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}
+Add Homework
+{% endblock %}
+{% block javascript %}
+<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+{% endblock %}
+{% block body %}
+<script>
+    function hw_json() {
+        fetch(`/addhw`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                hw_class: document.getElementById('hw_class').value,
+                hw_title: document.getElementById('hw_title').value,
+                due_date: `${document.getElementById('due_date').value}`,
+                priority: document.getElementById('priority').value,
+                notes: document.getElementById('notes').value
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if(result['status'] == 400) {
+                /* show error message if error*/
+                const alert = document.getElementById('error_message')
+                alert.innerHTML = result['message']
+                alert.style.display='block'
+
+                /* hide success message if any */
+                document.getElementById('alert').style.display='none'
+            } else {
+                /* show success message if success*/
+                const alert = document.getElementById('alert');
+                alert.innerHTML = result['message'];
+                alert.style.display='block';
+
+                /* hide any error messages*/
+                document.getElementById('error_message').style.display='none';
+                hw_class: document.getElementById('hw_class').value = ''
+                hw_title: document.getElementById('hw_title').value = ''
+                due_date: document.getElementById('due_date').value = ''
+                priority: document.getElementById('priority').value = ''
+                window.location.href = '/'
+            }
+        });
+        return false
+    }
+    function hw_json_addanother() {
+        fetch(`/addhw`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                hw_class: document.getElementById('hw_class').value,
+                hw_title: document.getElementById('hw_title').value,
+                due_date: document.getElementById('due_date').value,
+                priority: document.getElementById('priority').value,
+                notes: document.getElementById('notes').value
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if(result['status'] == 400) {
+                /* show error message if error*/
+                const alert = document.getElementById('error_message')
+                alert.innerHTML = result['message']
+                alert.style.display='block'
+
+                /* hide success message if any */
+                document.getElementById('alert').style.display='none'
+            } else {
+                /* show success message if success*/
+                const alert = document.getElementById('alert');
+                alert.innerHTML = result['message'];
+                alert.style.display='block';
+
+                /* hide any error messages*/
+                document.getElementById('error_message').style.display='none';
+                hw_class: document.getElementById('hw_class').value = ''
+                hw_title: document.getElementById('hw_title').value = ''
+                due_date: document.getElementById('due_date').value = ''
+                priority: document.getElementById('priority').value = ''
+            }
+        });
+        return false
+    }
+</script>
+<div id="alert" class="alert alert-success" role="alert" style='display:none;'></div>
+<div id='error_message' class="alert alert-danger" role="alert" style='display:none;'></div>
+<h1  class='django_forms'>Add Homework</h1>
+<hr>
+
+<form action="/addhw" onsubmit='return false' class="indented add_hw_form" method='POST'>
+    {% csrf_token %}
+    <table class='django_forms'>
+        <tbody><tr><th><label for="id_hw_class">Hw class:</label></th><td><select name="hw_class" required="" id="hw_class">
+<option value="" selected disabled>---------</option>
+
+{% for class in classes %}
+<option value={{class.id}}>{{class.class_name}}</option>
+{% endfor %}
+<option value='add_new_class'>Add New Class</option>
+
+</select></td></tr>
+<tr><th><label for="id_hw_title">Hw title:</label></th><td><input type="text" name="hw_title"maxlength="256" required="" id="hw_title"></td></tr>
+<tr><th><label for="id_due_date">Due date:</label></th><td><input type="datetime-local" name="due_date" required="" id="due_date"></td></tr>
+<tr><th><label for="id_priority">Priority:</label></th><td><input type="number" name="priority" id="priority"></td></tr>
+<tr><th><label for="id_notes">Notes:</label></th><td><textarea name="notes" cols="40" rows="10" id="notes"></textarea></td></tr> 
+    </tbody></table>
+    <button onclick='hw_json()' style="margin-left: 35%" type="submit" class="btn btn-primary">Submit</button>
+    <button onclick='hw_json_addanother()' style="margin-left: 5%" type="submit" class="btn btn-primary">Submit and Add Another</button>
+
+</form>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('hw_class').onchange = () => {
+            const class_ins = document.getElementById('hw_class')
+            if(document.getElementById('hw_class').value == 'add_new_class') {
+                window.location.href='https://{{website_root}}/addclass'
+            } else {
+                    fetch(`/getclasstime/${class_ins.value}`, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                })
+                .then(response=>response.json())
+                .then(result => {
+                    if(result['status'] == 200){
+                        document.getElementById('due_date').value = result['class_time']
+                    } else {
+                        console.log(result['message'])
+                    }
+                })
+            }
+
+        }
+    })
+</script>
+
+{% endblock %}
+
