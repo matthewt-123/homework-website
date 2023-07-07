@@ -15,6 +15,8 @@ sys.path.append("..")
 from integrations.views import refresh_ics, notion_push
 from integrations.models import SchoologyAuth, SchoologyClasses, NotionData, IntegrationLog
 from mywebsite.settings import DEBUG
+from azure.communication.email import EmailClient
+
 def overdue_check():
     my_date = datetime.datetime.now()
     day = my_date.strftime("%d")
@@ -25,13 +27,16 @@ def overdue_check():
     for hw in allhw:
         hw.overdue = True
         hw.save()
-def send_email(interval):
+connection_string = "endpoint=https://hwapp-communication-services.communication.azure.com/;accesskey=q0qTkReuMcHOJpq83kt349TO0xpE0Au8H1jygmFvhMgt258vA55GVTjlDxnjtqM5tGH5zQZ+ixvbcXUclqPh6A=="
+client = EmailClient.from_connection_string(connection_string)
+
+
+def send_email(interval=0):
     #load data from .env to get API key
     load_dotenv()
     #refresh ICS
-    refresh_ics()
     try:
-        recipients = Preferences.objects.filter(email_notifications=True)
+        recipients = Preferences.objects.all()
         for recipient in recipients:
             listed= f'Homework email for {recipient.preferences_user.username}'
             #get all hw for recipient
@@ -40,30 +45,32 @@ def send_email(interval):
             listed = "<ul>"
             for each in hw_list:
                 if each.overdue:
-                    if each.notes != None and each.notes != "None":
-                        listed = listed + f"<li style='color:red'><a style='color:red' href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li><ul><li style='color:red'>Notes: {each.notes}</li></ul>"
-                    else:
-                        listed = listed + f"<li style='color:red'><a style='color:red' href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li>"
+                    listed = listed + f"<li style='color:red'><a style='color:red' href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li>"
                 else:
-                    if each.notes != None and each.notes != "None":
-                        listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li><ul><li>Notes: {each.notes}</li></ul>"
-                    else:
-                        listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li>"
+                    listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li>"
             #add closing tag
             listed = f"{listed}</ul>"
             html_content = str(EmailTemplate.objects.get(id=2).template_body)
             html_content = html_content.replace('$$homework', listed)
             todays = date.today()
-            send = requests.post(
-                f"{os.environ.get('API_BASE_URL')}/messages",
-                auth=("api", f"{os.environ.get('mailgun_api_key')}"),
-                data={
-                    "from": "Homework App <noreply@matthewtsai.me>",
-                    "to": [recipient.preferences_user.email],
+            message = {
+                "content": {
                     "subject": f"{recipient.preferences_user.username}'s Homework Email for {todays}",
-                    "html": html_content 
-                }
-            )
+                    "html": html_content
+                },
+                "recipients": {
+                    "to": [
+                        {
+                            "address": recipient.preferences_user.email,
+                            "displayName": f"{recipient.preferences_user.first_name} {recipient.preferences_user.last_name}"
+                        }
+                    ]
+                },
+                "senderAddress": f"support@email.matthewtsai.tech"
+            }
+            poller = client.begin_send(message)
+            result = poller.result()
+            print(result)
     except:
         #pass if no recipients matching preference query
         pass

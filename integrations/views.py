@@ -430,7 +430,10 @@ def notion_callback(request):
                 },
                 "properties": {
                     "Name": {
-                        "title": [{"type":"text","text":{"content":f"{hw.hw_title}","link":None},"plain_text":f"{hw.hw_title}","href":None}]
+                        "title": [{
+                                "text": {
+                                    "content":f"{hw.hw_title}"
+                                }}]
                         
                     },
                     "Status": {
@@ -455,7 +458,10 @@ def notion_callback(request):
                     
                 }
             }
-            response = requests.post(url, data=json.dumps(body), headers={'Authorization': f'Bearer {token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
+            response = requests.post(url, data=json.dumps(body), headers={'Authorization': f'Bearer {token}', 'Notion-Version': '2022-06-28', "Content-Type": "application/json"})
+            print(response.text)
+            print(url)
+            print(body)
             hw.notion_migrated = True
             hw.notion_id = json.loads(response.text)['id']
             hw.save()
@@ -677,12 +683,7 @@ def authentication_manager(request, user_id):
 @login_required(login_url='/login')
 def canvas_api(request):
     if request.method == 'POST':
-        try:
-            s_obj = SchoologyAuth.objects.get(h_user=request.user, src="Canvas")
-        except:
-            s_obj = SchoologyAuth(src = "Canvas", h_user = request.user) 
-        if request.POST.get('new_site'):
-            s_obj = SchoologyAuth(src = "Canvas", h_user = request.user) 
+        s_obj = SchoologyAuth(src = "Canvas", h_user = request.user) 
         s_obj.s_secret_key = request.POST.get('secret_key')
         s_obj.url = request.POST.get('base_url')
         s_obj.save()
@@ -692,7 +693,8 @@ def canvas_api(request):
     else:
         return render(request, 'hwapp/canvas_api.html', {
             'service': 'Canvas',
-            'location': 'Profile -> Settings -> Add New Access Token'
+            'location': 'Profile -> Settings -> Add New Access Token',
+            'prefix': 'New'
         })
 @login_required(login_url='/login')
 def schoology_api(request):
@@ -729,8 +731,6 @@ def edit_api(request, integration_id):
             linked_classes = SchoologyClasses.objects.filter(auth_data=integration, schoology_user=request.user).exclude(update=False)
         except:
             linked_classes = False
-        print(linked_classes)
-        print('test')
         if integration.src == "Schoology":
             return render(request, 'hwapp/schoology_api.html', {
                 'integration': integration,
@@ -763,7 +763,7 @@ def edit_api(request, integration_id):
         return render(request, 'hwapp/success.html', {
             "message": f"{s_obj.url} updated successfully"
         })
-
+@login_required(login_url='/home')
 def integration_log(request):
     #not authorized for non-admins
     if not request.user.is_superuser:
@@ -773,5 +773,5 @@ def integration_log(request):
     else:
         logs = IntegrationLog.objects.all().order_by("-id")
     return render(request, 'hwapp/integrationlog.html', {
-        "logs": logs
+        "logs": logs,
     })

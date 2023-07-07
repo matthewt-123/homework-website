@@ -41,9 +41,6 @@ from external.forms import HelpForm1
 
 load_dotenv()
 
-#for da class check ONLY
-from bs4 import BeautifulSoup
-
 def matthew_check(user):
     return user.is_superuser
 oauth = OAuth()
@@ -61,31 +58,49 @@ def sso_login(request):
         request, request.build_absolute_uri(reverse("callback"))
     )
 def callback(request):
-    token = oauth.auth0.authorize_access_token(request)
-    request.session["user"] = token
-    request.user = token
-    e_info = token.get("userinfo")
-    a_id = e_info.get('sub')
-    try:
-        user1 = AllAuth.objects.get(uid=a_id).allauth_user
-    except:
+    if request.GET.get('error'):
+        #getting access token
+        url = "https://dev-q8234yaa.us.auth0.com/oauth/token"
+        data = "{\"client_id\":\"OMlu360UoElELWmLxf4heWZOSJWmL8yv\",\"client_secret\":\"XQvngJGK_3SUjuaEuzzJ3jX1WGrMxgcwJfcT6nPj6Sx5-bOzOORkfQtGWAnyEEmw\",\"audience\":\"https://dev-q8234yaa.us.auth0.com/api/v2/\",\"grant_type\":\"client_credentials\"}"
+        headers = { 'content-type': "application/json" }
+        response = requests.post(url, data=data, headers=headers)
+        uid = request.GET.get('error_description')
+        url = f"https://dev-q8234yaa.us.auth0.com/api/v2/jobs/verification-email"
+        data = {
+            "user_id": uid,
+        }
+        headers = { 'content-type': "application/json", "Authorization": f"Bearer {json.loads(response.text)['access_token']}" }
+        response = requests.post(url, data = json.dumps(data), headers=headers)
+        extra_msg = "One more step to create your profile! Please check your email for a verification link"
+        return render(request, 'hwapp/success.html', {
+            "message": extra_msg
+        })
+    else:
+        token = oauth.auth0.authorize_access_token(request)
+        request.session["user"] = token
+        request.user = token
+        e_info = token.get("userinfo")
+        a_id = e_info.get('sub')
         try:
-            user1 = User.objects.create_user(e_info.get('nickname'), e_info.get('email'), ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.punctuation) for _ in range(256)))
-            user1.save()
+            user1 = AllAuth.objects.get(uid=a_id).allauth_user
         except:
-            s=False
-            c=1
-            while s==False:
-                try:
-                    user1 = User.objects.create_user(f"{e_info.get('nickname')}{c}", e_info.get('email'), ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.punctuation) for _ in range(256)))
-                    user1.save()
-                    s = True
-                except:
-                    c+=1
-        a_auth = AllAuth.objects.create(uid=a_id, extra_data = e_info, allauth_user=user1)
-        a_auth.save()
-    login(request, user1)
-    return redirect(request.build_absolute_uri(reverse("index")))
+            try:
+                user1 = User.objects.create_user(e_info.get('nickname'), e_info.get('email'), ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.punctuation) for _ in range(256)))
+                user1.save()
+            except:
+                s=False
+                c=1
+                while s==False:
+                    try:
+                        user1 = User.objects.create_user(f"{e_info.get('nickname')}{c}", e_info.get('email'), ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.punctuation) for _ in range(256)))
+                        user1.save()
+                        s = True
+                    except:
+                        c+=1
+            a_auth = AllAuth.objects.create(uid=a_id, extra_data = e_info, allauth_user=user1)
+            a_auth.save()
+        login(request, user1)
+        return redirect(request.build_absolute_uri(reverse("index")))
 def login_view(request):
     return HttpResponseRedirect('/accounts/auth0/login/')
 def home(request):
@@ -114,13 +129,13 @@ def index(request):
     #date range filter
     if request.GET.get('start') or request.GET.get('end'):
         if not request.GET.get('start'):
-            hwlist = Homework.objects.filter(hw_user = request.user).order_by('due_date', 'hw_class__period', 'priority')
+            hwlist = Homework.objects.filter(hw_user = request.user, hw_class__archived = False).order_by('due_date', 'hw_class__period', 'priority')
         elif not request.GET.get('end'):
-            hwlist = Homework.objects.filter(hw_user = request.user, due_date__gte = request.GET.get('start')).order_by('due_date', 'hw_class__period', 'priority')
+            hwlist = Homework.objects.filter(hw_user = request.user, due_date__gte = request.GET.get('start'), hw_class__archived = False).order_by('due_date', 'hw_class__period', 'priority')
         else:
-            hwlist = Homework.objects.filter(hw_user = request.user, due_date__range = [request.GET.get('start'), request.GET.get('end')]).order_by('due_date', 'hw_class__period', 'priority')
+            hwlist = Homework.objects.filter(hw_user = request.user, hw_class__archived = False, due_date__range = [request.GET.get('start'), request.GET.get('end')]).order_by('due_date', 'hw_class__period', 'priority')
     else:
-        hwlist = Homework.objects.filter(hw_user = request.user).order_by('due_date', 'hw_class__period', 'priority')
+        hwlist = Homework.objects.filter(hw_user = request.user, hw_class__archived = False).order_by('due_date', 'hw_class__period', 'priority')
     #class filter
     if request.GET.get('class'):
         try:
@@ -135,10 +150,8 @@ def index(request):
     #active filter
     if request.GET.get('inactive') == 'true':
         hwlist = hwlist.filter(completed=True)
-    elif request.GET.get('inactive'):
-        pass
     else:
-        hwlist = hwlist.filter(completed=False, archive=False)
+        hwlist = hwlist.filter(completed=False, archive=False, hw_class__archived=False)
     #assignment filter
     if request.GET.get('assignment'):
         tmp = []
@@ -217,7 +230,6 @@ def addhw(request):
     else:
         try:
             classes = Class.objects.filter(class_user=request.user, archived=False)
-            print(classes)
         except:
             return HttpResponseRedirect(reverse('classes'))
         return render(request, 'hwapp/addhw.html', {
@@ -274,8 +286,8 @@ def edit_hw(request, hw_id):
                 })
             hw_title = form['hw_title']
             due_date = form['due_date']
-            priority = form['priority']
             overdue = form['overdue']
+            completed = form['completed']
             if form['notes'] != None:
                 notes = form['notes']
             else:
@@ -288,8 +300,7 @@ def edit_hw(request, hw_id):
                 updated.hw_title = hw_title
                 updated.due_date = due_date
                 updated.overdue = overdue
-                if priority:
-                    updated.priority = priority
+                updated.completed = completed
                 if notes:
                     updated.notes = notes
                 updated.save()
@@ -404,25 +415,78 @@ def profile(request):
     if request.method == 'POST':
         request.user.first_name = request.POST['first_name']
         request.user.last_name = request.POST['last_name']
+        extra_msg = ""
+        if request.user.email != request.POST['email']:
+            #getting access token
+            url = "https://dev-q8234yaa.us.auth0.com/oauth/token"
+            data = "{\"client_id\":\"OMlu360UoElELWmLxf4heWZOSJWmL8yv\",\"client_secret\":\"XQvngJGK_3SUjuaEuzzJ3jX1WGrMxgcwJfcT6nPj6Sx5-bOzOORkfQtGWAnyEEmw\",\"audience\":\"https://dev-q8234yaa.us.auth0.com/api/v2/\",\"grant_type\":\"client_credentials\"}"
+            headers = { 'content-type': "application/json" }
+            response = requests.post(url, data=data, headers=headers)
+            #checking duplicate
+            url = f"https://dev-q8234yaa.us.auth0.com/api/v2/users-by-email?email={request.POST['email']}"
+            headers = { 'content-type': "application/json", "Authorization": f"Bearer {json.loads(response.text)['access_token']}" }
+            data = {
+                "email": request.POST['email']
+            }
+            response = requests.get(url, headers=headers)
+            if not json.loads(response.text):
+                uid = AllAuth.objects.get(allauth_user=request.user).uid
+                #updating user
+                url = f"https://dev-q8234yaa.us.auth0.com/api/v2/users/{uid}"
+                data = {
+                    "connection": "Username-Password-Authentication",
+                    "email": request.POST['email']
+                }
+                response = requests.patch(url, data=json.dumps(data), headers=headers)
+                url = f"https://dev-q8234yaa.us.auth0.com/api/v2/jobs/verification-email"
+                data = {
+                    "user_id": uid,
+                }
+                response = requests.post(url, data = json.dumps(data), headers=headers)
+                extra_msg = "Please check your email for a verification link"
+            else:
+                return render(request, 'hwapp/profile.html', {
+                    'error': "Invalid email",
+                    'first_name': request.user.first_name,
+                    'last_name': request.user.last_name,
+                    'email': request.user.email,
+                })   
         request.user.email = request.POST['email']
         request.user.save()
+
         return render(request, 'hwapp/profile.html', {
-            'message': "Success!",
+            'message': f"Success! {extra_msg}",
             'first_name': request.user.first_name,
             'last_name': request.user.last_name,
             'email': request.user.email,
         })
     else:
-        initial = {
-            'first_name': request.user.first_name,
-            'last_name': request.user.last_name,
-            'email': request.user.email,
-        }
+        url = "https://dev-q8234yaa.us.auth0.com/oauth/token"
+        data = "{\"client_id\":\"OMlu360UoElELWmLxf4heWZOSJWmL8yv\",\"client_secret\":\"XQvngJGK_3SUjuaEuzzJ3jX1WGrMxgcwJfcT6nPj6Sx5-bOzOORkfQtGWAnyEEmw\",\"audience\":\"https://dev-q8234yaa.us.auth0.com/api/v2/\",\"grant_type\":\"client_credentials\"}"
+        headers = { 'content-type': "application/json" }
+        response = requests.post(url, data=data, headers=headers)
         return render(request, 'hwapp/profile.html', {
             'first_name': request.user.first_name,
             'last_name': request.user.last_name,
             'email': request.user.email,
         })
+@login_required(login_url='/login')  
+def change_password(request):
+    if request.method == "PATCH":
+        headers = { 'content-type': "application/json" }
+        url = "https://dev-q8234yaa.us.auth0.com/dbconnections/change_password"
+        data = {
+            "email": request.user.email,
+            "connection": "Username-Password-Authentication"
+        }
+
+        response = requests.post(url, data=json.dumps(data), headers=headers)
+        if str(response) == "<Response [200]>":
+            return JsonResponse({"message": "password link sent to your email", "status": 200}, status=200)
+        else:
+            return JsonResponse({"message": "an error has occurred", "status": 500}, status=500)
+    else:
+        return JsonResponse({"error": "not authorized"}, status=400)
 @login_required(login_url='/login')
 def calendar(request):
     if request.method == "GET":
@@ -502,104 +566,18 @@ def getclasstime(request, class_id):
             'status': 405,
         }, status=405)
 
-def reset_password(request):
-    load_dotenv()
-    if request.method == "GET":
-        hash_val = request.GET.get('hash')
-        if hash_val == None:
-            return render(request, 'hwapp/reset_password.html')
-        else:
-            #check hash against database
-            try:
-                hash_val_db = PWReset.objects.get(hash_val=hash_val, active=True)
-            except:
-                return render(request, 'hwapp/error.html', {
-                    'error': 'Invalid link. Please request a new one <a href="/reset_password">here</a>'
-                })
-            if hash_val_db.expires < timezone.now():
-                return render(request, 'hwapp/error.html', {
-                    'error': 'This link has expired. Please request a new one <a href="/reset_password">here</a>'
-                })
-            else:
-                return render(request, 'hwapp/newpw.html', {
-                    'hash_val': hash_val
-                })
-            
-    if request.method == "POST":
-            try:
-                request.POST['form_email']
-                try:
-                    user = User.objects.get(email = request.POST['form_email'])
-                    hash_val = hash(f"{user.username}{user.id}{datetime.now()}")
-                    now_plus_10 = timezone.now() + timedelta(minutes = 45)
-                    PWReset.objects.create(reset_user=user, hash_val=hash_val, expires=now_plus_10)
-                    pw_reset_email(user=user, hash_val=hash_val, expires=now_plus_10, email=user.email)
-                    website_root = os.environ.get('website_root')
-                    return render(request, 'hwapp/reset_password.html', {
-                        'success': f'If your email is recognized in our system, you will receive an email to reset your password. Please be sure to check your spam folder, and the link will expire in 45 minutes. If you do not receive an email within 10 minutes, there is no account associated with that email, but you may create an account at <a href="https://{website_root}/register">this link</a>. Please visit our <a href="https://itsm.{website_root}">help center</a> with any questions. Thanks!'
-                    })
-                except:
-                    website_root = os.environ.get('website_root')
-                    return render(request, 'hwapp/reset_password.html', {
-                        'success': f'If your email is recognized in our system, you will receive an email to reset your password. Please be sure to check your spam folder, and the link will expire in 45 minutes. If you do not receive an email within 10 minutes, there is no account associated with that email, but you may create an account at <a href="https://{website_root}/register">this link</a>. Please visit our <a href="https://itsm.{website_root}">help center</a> with any questions. Thanks!'
-                    })
-            except:
-                try:
-                    pw = request.POST['pw']
-                    confirm = request.POST['pw_confirmation']
-                    hash_val=request.POST['hash_val']
-                    #check PW confirmation
-                    if pw != confirm:
-                        return render(request, 'hwapp/newpw.html', {
-                            'message': 'Please make sure that your passwords match',
-                            'hash_val': request.POST['hash_val']
-                        })
-                    else:
-                        #check hash again
-                        try:
-                            hash_val_db = PWReset.objects.get(hash_val=hash_val)
-                        except:
-                            return render(request, 'hwapp/error.html', {
-                                'error': 'Invalid link. Please request a new one <a href="/reset_password">here</a>'
-                            })
-                        if hash_val_db.expires < timezone.now():
-                            return render(request, 'hwapp/error.html', {
-                                'error': 'This link has expired. Please request a new one <a href="/reset_password">here</a>'
-                            })
-                        #check PW strength:
-                        if helpers.check_pw(pw) != True:
-                            return render(request, 'hwapp/newpw.html', {
-                                'message': helpers.check_pw(pw),
-                                'hash_val': request.POST['hash_val']
-                            })                            
-                        
-                        else:
-                            u = hash_val_db.reset_user
-                            u.set_password(pw)
-                            u.save()
-                            #invalidate link
-                            hash_val_db.expires=timezone.now()
-                            hash_val_db.active = False
-                            return render(request, 'hwapp/newpw.html', {
-                                'success': 'Success! Your password has been updated. Please click <a href="/login">here</a> to login.',
-                                'hash_val': request.POST['hash_val']
-                        })
-
-                except:
-                    return HttpResponseRedirect(reverse('index'))
-
 @user_passes_test(matthew_check, login_url='/login')
 def admin_console(request):
     if request.method == "POST":
         json_val = json.loads(request.body)
         if json_val['function'] == "refresh":
-            send_email("Daily")
+            send_email()
             return JsonResponse({"status": 200}, status=200)
         elif json_val['function'] == "overdue":
             overdue_check()
             return JsonResponse({"status": 200}, status=200)
         elif json_val['function'] == 'ics_refresh':
-            refresh_ics()
+            send_email()
             return JsonResponse({"status": 200}, status=200)
         elif json_val['function'] == 'send_text':
             text_refresh()
@@ -740,11 +718,11 @@ def archiveclass(request, id):
         for hw in h:
             hw.archive = True
             hw.save()
+        return JsonResponse({'message': 'completed', 'status': 200}, status=204)
     except:
         return JsonResponse({'error': 'Access Denied', 'status': 400}, status=400)
 def login_as(request):
     users = User.objects.all()
-    print(users)
     return render(request, 'hwapp/acquire.html', {
         "another_user": users
     })

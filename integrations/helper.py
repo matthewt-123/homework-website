@@ -204,17 +204,18 @@ def notion_pull():
         url = ""
         url = f'https://api.notion.com/v1/databases/{notion_obj.db_id}/query'
         data = {"filter": {"property": "Status", "status": {"equals": "Completed"}}}
-        response = requests.post(url, headers={'Authorization': f'Bearer {notion_obj.access_token}', 'Notion-Version': '2022-06-28', "Content-Type": "application/text"}, data=data)
+        response = requests.post(url, headers={'Authorization': f'Bearer {notion_obj.access_token}', 'Notion-Version': '2022-06-28', "Content-Type": "application/json"}, data=json.dumps(data))
         if '200' not in str(response):
             IntegrationLog.objects.create(user=notion_obj.notion_user, src="notion", dest="hwapp", url = url, date = datetime.now(), message=response.text, error=True)
             break
         i = json.loads(response.text)
         completed_list = []
         for event in i['results']:
-            print(event['id'])
             completed_list.append(event['id'])
         hw_list = Homework.objects.filter(completed=False, hw_user=notion_obj.notion_user, notion_migrated=True)
         for hw in hw_list:
             if hw.notion_id in completed_list:
+                print(hw.hw_title)
                 hw.completed = True
                 hw.save()
+                IntegrationLog.objects.create(user=notion_obj.notion_user, src="notion", dest="hwapp", url = url, date = datetime.now(), message=response.text, error=False, hw_name=hw.hw_title)

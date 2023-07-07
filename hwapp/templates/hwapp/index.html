@@ -160,7 +160,6 @@
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                         <a onclick='completed(0)' class="dropdown-item class_filter_items">No</a>
                         <a onclick='completed(1)' class="dropdown-item class_filter_items" >Yes</a>
-                        <a onclick='completed(2)' class="dropdown-item class_filter_items">All</a>
 
                     </div>
                   </div>
@@ -357,8 +356,8 @@ function completed(val) {
     var url = new URL(window.location.href);
     if(val == 1) {
         url.searchParams.set('inactive', 'true')
-    } else if(val == 2) {
-        url.searchParams.set('inactive', 'all')
+    } else if(val == 0) {
+        url.searchParams.set('inactive', 'false')
 
     }
     window.location.href=url   

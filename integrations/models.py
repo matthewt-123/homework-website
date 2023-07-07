@@ -66,7 +66,7 @@ class IntegrationLog(models.Model):
     dest = models.CharField(max_length=512, default=None, blank=True, null=True)
     url = models.CharField(max_length=512, default=None, blank=True, null=True)
     date = models.DateTimeField(blank=True, null=True)
-    message = models.CharField(max_length=512, default=None, blank=True, null=True)
+    message = models.CharField(max_length=100000, default=None, blank=True, null=True)
     error = models.BooleanField(default=False, blank=True, null=True)
     hw_name = models.CharField(max_length=512, default=None, blank=True, null=True)
     def __str__(self):

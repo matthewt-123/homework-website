@@ -5,11 +5,44 @@ My Profile
 {% block body %}
 
 <h1 style="margin-left:35%">Edit {{user.username}}'s Profile</h1>
-{% if message %}
-<div class="alert alert-success" role="alert">
+<div class="alert alert-success" role="alert"  style="display:none" id="alert">
     {{message}}
+</div>
+<div class="alert alert-danger" role="alert" style="display:none" id="error_message">
+    {{error}}
   </div>
-{% endif %}
+<script>
+  function reset_pw() {
+      fetch(`/change_password`, {
+          method: 'PATCH',
+          headers: {
+              'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+          },
+          credentials: "same-origin",
+      })
+      .then(response => response.json())
+      .then(result => {
+          if(result['status'] == 400) {
+              /* show error message if error*/
+              const alert = document.getElementById('error_message')
+              alert.innerHTML = result['message']
+              alert.style.display='block'
+
+              /* hide success message if any */
+              document.getElementById('alert').style.display='none'
+          } else {
+              /* show error message if error*/
+              const alert = document.getElementById('alert')
+              alert.innerHTML = result['message']
+              alert.style.display='block'
+
+              /* hide success message if any */
+              document.getElementById('error_message').style.display='none'
+          }
+      });
+      return false
+}
+</script>
 <hr>
     <form action='{% url "profile" %}' method='POST' class='indented'>
         {% csrf_token %}
@@ -27,7 +60,8 @@ My Profile
 
         </div><br>
         <button style='margin-left: 35%' type="submit" class="btn btn-primary">Submit</button>
-    </form>
+    </form><br>
+    <button style='margin-left: 35%' class="btn btn-secondary" onclick="reset_pw()">Change Password</button>
 
 
 

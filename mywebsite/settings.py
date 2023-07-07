@@ -35,7 +35,7 @@ sentry_sdk.init(
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.
     send_default_pii=False,
-    release="homework-app@10.0",
+    release="homework-app@14.0",
 )
 
 # Quick-start development settings - unsuitable for production
@@ -125,7 +125,7 @@ WSGI_APPLICATION = 'mywebsite.wsgi.application'
 DATABASES = {
     "dev1": {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(os.path.join(BASE_DIR, "db_dev.sqlite3")),
+        'NAME': str(os.path.join(BASE_DIR, "db.sqlite3")),
     },
     "dev": {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -136,7 +136,7 @@ DATABASES = {
         'NAME':  "/home/TestVM/database/db.sqlite3",
     },
 }
-DATABASES['default'] = DATABASES['dev' if DEBUG else 'prod']
+DATABASES['default'] = DATABASES['dev1' if DEBUG else 'prod']
 #db_from_env = dj_database_url.config(conn_max_age=600)
 #DATABASES['default'].update(db_from_env)
 

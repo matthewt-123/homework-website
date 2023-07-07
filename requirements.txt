@@ -62,3 +62,4 @@ whitenoise==5.2.0
 pytz
 django-hijack
 dateparser
+azure-communication-email

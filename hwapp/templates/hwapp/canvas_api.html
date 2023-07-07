@@ -5,7 +5,7 @@
 
 {% block body %}
 <h1 style='margin-left:35%;'>
-    {{service}} API Key
+    {{prefix}} {{service}} API Key
 </h1><br>
 <h2 style='margin-left:35%;'>
 Location: 
@@ -33,14 +33,6 @@ Location:
                 <td>
                     <input type="password" name="secret_key" id="secret_key">
                 </td>
-            </tr>
-            <tr>
-                <td>
-                    <label for='new_site'>New site? </label>
-                </td>
-                <td>
-                    <input type="checkbox" name="new_site" id="new_site">
-                </td>                
             </tr>
             
         </tbody>

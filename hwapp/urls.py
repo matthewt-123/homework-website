@@ -34,6 +34,7 @@ urlpatterns = [
     path('logout', views.sso_logout, name='logout'),
     path('version/<int:version_id>', views.version_manager, name='version_manager'),
     path('archive/<int:id>', views.archiveclass),
+    path('change_password', views.change_password)
     #path('login_as', views.login_as)
 ]
 
