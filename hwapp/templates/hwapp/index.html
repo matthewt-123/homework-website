@@ -199,7 +199,17 @@
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>
             </td>
             {% endif %}
-                <td></td>
+                <td>
+                    <span style="margin-left: 20%;">
+                        {% if hw.completed %}
+                        <img alt='Completed' src="{% static 'hwapp/check.webp' %}" style="width:10%;height:10%">
+                        {% else %}
+                        <img alt='Not Completed' src="{% static 'hwapp/x.png' %}" style="width:15%;height:15%">
+    
+                        {% endif %}
+                    </span>
+
+                </td>
             </tr>
             {% endfor %}
             <!--blank row-->

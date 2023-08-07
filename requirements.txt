@@ -8,7 +8,7 @@ currency-symbols==2.0.0
 decorator==4.4.2
 distlib==0.3.1
 dj-database-url==0.5.0
-Django==3.2.13
+Django
 django-allauth
 django-cors-headers==3.7.0
 django-ical==1.8.0
@@ -24,11 +24,11 @@ icalendar==4.0.7
 ics==0.7
 idna==2.10
 jellyfish==0.8.2
-Jinja2==2.11.2
+Jinja2
 lazy-object-proxy==1.5.2
 markdown2==2.4.0
 MarkupSafe==1.1.1
-pipenv==2020.11.15
+pipenv
 pycparser==2.20
 pyserial==3.5
 python-dateutil==2.8.1
@@ -55,7 +55,7 @@ virtualenv-clone==0.5.4
 wcwidth==0.2.5
 webcolors==1.11.1
 webencodings==0.5.1
-Werkzeug==1.0.1
+Werkzeug
 whitenoise==5.2.0
 #psycopg2 -for postgresql only
 #mysqlclient
@@ -63,3 +63,5 @@ pytz
 django-hijack
 dateparser
 azure-communication-email
+django-model-utils
+django-slick-reporting

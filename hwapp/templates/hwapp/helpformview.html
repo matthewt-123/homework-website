@@ -1,0 +1,53 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+{% if message %}
+<div class="alert alert-success" role="alert">
+    {{message}}    
+    </div>
+{% endif %}
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/ui/trumbowyg.min.css">
+  
+</head>
+<h1>Replying to {{helpform.first_name}} {{helpform.last_name}}</h1>
+<hr>
+<form method="post" action="{% url 'helpformview' helpform.id %}">
+    {% csrf_token %}
+    <label for='subject'>Subject: </label><input style='width:80%;font-size: ;' type="text" id="subject" name="subject">
+
+    <textarea cols='100' class="myeditablediv" id="message" name='message'></textarea>
+<button class='btn btn-primary'>Submit</button>
+  </form>
+<hr>
+<div>
+<small>
+  <b>From:</b> {{helpform.email}}<br>
+  <b>To:</b> Homework App Support(support@matthewtsai.tech)<br>
+  <b>Subject:</b> {{helpform.subject}}<br>
+  <b>Received: </b> {{helpform.received}}<br>
+</small>
+{{helpform.message}}
+</div>
+{% for email in email_history %}
+<hr>
+<div>
+  <small>
+    <b>From:</b> {{email.email}}<br>
+    <b>To:</b> {{helpform.email}}<br>
+    <b>Subject:</b> {{email.subject}}<br>
+    <b>Received: </b> {{email.received}}<br>
+  </small>
+  {{email.message | safe}}
+  </div>
+{% endfor %}
+
+
+
+{% endblock %}
+{% block footer %}<script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/trumbowyg.min.js"></script>
+<script>
+
+    $('.myeditablediv').trumbowyg()
+
+</script>{% endblock %}

@@ -7,12 +7,10 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("", views.index, name="homework"),
     path("classes", views.classes, name="classes"),
-    path("preferences", views.preferences, name="preferences"),
     path("addhw", views.addhw, name="addhw"),
     path("edit_hw/<int:hw_id>", views.edit_hw, name="edit_hw"),
     path("addclass", views.addclass, name="addclass"),
     path("editclass/<int:class_id>", views.editclass, name="editclass"),
-    #path("allhw", views.allhw, name="allhw"),
     path("about", views.about, name="about"),
     path("profile", views.profile, name="profile"),
     path("calendar/", views.calendar, name="calendar"),
@@ -34,7 +32,9 @@ urlpatterns = [
     path('logout', views.sso_logout, name='logout'),
     path('version/<int:version_id>', views.version_manager, name='version_manager'),
     path('archive/<int:id>', views.archiveclass),
-    path('change_password', views.change_password)
+    path('change_password', views.change_password),
+    path('helpformview/<int:id>', views.helpformview, name="helpformview"),
+    path('helpformlist', views.helpformlist)
     #path('login_as', views.login_as)
 ]
 

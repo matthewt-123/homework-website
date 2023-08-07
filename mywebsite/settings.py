@@ -35,7 +35,7 @@ sentry_sdk.init(
     # If you wish to associate users to errors (assuming you are using
     # django.contrib.auth) you may enable sending PII data.
     send_default_pii=False,
-    release="homework-app@14.0",
+    release="homework-app@15.0",
 )
 
 # Quick-start development settings - unsuitable for production
@@ -45,11 +45,11 @@ sentry_sdk.init(
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS_TYPES = {
     "dev":
-    ['matthewshomeworkapp.herokuapp.com','localhost','internal.matthewtsai.games', '10.2.0.4', '192.168.0.28', '127.0.0.1'], 
+    ['localhost'], 
      "prod":
     ['matthewtsai.tech', '10.2.0.4'], 
 }
@@ -77,9 +77,14 @@ INSTALLED_APPS = [
     'external',
     'hijack',
     'hijack.contrib.admin',
+    'reports',
+    "slick_reporting",
+    "crispy_forms", 
+    "crispy_bootstrap4"
+
 ]
 SITE_ID = 1
-
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
@@ -136,7 +141,7 @@ DATABASES = {
         'NAME':  "/home/TestVM/database/db.sqlite3",
     },
 }
-DATABASES['default'] = DATABASES['dev1' if DEBUG else 'prod']
+DATABASES['default'] = DATABASES['dev' if DEBUG else 'prod']
 #db_from_env = dj_database_url.config(conn_max_age=600)
 #DATABASES['default'].update(db_from_env)
 

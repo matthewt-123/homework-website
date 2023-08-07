@@ -66,8 +66,18 @@ class IntegrationLog(models.Model):
     dest = models.CharField(max_length=512, default=None, blank=True, null=True)
     url = models.CharField(max_length=512, default=None, blank=True, null=True)
     date = models.DateTimeField(blank=True, null=True)
-    message = models.CharField(max_length=100000, default=None, blank=True, null=True)
+    message = models.TextField(default=None, blank=True, null=True)
     error = models.BooleanField(default=False, blank=True, null=True)
     hw_name = models.CharField(max_length=512, default=None, blank=True, null=True)
     def __str__(self):
         return f"{self.user}: {self.src}->{self.dest}"
+class Log(models.Model):
+    user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
+    url = models.CharField(max_length=512, default=None, blank=True, null=True)
+    date = models.DateTimeField(blank=True, null=True)
+    message = models.TextField(default=None, blank=True, null=True)
+    error = models.BooleanField(default=False, blank=True, null=True)
+    log_type = models.CharField(max_length=512, default=None, blank=True, null=True) #types: access, manual refresh, cron, hw/class refresh, notion pull
+    ip_address = models.CharField(max_length=16, default=0, blank=0, null=0)
+    def __str__(self):
+        return f"{self.user}: {self.log_type}"

@@ -6,4 +6,4 @@ from django.contrib.admin import widgets
 class HelpForm1(ModelForm):
     class Meta:
         model = HelpForm
-        fields = ['first_name', 'last_name', 'email', 'message']
+        fields = ['first_name', 'last_name', 'email', 'subject', 'message']

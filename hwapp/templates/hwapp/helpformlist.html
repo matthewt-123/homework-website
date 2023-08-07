@@ -1,0 +1,29 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}Help Form List{% endblock %}
+{% block body %}
+{% if user.is_superuser %}
+<h1>All Help Forms</h1>
+<table style="width:100%">
+    <thead>
+        <tr>
+            <td style="width:5%"><b>ID</b></td>
+            <td style="width:25%"><b>From</b></td>
+            <td style="width:35%"><b>Subject</b></td>
+            <td style="width:25%"><b>Received</b></td>
+            <td style="width:10%"><b>Status</b></td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for form in helpforms %}
+        <tr>
+            <td>{{form.id}}</td>
+            <td>{{form.first_name}} {{form.last_name}}</td>
+            <td><a href="{% url 'helpformview' form.id %}">{{form.subject}}</a></td>
+            <td>{{form.received}}</td>
+            <td>{{form.status}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+{% endblock %}

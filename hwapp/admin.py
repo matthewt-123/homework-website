@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import User, Day, Class, Homework, Preferences, Carrier, Timezone, PWReset, IcsLink, EmailTemplate, IcsId, AllAuth, Recurring
+from .models import User, Day, Class, Homework, Preferences, Timezone, IcsLink, EmailTemplate, IcsId, AllAuth
+from django.contrib.admin.models import LogEntry
 
 # Register your models here.
 @admin.action(description='Unpush Notion')
@@ -28,11 +29,9 @@ admin.site.register(Day)
 admin.site.register(Class, ClassAdmin)
 admin.site.register(Homework, HomeworkAdmin)
 admin.site.register(Preferences, PreferencesAdmin)
-admin.site.register(Carrier)
-admin.site.register(PWReset)
 admin.site.register(IcsLink)
 admin.site.register(Timezone)
 admin.site.register(EmailTemplate)
 admin.site.register(IcsId)
 admin.site.register(AllAuth)
-admin.site.register(Recurring)
+admin.site.register(LogEntry)

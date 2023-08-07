@@ -1,0 +1,152 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}
+Admin Console
+{% endblock %}
+{% block body %}
+{% if user.is_superuser %}
+<div class="alert alert-primary">
+    NOTICE: Access to this log is for authorized users only. While viewing this log, your use may be monitored, recorded and subject to audit.
+</div>
+<table style="width: 96%;margin-left:2%;margin-right:2%">
+    <thead>
+        <tr>
+            <td>
+                <b>ID</b>
+            </td>
+            <td>
+                <b>User</b>
+            </td>
+            <td>
+                <b>Log Type</b>
+            </td>
+            <td>
+                <b>Date</b>
+            </td>
+            <td>
+                <div class="dropdown">
+                    <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <b>Error?</b> 
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a onclick='errorVal(0)' class="dropdown-item class_filter_items">No</a>
+                        <a onclick='errorVal(1)' class="dropdown-item class_filter_items" >Yes</a>
+
+                    </div>
+                  </div>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{log.id}}</td>
+            <td>{{log.user.username}}</td>
+            <td>{{log.log_type}}</td>
+            <td>{{log.date}}</td>
+            <td {% if log.error == True %} style="color: red;word-wrap: break-word;" {% endif %}>{{log.error}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<!-- modal JS -->
+<div class="modal">
+    <div style="width:75%;height:80%" class="modal-content">
+        <span class="close-button"  onclick="toggleModal()">&times;</span>
+        <h1>Message</h1>
+        <div id="modal_text"></div>
+    </div>
+</div>
+<script>
+    function errorVal(val) {
+    var url = new URL(window.location.href);
+    if(val == 1) {
+        url.searchParams.set('error', 'true')
+    } else {
+        url.searchParams.delete('error')
+
+    }
+    window.location.href=url   
+}
+const modal = document.querySelector(".modal");
+const trigger = document.querySelector(".trigger");
+const closeButton = document.querySelector(".close-button");
+function toggleModal(message=false) {
+    if (message) {
+        document.getElementById("modal_text").innerHTML = `${message}`;
+    } else {
+        document.getElementById("modal_text").innerHTML = ""
+    }
+    modal.classList.toggle("show-modal");
+
+}
+
+function windowOnClick(event) {
+    if (event.target === modal) {
+        toggleModal();
+    }
+}
+document.addEventListener('keydown', evt => {
+    if (evt.key === 'Escape' && modal.classList.contains("show-modal")) {
+        toggleModal();
+    }})
+document.addEventListener("DOMContentLoaded", () => {
+    trigger.addEventListener("click", toggleModal);
+    closeButton.addEventListener("click", toggleModal);
+    window.addEventListener("click", windowOnClick);
+
+
+
+})
+</script>
+{% else %}
+<div class="alert alert-danger" role="alert">Error: Access Denied</div>
+{% endif %}
+<style>
+    .modal {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(1.1);
+    transition: visibility 0s linear 0.25s, opacity 0.25s 0s, transform 0.25s;
+}
+
+.modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 1rem 1.5rem;
+    width: 24rem;
+    border-radius: 0.5rem;
+}
+
+.close-button {
+    float: right;
+    width: 1.5rem;
+    line-height: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    background-color: lightgray;
+}
+
+.close-button:hover {
+    background-color: darkgray;
+}
+
+.show-modal {
+    display:block;
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1.0);
+    transition: visibility 0s linear 0s, opacity 0.25s 0s, transform 0.25s;
+}
+</style>
+{% endblock %}

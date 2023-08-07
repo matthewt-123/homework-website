@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import CalendarEvent,IcsHashVal, NotionData, GoogleData,GoogleCalendar,SchoologyAuth,SchoologyClasses,IntegrationLog
+from .models import CalendarEvent,IcsHashVal, NotionData, GoogleData,GoogleCalendar,SchoologyAuth,SchoologyClasses,IntegrationLog,Log
 
 @admin.action(description='Disable Class Import')
 def disable(modeladmin, request, queryset):
@@ -23,11 +23,16 @@ class SchoologyAuthAdmin(admin.ModelAdmin):
 # Register your models here.
 class IntegrationLogAdmin(admin.ModelAdmin):
     list_display = ("id", "src", "dest", "user", "date", "error")
+class LogAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "log_type", "date", "error")
+class NotionDataAdmin(admin.ModelAdmin):
+    list_display = ("id", "notion_user", "workspace_name", "tag")
 admin.site.register(CalendarEvent)
 admin.site.register(IcsHashVal)
 admin.site.register(IntegrationLog, IntegrationLogAdmin)
+admin.site.register(Log, LogAdmin)
 
-admin.site.register(NotionData)
+admin.site.register(NotionData, NotionDataAdmin)
 admin.site.register(GoogleData)
 admin.site.register(GoogleCalendar)
 admin.site.register(SchoologyAuth, SchoologyAuthAdmin)

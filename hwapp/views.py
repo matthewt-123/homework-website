@@ -2,7 +2,7 @@ from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.forms import ModelForm
 from django.contrib.auth import login
-from .models import EmailTemplate, User, Class, Homework, Preferences, PWReset, AllAuth,Recurring, Day
+from .models import EmailTemplate, User, Class, Homework, Preferences, AllAuth, Day, Timezone
 from django.http import HttpResponseRedirect
 import requests
 from django.urls import reverse
@@ -14,16 +14,10 @@ from dotenv import load_dotenv
 import json
 import string
 import random
-from datetime import datetime, time, timedelta
-from django.utils import timezone
+from datetime import datetime
 from django.core.paginator import Paginator
-from .email_helper import pw_reset_email, send_email, overdue_check, timezone_helper, text_refresh, email_user,recurring_events
-import arrow
-from . import helpers
-
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import get_template
-from django.template import Context
+from .email_helper import send_email, overdue_check, email_user
+from django.db.models import Q
 
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
@@ -34,11 +28,11 @@ from urllib.parse import quote_plus, urlencode
 #allow python to access Calendar data model
 import sys
 sys.path.append("..")
-from integrations.models import CalendarEvent, IcsHashVal, NotionData
-from integrations.views import notion_auth, refresh_ics, schoology_class, schoology_hw, canvas_class, canvas_hw
-from integrations.helper import notion_push, notion_status_push, notion_pull
+from integrations.models import CalendarEvent, IcsHashVal, NotionData, Log
+from integrations.views import schoology_class, schoology_hw, canvas_class, canvas_hw
+from integrations.helper import notion_push, notion_pull
 from external.forms import HelpForm1
-
+from external.models import HelpForm
 load_dotenv()
 
 def matthew_check(user):
@@ -72,6 +66,8 @@ def callback(request):
         headers = { 'content-type': "application/json", "Authorization": f"Bearer {json.loads(response.text)['access_token']}" }
         response = requests.post(url, data = json.dumps(data), headers=headers)
         extra_msg = "One more step to create your profile! Please check your email for a verification link"
+        request.session.clear()
+
         return render(request, 'hwapp/success.html', {
             "message": extra_msg
         })
@@ -416,6 +412,7 @@ def profile(request):
         request.user.first_name = request.POST['first_name']
         request.user.last_name = request.POST['last_name']
         extra_msg = ""
+        #update email
         if request.user.email != request.POST['email']:
             #getting access token
             url = "https://dev-q8234yaa.us.auth0.com/oauth/token"
@@ -454,22 +451,41 @@ def profile(request):
         request.user.email = request.POST['email']
         request.user.save()
 
+        #updating timezone:
+        tz_id = request.POST['timezone']
+        try:
+            new_tz = Timezone.objects.get(id=tz_id)
+        except:
+            return render(request, 'hwapp/error.html', {
+                'error': "Invalid Timezone. Please try again"
+            })
+        preference = Preferences.objects.get(preferences_user=request.user)
+        preference.user_timezone = new_tz
+        preference.save()
         return render(request, 'hwapp/profile.html', {
             'message': f"Success! {extra_msg}",
             'first_name': request.user.first_name,
             'last_name': request.user.last_name,
             'email': request.user.email,
+            'timezones': Timezone.objects.all(),
+            'selected': new_tz.id
         })
     else:
         url = "https://dev-q8234yaa.us.auth0.com/oauth/token"
         data = "{\"client_id\":\"OMlu360UoElELWmLxf4heWZOSJWmL8yv\",\"client_secret\":\"XQvngJGK_3SUjuaEuzzJ3jX1WGrMxgcwJfcT6nPj6Sx5-bOzOORkfQtGWAnyEEmw\",\"audience\":\"https://dev-q8234yaa.us.auth0.com/api/v2/\",\"grant_type\":\"client_credentials\"}"
         headers = { 'content-type': "application/json" }
         response = requests.post(url, data=data, headers=headers)
+        try: 
+            selected = Preferences.objects.get(preferences_user=request.user).user_timezone
+        except:
+            selected = -1
         return render(request, 'hwapp/profile.html', {
-            'first_name': request.user.first_name,
-            'last_name': request.user.last_name,
-            'email': request.user.email,
-        })
+                'first_name': request.user.first_name,
+                'last_name': request.user.last_name,
+                'email': request.user.email,
+                'selected': selected,
+                'timezones': Timezone.objects.all()
+            })
 @login_required(login_url='/login')  
 def change_password(request):
     if request.method == "PATCH":
@@ -571,16 +587,17 @@ def admin_console(request):
     if request.method == "POST":
         json_val = json.loads(request.body)
         if json_val['function'] == "refresh":
-            send_email()
-            return JsonResponse({"status": 200}, status=200)
-        elif json_val['function'] == "overdue":
-            overdue_check()
-            return JsonResponse({"status": 200}, status=200)
-        elif json_val['function'] == 'ics_refresh':
-            send_email()
-            return JsonResponse({"status": 200}, status=200)
-        elif json_val['function'] == 'send_text':
-            text_refresh()
+            response = send_email()
+            if response:
+                message = send_email()
+                if str(message['status']) == "Succeeded":
+                    error = False
+                else:
+                    error = True
+            else: #no emails sent
+                error = False
+                message = None
+            Log.objects.create(user=request.user, date=datetime.now(), message=message, error=error, log_type="Refresh", ip_address = request.META.get("REMOTE_ADDR"))
             return JsonResponse({"status": 200}, status=200)
         elif json_val['function'] == 'schoology_class':
             schoology_class(request) 
@@ -607,8 +624,9 @@ def admin_console(request):
 @login_required(login_url='/login')
 def new_user_view(request):
     template = EmailTemplate.objects.get(id=5)
-    return render(request, 'hwapp/newuser.html', {
-        'template': template.template_body
+    return render(request, 'hwapp/template_render.html', {
+        'template': template,
+        'header': 'Welcome to the Homework App!'
     })
 @login_required(login_url='/login')
 def homework_entry(request, hw_id):
@@ -624,6 +642,7 @@ def homework_entry(request, hw_id):
 
 @user_passes_test(matthew_check, login_url='/login')
 def fivehundrederror(request):
+    raise Exception("500 Error Test")
     pass
 @user_passes_test(matthew_check, login_url='/login')
 def email_template_editor(request):
@@ -721,8 +740,45 @@ def archiveclass(request, id):
         return JsonResponse({'message': 'completed', 'status': 200}, status=204)
     except:
         return JsonResponse({'error': 'Access Denied', 'status': 400}, status=400)
-def login_as(request):
-    users = User.objects.all()
-    return render(request, 'hwapp/acquire.html', {
-        "another_user": users
-    })
+@user_passes_test(matthew_check)
+def helpformlist(request):
+    if str(request.GET.get('status')).lower() == 'all':
+        return render(request, 'hwapp/helpformlist.html', {
+            'helpforms': HelpForm.objects.all().order_by('-id')
+        })
+    else:
+        return render(request, 'hwapp/helpformlist.html', {
+            'helpforms': HelpForm.objects.filter(parent_form = None).exclude(status="Completed").order_by('-id')
+        })        
+@user_passes_test(matthew_check)
+def helpformview(request, id):
+    try:
+        helpform = HelpForm.objects.get(id=id, parent_form = None)
+        email_history = HelpForm.objects.filter(parent_form=HelpForm.objects.get(id=id))
+    except Exception as e:
+        print(e)
+        return render(request, 'hwapp/error.html', {
+            'error': f'no help form matching id {id} found'
+        })
+    if request.method == 'GET':
+        return render(request, 'hwapp/helpformview.html', {
+            'helpform': helpform,
+            'email_history': email_history
+        })
+    else:
+        try:
+            helpform = HelpForm.objects.get(id=id, parent_form=None)
+            tracking_id = round(46789234*(int(helpform.id) + 34952)/234567)
+            print(tracking_id)
+            tracking_info = f"----------------------------------------------------------------------------------------------------------------------------------------------<div style='display:none;color:white;font-size:0%'>@@@@tracking_id={tracking_id}@@@@</div>"
+            email_user(email=helpform.email, content=f"{request.POST['message']}{tracking_info}", subject=f"[matthewtsai.tech] Help Form: {request.POST['subject']}", recipient_name=helpform.first_name)
+            helpform.status = "Completed"
+            helpform.save()
+            new_response = HelpForm(parent_form=helpform, first_name=request.user.first_name, last_name = request.user.last_name, email = "support@email.matthewtsai.tech", received=datetime.now(), subject=f"[matthewtsai.tech] Help Form: {request.POST['subject']}", message=request.POST['message'], status="Completed")
+            new_response.save()
+            return render(request, 'hwapp/success.html', {
+                'message': f"Message sent successfully. Click <a href='/helpformlist'>here</a> to return to the help form listing or <a href='/helpformview/{helpform.id}'>here</a> to return to your previous page"
+            })
+        except Exception as e:
+            print(e)
+            return JsonResponse({"error": "form not found"}, status=404)

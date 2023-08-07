@@ -24,6 +24,7 @@ urlpatterns = [
     path('integrations/', include('integrations.urls')),
     path('home/', include('external.urls')),
     path('hijack/', include('hijack.urls')),
+    #path('reports/', include('reports.urls'))
 ]
 
 

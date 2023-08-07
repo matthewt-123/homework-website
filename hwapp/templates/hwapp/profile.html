@@ -5,9 +5,14 @@ My Profile
 {% block body %}
 
 <h1 style="margin-left:35%">Edit {{user.username}}'s Profile</h1>
-<div class="alert alert-success" role="alert"  style="display:none" id="alert">
+{% if message %}
+<div class="alert alert-success alert-dismissible fade show" role="alert" id="alert">
     {{message}}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
 </div>
+{% endif %}
 <div class="alert alert-danger" role="alert" style="display:none" id="error_message">
     {{error}}
   </div>
@@ -44,6 +49,7 @@ My Profile
 }
 </script>
 <hr>
+<div>
     <form action='{% url "profile" %}' method='POST' class='indented'>
         {% csrf_token %}
         <div style='margin-left:35%;'>
@@ -58,11 +64,20 @@ My Profile
                 <label for="email"><strong>Email address</strong></label>
                 <input type="email" class="form-control" id="email" name="email" style="width:50%" placeholder="Enter email" value="{{email}}">
 
+                <label for="timezone"><strong>Timezone</strong></label><br>
+                <select name="timezone" id="timezone">
+                    {% for timezone in timezones %}
+                    <option value="{{timezone.id}}" {% if timezone.id == selected %} selected {% endif %}>{{timezone}}</option>
+                    {% endfor %}
+                </select>
+          
         </div><br>
         <button style='margin-left: 35%' type="submit" class="btn btn-primary">Submit</button>
     </form><br>
     <button style='margin-left: 35%' class="btn btn-secondary" onclick="reset_pw()">Change Password</button>
 
+</div>
+<hr>
 
 
 {% endblock %}

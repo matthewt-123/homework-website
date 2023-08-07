@@ -1,7 +1,7 @@
 import os
 from datetime import date
 import datetime
-from .models import User, Homework, Class, Preferences, Carrier, EmailTemplate, Recurring, Day
+from .models import User, Homework, Class, Preferences, EmailTemplate, Day
 import requests
 from time import time
 from requests.auth import HTTPBasicAuth
@@ -70,45 +70,10 @@ def send_email(interval=0):
             }
             poller = client.begin_send(message)
             result = poller.result()
-            print(result)
+            return result
     except:
         #pass if no recipients matching preference query
-        pass
-
-def text_refresh():
-    text_recipients = Preferences.objects.filter(text_notifications=True, phone_number__isnull=False)
-    try:
-        text_recipients = Preferences.objects.filter(text_notifications=True, phone_number__isnull=False)
-        for text_recipient in text_recipients:
-            email_base = text_recipient.carrier.email
-            phone_number=int(text_recipient.phone_number)
-            listed= f'Homework email for {text_recipient.preferences_user.username}'
-            #get all hw for recipient
-            hw_list = Homework.objects.filter(hw_user=text_recipient.preferences_user, completed=False).order_by('due_date', 'hw_class__period', 'priority')
-
-            #iterate over each hw item, adding it to the email in HTML format
-            listed = "<ul>"
-            for each in hw_list:
-                if each.notes != None and each.notes != "None":
-                    listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li><ul><li>Notes: {each.notes}</li></ul>"
-                else:
-                    listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date}</a></li>"
-            #add closing tag
-            listed = f"{listed}</ul>"
-            todays = date.today()
-            send = requests.post(
-                f"{os.environ.get('API_BASE_URL')}/messages",
-                auth=HTTPBasicAuth("api", f"{os.environ.get('mailgun_api_key')}"),
-                data={
-                    "from": "Homework App <noreply@matthewtsai.me>",
-                    "to": [f"{phone_number}{email_base}"],
-                    "subject": f"{text_recipient.preferences_user.username}'s Homework Email for {todays}",
-                    "html": listed 
-                }
-            )
-    except:
-        #pass if no recipients matching preference query
-        pass
+        return None
 
 def pw_reset_email(user, hash_val, expires, email):
     pw_email_template = str(EmailTemplate.objects.get(id=1).template_body)
@@ -126,19 +91,30 @@ def pw_reset_email(user, hash_val, expires, email):
                 "html": listed 
             }      
     )
-def email_user(emails, content, subject):
-    #listed = content.replace('$$website_root', os.environ.get("website_root"))
-    listed = content
-    send = requests.post(
-    "https://api.mailgun.net/v3/matthewtsai.me/messages",
-    auth=("api", f"{os.environ.get('mailgun_api_key')}"),
-    data={
-        "from": "Homework App <noreply@matthewtsai.me>",
-        "to": emails,
-        "subject": f"{subject}",
-        "html": listed 
+def email_user(email, content, subject, recipient_name):
+    message = {
+        "content": {
+            "subject": subject,
+            "html": content
+        },
+        "recipients": {
+            "to": [
+                {
+                    "address": email,
+                    "displayName": recipient_name
+                }
+            ]
+        },
+        "senderAddress": f"support@email.matthewtsai.tech",
+        "replyTo": [
+            {
+                "address": "support@matthewtsai.tech",  # Email address. Required.
+                "displayName": "Homework App Support"  
+            }
+        ]
     }
-)
+    poller = client.begin_send(message)
+    result = poller.result()
 
 def timezone_helper(u_timezone, u_datetime):
     local_time = pytz.timezone(str(u_timezone))    
@@ -146,17 +122,24 @@ def timezone_helper(u_timezone, u_datetime):
     utc_datetime = local_datetime.astimezone(pytz.utc)
     return utc_datetime
 def email_admin(f_name, l_name, email, message):
-    content = f"First Name: {f_name}\nLast Name: {l_name}\nEmail: {email}\nMessage: {message}"
-    send = requests.post(
-    "https://api.mailgun.net/v3/matthewtsai.me/messages",
-    auth=("api", f"{os.environ.get('mailgun_api_key')}"),
-    data={
-        "from": "Homework App <noreply@matthewtsai.me>",
-        "to": ['support@matthewtsai.me'],
-        "subject": f"[matthewtsai.me] New Help Form Submitted",
-        "text": content 
+    content = f"First Name: {f_name}<br>Last Name: {l_name}<br>Email: {email}\nMessage: {message}"
+    message = {
+        "content": {
+            "subject": "[matthewtsai.tech] New Help Form Submitted",
+            "html": content
+        },
+        "recipients": {
+            "to": [
+                {
+                    "address": "support@matthewtsai.tech",
+                    "displayName": f"Homework App Support"
+                }
+            ]
+        },
+        "senderAddress": f"support@email.matthewtsai.tech"
     }
-)
+    poller = client.begin_send(message)
+    result = poller.result()
 
 def schoology_class():
     users = SchoologyAuth.objects.filter(src='Schoology')
@@ -267,48 +250,3 @@ def canvas_hw():
                 except:
                     pass #no notion data
             pass
-def recurring_events():
-    #run every sunday
-    r = Recurring.objects.all()
-    dt = datetime.datetime.now() 
-    sunday = dt + relativedelta(weekday=MO(0)) + datetime.timedelta(days=-1)
-    for each in r:
-        user = each.user
-        hw = each
-        for day in each.days.all():
-            dt = sunday + datetime.timedelta(days=day.id - 1)
-            token = NotionData.objects.get(notion_user=user, tag="homework").access_token
-            page_id = NotionData.objects.get(notion_user=user, tag="homework").db_id
-            url = 'https://api.notion.com/v1/pages'
-            body = {
-                "parent": {
-                    "database_id": f"{page_id}"
-                },
-                "properties": {
-                    "Name": {
-                        "title": [{"type":"text","text":{"content":f"{hw.hw_title}","link":None},"plain_text":f"{hw.hw_title}","href":None}]
-                        
-                    },
-                    "Status": {
-                        "status": {
-                            "name":"Not started"
-                        }
-                    },
-                    "Class": {
-                        "type": f"select",
-                        "select": {
-                            "name": f"{hw.hw_class.class_name}"
-                        }
-                    },
-                    "Due": {
-                        "type": "date",
-                        "date": {
-                            "start": f"{dt}",
-                            "end": None,
-                            "time_zone": "US/Pacific"
-                        }
-                    }
-                    
-                }
-            }
-            requests.post(url, data=json.dumps(body), headers={'Authorization': f'Bearer {token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})

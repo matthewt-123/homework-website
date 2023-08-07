@@ -4,6 +4,9 @@ Admin Console
 {% endblock %}
 {% block body %}
 {% if user.is_superuser %}
+<div class="alert alert-primary">
+    NOTICE: Access to this log is for authorized users only. While viewing this log, your use may be monitored, recorded and subject to audit.
+</div>
 <table style="width: 96%;margin-left:2%;margin-right:2%">
     <thead>
         <tr>

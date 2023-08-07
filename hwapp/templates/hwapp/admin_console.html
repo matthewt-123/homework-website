@@ -5,6 +5,14 @@ Admin Console
 {% block body %}
 {% if user.is_superuser %}
 <script>
+    function confirm_refresh() {
+        var result = confirm("Would you like to send an email to all users?");
+            if (result == true) {
+                doc = admin(function1="refresh");
+            } else {
+                alert("Action Cancelled");
+            }
+    };
     function admin(function1) {
         fetch(`/admin_view`, {
             method: 'POST',
@@ -30,7 +38,7 @@ Admin Console
 <div id="alert" class='alert alert-success' style="display: none;"></div>
 <div class='flex-container' style='display:flex;height:100px;align-items: space-around;justify-content: center;flex-direction: row;gap:5%;flex-wrap: wrap;'>
     <div>
-        <button class='btn btn-primary' onclick="admin(function1='refresh')">Send Email</button>
+        <button class='btn btn-primary' onclick="confirm_refresh()">Send Email</button>
     </div>
     <div>
         <a class='btn btn-primary' target="_blank" href='https://matthew-homeworkapp.atlassian.net/jira/software/projects/HOM/boards/1'>Jira Board</a>
@@ -72,6 +80,13 @@ Admin Console
     </div>
     <div>
         <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='notion_pull')">Notion Pull</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' style ="color: white;" href="/helpformlist">Help Forms</a>
+    </div>
+    <div>
+        <a class='btn btn-primary' style ="color: white;" href="{% url 'admin_log' %}">Admin Log</a>
+
     </div>
 </div>
 

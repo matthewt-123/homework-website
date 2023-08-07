@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 import os
 from django.views.decorators.csrf import csrf_exempt
 import re
-from .models import CalendarEvent, IcsHashVal, NotionData, SchoologyClasses, SchoologyAuth, IntegrationLog
+from .models import CalendarEvent, IcsHashVal, NotionData, SchoologyClasses, SchoologyAuth, IntegrationLog, Log
 from dotenv import load_dotenv
 import datetime
 import json
@@ -53,228 +53,80 @@ def index(request):
         'n_datas': n_data
     })
 
-@login_required(login_url='/login')
-def schoology_init(request):
-    if request.method == "POST":
-        try:
-            #make link an https link
-            link = request.POST.get('schoology_ics_link')
-            link = link.replace('webcal', 'https')
-            c = Calendar(requests.get(link).text)
-        except:
-            return render(request, 'hwapp/error.html', {
-                'error': 'Please copy the full link from Schoology with the instructions below and include the "webcal" portion of the link'
-            })
-        #SETUP: create Schoology Class instance if not already existing(since Schoology does not provide class names with HW assignments)
-        dt_str = '23:59'
-        dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
-        try:
-            class1 = Class.objects.get(class_user=request.user, class_name='Schoology Integration', time=dt_obj, period=999999, ics_link=link)
-        except:
-            class1 = Class(class_user = request.user, class_name='Schoology Integration', time=dt_obj, period=999999, ics_link=link)
-            class1.save()
-        #pull prior integrated events:
-        uids = IcsId.objects.filter(icsID_user=request.user)
-        uid_list = []
-        for uid in uids:
-            uid_list.append(uid.icsID)
-        #pull timezone, default to Pacific if necessary:
-        try:
-            timezone = Preferences.objects.get(preferences_user=request.user).user_timezone
-            if timezone==None:
-                return render(request, 'hwapp/error.html', {
-                    'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
-                })
-        except:
-            return render(request, 'hwapp/error.html', {
-                'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
-            })  
+# @login_required(login_url='/login')
+# def other_init(request):
+#     if request.method == 'POST':
+#         try:
+#             #make link an https link
+#             link = request.POST.get('schoology_ics_link')
+#             link = link.replace('webcal', 'https')
+#             c = Calendar(requests.get(link).text)
+#         except:
+#             return render(request, 'hwapp/error.html', {
+#                 'error': 'Please copy the full ICS link from the external integration with the instructions below and include the "webcal" portion of the link'
+#             })
+#         #SETUP: create new Class instance if not already existing(since Canvas does not provide class names with HW assignments)
+#         dt_str = '23:59'
+#         dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
+#         class_name = request.POST.get('integration_name')
+#         try:
+#             class2 = Class.objects.get(class_user=request.user, class_name=class_name, time=dt_obj, period=999999, ics_link=link)
+#         except:
+#             class2 = Class(class_user = request.user, class_name=class_name, time=dt_obj, period=999999, ics_link=link)
+#             class2.save()
+#         #pull prior integrated events:
+#         uids = IcsId.objects.filter(icsID_user=request.user)
+#         uid_list = []
+#         for uid in uids:
+#             uid_list.append(uid.icsID)
+#         #pull timezone, default to Pacific if necessary:
+#         try:
+#             timezone = Preferences.objects.get(preferences_user=request.user).user_timezone
+#             if timezone==None:
+#                 return render(request, 'hwapp/error.html', {
+#                     'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
+#                 })
+#         except:
+#             return render(request, 'hwapp/error.html', {
+#                 'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
+#             })  
 
-        #append new hw to database and calendar
-        #convert ics to Timeline instance
-        for event in c.timeline:
-            #pull summary(name)
-            #pull end date, start date if no end date, or default time(midnight)
-            if event.end:
-                time=(event.end).to(str(timezone))
-                time.format('YYYY-MM-DD')
-                time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
-            elif event.begin:
-                time=(event.begin).to(str(timezone))
-                time.format('YYYY-MM-DD')
-                time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
-            else:
-                time=dt_obj
-            hw_name = str(event.name)
-            try:
-                notes = str(event.description)
-            except:
-                notes=None
-            try:
-                ics_uid = event.uid
-            except:
-                ics_uid = None
-            #check if uid exists. If so, do not create the event
-            if ics_uid in uid_list:
-                pass
-            else:
-                l = Homework.objects.create(hw_user=request.user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)  
-                notion_push(hw=l, user=request.user)      
-                IcsId.objects.create(icsID_user=request.user, icsID = ics_uid)
-        return render(request, 'hwapp/success.html', {
-            'message': "Schoology feed integrated successfully. Please <a href='/'>return home</a>"
-        })    
-    else:
-        return render(request, 'hwapp/schoology_ics.html')
-
-@login_required(login_url='/login')
-def canvas_init(request):
-    if request.method == 'POST':
-        try:
-            #make link an https link
-            link = request.POST.get('schoology_ics_link')
-            link = link.replace('webcal', 'https')
-            c = Calendar(requests.get(link).text)
-        except:
-            return render(request, 'hwapp/error.html', {
-                'error': 'Please copy the full link from Canvas with the instructions below and include the "webcal" portion of the link'
-            })
-        #SETUP: create Canvas Class instance if not already existing(since Canvas does not provide class names with HW assignments)
-        dt_str = '23:59'
-        dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
-        try:
-            class2 = Class.objects.get(class_user=request.user, class_name='Canvas Integration', time=dt_obj, period=999999, ics_link=link)
-        except:
-            class2 = Class(class_user = request.user, class_name='Canvas Integration', time=dt_obj, period=999999, ics_link=link)
-            class2.save()
-        #pull prior integrated events:
-        uids = IcsId.objects.filter(icsID_user=request.user)
-        uid_list = []
-        for uid in uids:
-            uid_list.append(uid.icsID)
-        #pull timezone, default to Pacific if necessary:
-        try:
-            timezone = Preferences.objects.get(preferences_user=request.user).user_timezone
-            if timezone==None:
-                return render(request, 'hwapp/error.html', {
-                    'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
-                })
-        except:
-            return render(request, 'hwapp/error.html', {
-                'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
-            })  
-
-        #append new hw to database and calendar
-        #convert ics to Timeline instance
-        for event in c.timeline:
-            #pull summary(name)
-            #pull end date, start date if no end date, or default time(midnight)
-            if event.end:
-                time=(event.end).to(str(timezone))
-                time.format('YYYY-MM-DD')
-                time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
-            elif event.begin:
-                time=(event.begin).to(str(timezone))
-                time.format('YYYY-MM-DD')
-                time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
-            else:
-                time=dt_obj
-            hw_name = str(event.name)
-            try:
-                notes = str(event.description)
-            except:
-                notes=None
-            try:
-                ics_uid = event.uid
-            except:
-                ics_uid = None
-            #check if uid exists. If so, do not create the event
-            if ics_uid in uid_list:
-                pass
-            else:
-                l = Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
-                notion_push(hw=l, user=request.user)  
-                IcsId.objects.create(icsID_user=request.user, icsID = ics_uid)
-
-        return render(request, 'hwapp/success.html', {
-            'message': "Canvas feed integrated successfully. Please <a href='/'>return home</a>"
-        })        
-    else:
-        return render(request, 'hwapp/canvas_ics.html')
-@login_required(login_url='/login')
-def other_init(request):
-    if request.method == 'POST':
-        try:
-            #make link an https link
-            link = request.POST.get('schoology_ics_link')
-            link = link.replace('webcal', 'https')
-            c = Calendar(requests.get(link).text)
-        except:
-            return render(request, 'hwapp/error.html', {
-                'error': 'Please copy the full ICS link from the external integration with the instructions below and include the "webcal" portion of the link'
-            })
-        #SETUP: create new Class instance if not already existing(since Canvas does not provide class names with HW assignments)
-        dt_str = '23:59'
-        dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
-        class_name = request.POST.get('integration_name')
-        try:
-            class2 = Class.objects.get(class_user=request.user, class_name=class_name, time=dt_obj, period=999999, ics_link=link)
-        except:
-            class2 = Class(class_user = request.user, class_name=class_name, time=dt_obj, period=999999, ics_link=link)
-            class2.save()
-        #pull prior integrated events:
-        uids = IcsId.objects.filter(icsID_user=request.user)
-        uid_list = []
-        for uid in uids:
-            uid_list.append(uid.icsID)
-        #pull timezone, default to Pacific if necessary:
-        try:
-            timezone = Preferences.objects.get(preferences_user=request.user).user_timezone
-            if timezone==None:
-                return render(request, 'hwapp/error.html', {
-                    'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
-                })
-        except:
-            return render(request, 'hwapp/error.html', {
-                'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
-            })  
-
-        #append new hw to database and calendar
-        #convert ics to Timeline instance
-        for event in c.timeline:
-            #pull summary(name)
-            #pull end date, start date if no end date, or default time(midnight)
-            if event.end:
-                time=(event.end).to(str(timezone))
-                time.format('YYYY-MM-DD')
-                time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
-            elif event.begin:
-                time=(event.begin).to(str(timezone))
-                time.format('YYYY-MM-DD')
-                time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
-            else:
-                time=dt_obj
-            hw_name = str(event.name)
-            try:
-                notes = str(event.description)
-            except:
-                notes=None
-            try:
-                ics_uid = event.uid
-            except:
-                ics_uid = None
-                        #check if uid exists. If so, do not create the event
-            if ics_uid in uid_list:
-                pass
-            else:
-                l = Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
-                notion_push(hw=l, user=request.user)  
-                IcsId.objects.create(icsID_user=request.user, icsID = ics_uid)
-        return render(request, 'hwapp/success.html', {
-            'message': "Feed integrated successfully. Please <a href='/'>return home</a>"
-        })        
-    else:
-        return render(request, 'hwapp/other.html')
+#         #append new hw to database and calendar
+#         #convert ics to Timeline instance
+#         for event in c.timeline:
+#             #pull summary(name)
+#             #pull end date, start date if no end date, or default time(midnight)
+#             if event.end:
+#                 time=(event.end).to(str(timezone))
+#                 time.format('YYYY-MM-DD')
+#                 time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
+#             elif event.begin:
+#                 time=(event.begin).to(str(timezone))
+#                 time.format('YYYY-MM-DD')
+#                 time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
+#             else:
+#                 time=dt_obj
+#             hw_name = str(event.name)
+#             try:
+#                 notes = str(event.description)
+#             except:
+#                 notes=None
+#             try:
+#                 ics_uid = event.uid
+#             except:
+#                 ics_uid = None
+#                         #check if uid exists. If so, do not create the event
+#             if ics_uid in uid_list:
+#                 pass
+#             else:
+#                 l = Homework.objects.create(hw_user=request.user, hw_class=class2, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
+#                 notion_push(hw=l, user=request.user)  
+#                 IcsId.objects.create(icsID_user=request.user, icsID = ics_uid)
+#         return render(request, 'hwapp/success.html', {
+#             'message': "Feed integrated successfully. Please <a href='/'>return home</a>"
+#         })        
+#     else:
+#         return render(request, 'hwapp/other.html')
 
 def export(request, user_id, hash_value):
     #check if user is authorized
@@ -285,7 +137,7 @@ def export(request, user_id, hash_value):
             sys_val = IcsHashVal.objects.get(hash_user=request.user, hash_type='default')
         except:
             return render(request, 'hwapp/error.html', {
-                'error': 'User not Found'
+                'error': 'User not found'
             })
         prov_val = abs(hash_value)
         if prov_val == int(sys_val.hash_val):
@@ -404,6 +256,14 @@ def notion_callback(request):
             n_data.save()
         except:
             n_data = NotionData.objects.create(notion_user = request.user, access_token = data1['access_token'], bot_id = data1['bot_id'],workspace_name = data1['workspace_name'], workspace_id = data1['workspace_id'])
+        #update notion personal if it exists:
+        try:
+            n_personal = NotionData.objects.get(notion_user=request.user, tag="personal")
+            n_personal.access_token = data1['access_token']
+            n_data.bot_id = data1['bot_id']
+            n_personal.save()
+        except:
+            pass
 
         #get DB id 
         try:
@@ -459,9 +319,6 @@ def notion_callback(request):
                 }
             }
             response = requests.post(url, data=json.dumps(body), headers={'Authorization': f'Bearer {token}', 'Notion-Version': '2022-06-28', "Content-Type": "application/json"})
-            print(response.text)
-            print(url)
-            print(body)
             hw.notion_migrated = True
             hw.notion_id = json.loads(response.text)['id']
             hw.save()
@@ -490,6 +347,7 @@ def notion_toics(request, user_id, hash_value, tag):
         url = f'https://api.notion.com/v1/databases/{notion_obj.db_id}/query'
         response = requests.post(url, headers={'Authorization': f'Bearer {notion_obj.access_token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
         if '200' not in str(response):
+            IntegrationLog.objects.create(user=request.user, src="notion", dest="hwapp", url = url, date = datetime.datetime.now(), message=response.text, error=True, hw_name="None (ICS Export: Personal)")
             return HttpResponseRedirect(reverse('notion_auth'))
         i = json.loads(response.text)
         for event in i['results']:
@@ -506,6 +364,7 @@ def notion_toics(request, user_id, hash_value, tag):
         url = f'https://api.notion.com/v1/databases/{notion_obj.db_id}/query'
         response = requests.post(url, headers={'Authorization': f'Bearer {notion_obj.access_token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
         if '200' not in str(response):
+            IntegrationLog.objects.create(user=request.user, src="notion", dest="hwapp", url = url, date = datetime.datetime.now(), message=response.text, error=True, hw_name="None (ICS Export: HW)")
             return HttpResponseRedirect(reverse('notion_auth'))
         i = json.loads(response.text)
         for event in i['results']:
@@ -551,6 +410,8 @@ def schoology_class(request):
         else:
             c = Class.objects.create(class_user=request.user, class_name=i['course_title'], external_src="Schoology", external_id=i['id'])
             SchoologyClasses.objects.create(schoology_user=request.user, class_id=i['id'], s_class_name=i['course_title'],s_grading_period=i['grading_periods'][0], linked_class=c, src='Schoology', auth_data=s)
+    Log.objects.create(user=request.user, date=datetime.now(), message="Refreshed Schoology Classes", error=False, log_type="Schoology Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+
 @login_required(login_url='/login')
 def schoology_hw(request):
     try:
@@ -588,6 +449,8 @@ def schoology_hw(request):
                 except:
                     pass
             pass
+    Log.objects.create(user=request.user, date=datetime.now(), message="Refreshed Schoology Homework", error=False, log_type="Schoology Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+
 @login_required(login_url='/login')
 def canvas_class(request):
     try:
@@ -603,7 +466,6 @@ def canvas_class(request):
             "Authorization": f'Bearer {s.s_secret_key}'
         }
         response = requests.get(url, headers=headers)
-        #print(response.text)
         response = json.loads(response.text)
         s_class = SchoologyClasses.objects.filter(schoology_user=request.user, src='Canvas')
         classes = []
@@ -616,6 +478,8 @@ def canvas_class(request):
                 if str(i['id']) not in classes:
                     c = Class.objects.create(class_user=request.user, class_name=i['name'], external_src="Canvas", external_id=i['id'])
                     SchoologyClasses.objects.create(schoology_user=request.user, class_id=i['id'], s_class_name=i['name'],s_grading_period=i['enrollment_term_id'], linked_class=c, src='Canvas', auth_data=s)
+    Log.objects.create(user=request.user, date=datetime.now(), message="Refreshed Canvas Classes", error=False, log_type="Canvas Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+
 @login_required(login_url='/login')
 def canvas_hw(request):
     try:
@@ -648,7 +512,6 @@ def canvas_hw(request):
                 class1.update = False
                 class1.save()
                 break
-            print(hw['id'])
             if str(hw['id']) not in z:
                 try:
                     l = datetime.datetime.strptime(hw['due_at'], "%Y-%m-%dT%H:%M:%S%z")
@@ -667,8 +530,9 @@ def canvas_hw(request):
                     notion_push(hw=h,user=request.user)
                 except:
                     pass
-
             pass
+    Log.objects.create(user=request.user, date=datetime.now(), message="Refreshed Canvas Homework", error=False, log_type="Canvas Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+    
 @user_passes_test(matthew_check, login_url='/login')
 def authentication_manager(request, user_id):
     if request.method == 'POST':
@@ -718,7 +582,7 @@ def schoology_api(request):
             'service': 'Schoology',
         })
 
-@login_required(login_url='/home')
+@user_passes_test(matthew_check)
 def edit_api(request, integration_id):
     if request.method == 'GET':
         try:
@@ -763,7 +627,7 @@ def edit_api(request, integration_id):
         return render(request, 'hwapp/success.html', {
             "message": f"{s_obj.url} updated successfully"
         })
-@login_required(login_url='/home')
+@user_passes_test(matthew_check)
 def integration_log(request):
     #not authorized for non-admins
     if not request.user.is_superuser:
@@ -772,6 +636,20 @@ def integration_log(request):
         logs = IntegrationLog.objects.filter(error=True).order_by("-id")
     else:
         logs = IntegrationLog.objects.all().order_by("-id")
+    Log.objects.create(user=request.user, date=datetime.datetime.now(), message="Viewed Integration Log", error=False, log_type="Integration Log Access", ip_address = request.META.get("REMOTE_ADDR"))
     return render(request, 'hwapp/integrationlog.html', {
+        "logs": logs,
+    })
+
+@login_required(login_url='/home')
+def admin_log(request):
+    #not authorized for non-admins
+    if not request.user.is_superuser:
+        return render(request, '404.html')
+    if request.GET.get("error") == 'true':
+        logs = Log.objects.filter(error=True).order_by("-id")
+    else:
+        logs = Log.objects.all().order_by("-id")
+    return render(request, 'hwapp/admin_log.html', {
         "logs": logs,
     })
