@@ -14,6 +14,7 @@ urlpatterns = [
     path('canvas_api', views.canvas_api, name='canvas_api'),
     path('api/<int:integration_id>', views.edit_api, name='edit_api'),
     path('integration_log', views.integration_log, name='integration_log'),
-    path('admin_log', views.admin_log, name='admin_log')
+    path('admin_log', views.admin_log, name='admin_log'),
+    path('csv_export', views.csv_export, name='csv_export')
 
 ]

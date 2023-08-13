@@ -7,8 +7,6 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 import os
-from django.views.decorators.csrf import csrf_exempt
-import re
 from .models import CalendarEvent, IcsHashVal, NotionData, SchoologyClasses, SchoologyAuth, IntegrationLog, Log
 from dotenv import load_dotenv
 import datetime
@@ -16,14 +14,11 @@ import json
 import pytz
 import requests
 from ics import Calendar, Event
-from dateutil import tz
-from pathlib import Path
-import base64
 from .helper import full_notion_refresh, notion_push, canvas_notion_push
 import sentry_sdk
 import secrets
 from time import time
-
+import csv
 
 notion_bearer_token = 'NTkyMDM3YmYtNjE2Ni00YTliLWJmNjctNjlkODc5NTA3NjNkOnNlY3JldF9IWXA0RFdCemNLckUxTGNlMkRIdjhpTG5LczJyZkVsMTBOcXg3SWV6eGc1'
 
@@ -653,3 +648,33 @@ def admin_log(request):
     return render(request, 'hwapp/admin_log.html', {
         "logs": logs,
     })
+
+@login_required(login_url='/home')
+def csv_export(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="homework.csv"'
+    hws = Homework.objects.filter(hw_user=request.user)
+    class_id = request.GET.get("class_id")
+    if request.GET.get("class_id"):
+        try:
+            hw_class = Class.objects.get(id=request.GET.get("class_id"), class_user=request.user)
+            hws = hws.filter(hw_class=hw_class)
+        except:
+            return render(request, 'hwapp/error.html', {
+                "error": "Access Denied",
+            })
+    #default: no completed filter
+    if str(request.GET.get("completed")) == 'true':
+        hws = hws.filter(completed = True)
+    elif str(request.GET.get("completed")) == 'false':
+        hws = hws.filter(completed = False)
+
+    
+    writer = csv.writer(response)
+    writer.writerow(['hw_class', 'hw_title', 'due_date', 'completed'])
+
+    hws = hws.values_list('hw_class__class_name', 'hw_title', 'due_date', 'completed')
+    for hw in hws:
+        writer.writerow(hw)
+
+    return response

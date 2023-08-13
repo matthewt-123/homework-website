@@ -3,6 +3,7 @@
 
 {% block body %}
 <h1>
+    {% if extra_message %}{{extra_message}}: {% endif %}
     {% if class1 %}
     Homework for {{class1.class_name}}
     {% else %}

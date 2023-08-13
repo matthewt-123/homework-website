@@ -75,6 +75,9 @@
                             <a href="{% url 'about' %}" style="text-decoration: none;"><div class="nav_item">
                                 &nbsp About This Website &nbsp
                             </div></a>         
+                            <a href="{% url 'csv_export_template' %}" style="text-decoration: none;"><div class="nav_item">
+                                &nbsp Export Homework &nbsp
+                            </div></a> 
                             <a href="{% url 'logout' %}" style="text-decoration: none;"><div class="nav_item">
                                 &nbsp Logout &nbsp
                             </div></a>                    
@@ -164,7 +167,12 @@
                                         <a style='font-size:20px' href='/about'>
                                             About This Website
                                         </a>
-                                    </li>                                    
+                                    </li>   
+                                    <li>
+                                        <a style='font-size:20px' href='{% url "csv_export_template" %}'>
+                                            Export Homework
+                                        </a>
+                                    </li>                                   
                                     <li>
                                         <a style='font-size:20px' href="{% url 'logout' %}">
                                             Log Out

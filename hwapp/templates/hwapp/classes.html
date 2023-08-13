@@ -4,7 +4,7 @@
     function delete_class(class_id){
         name_data = document.getElementById(`class_name_${class_id}`)
         name = name_data.dataset.value
-        if(confirm(`Are you sure you want to delete ${name}?`)) {
+        if(confirm(`Are you sure you want to delete ${name}? This action cannot be undone`)) {
             fetch(`/deleteclass/${class_id}`, {
                 method: 'DELETE',
                 headers: {
@@ -39,7 +39,7 @@
         function archive_class(class_id){
         name_data = document.getElementById(`class_name_${class_id}`)
         name = name_data.dataset.value
-        if(confirm(`Are you sure you want to archive ${name}?`)) {
+        if(confirm(`Are you sure you want to {% if archived %}un{% endif %}archive ${name}?`)) {
             fetch(`/archive/${class_id}`, {
                 method: 'DELETE',
                 headers: {
@@ -78,6 +78,11 @@
 {% block body %}
 <h1>
 Classes List for {{user.username}}
+{% if archived %}
+<hr><div class="alert alert-primary" style="font-size: 25px;" role="alert">
+    IMPORTANT: To view homework in archived classes, please unarchive the class first
+</div>
+{% endif %}
 </h1>
 <div id="alert" class="alert alert-success" role="alert" style='display:none;'></div>
 <div id='error_message' class="alert alert-danger" role="alert" style='display:none;'></div>
@@ -98,7 +103,7 @@ Classes List for {{user.username}}
                 <strong>Edit</strong>
             </td>
             <td class="classes" width=10%><strong>Delete</strong></td>
-            <td class="classes" width=10%><strong>Archive</strong></td>
+            <td class="classes" width=10%><strong>{% if archived %}Una{% else %}A{% endif %}rchive</strong></td>
 
         </tr></strong>
     </thead>
@@ -136,5 +141,13 @@ Classes List for {{user.username}}
     </tbody>
 </table>
 <hr>
-<a href='/addclass'>Add Class</a>
+<div style="margin-left:40%">
+    <a class="btn btn-success" href='/addclass'>Add Class</a>
+    {% if archived %}
+    <a class="btn btn-primary" href="/classes">Hide Archived Classes</a>
+    {% else %}
+    <a class="btn btn-primary" href="?archived=true">Show Archived Classes</a>
+    {% endif %}
+</div>
+
 {% endblock %}

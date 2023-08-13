@@ -23,20 +23,8 @@ from sentry_sdk.integrations.django import DjangoIntegration
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-sentry_sdk.init(
-    dsn="https://86f8b9a59c8d4407a18c0574fea5781e@o1217115.ingest.sentry.io/6359235",
-    integrations=[DjangoIntegration()],
 
-    # Set traces_sample_rate to 1.0 to capture 100%
-    # of transactions for performance monitoring.
-    # We recommend adjusting this value in production.
-    traces_sample_rate=1.0,
-
-    # If you wish to associate users to errors (assuming you are using
-    # django.contrib.auth) you may enable sending PII data.
-    send_default_pii=False,
-    release="homework-app@15.0",
-)
+VERSION = "15.1"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -46,6 +34,34 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
+if DEBUG:
+    sentry_sdk.init(
+        dsn="https://86f8b9a59c8d4407a18c0574fea5781e@o1217115.ingest.sentry.io/6359235",
+        integrations=[DjangoIntegration()],
+
+        #No logging for development
+        traces_sample_rate=0,
+
+        # If you wish to associate users to errors (assuming you are using
+        # django.contrib.auth) you may enable sending PII data.
+        send_default_pii=False,
+        release=f"homework-app-DEVELOPMENT@{VERSION}",
+    )
+else:
+    sentry_sdk.init(
+        dsn="https://86f8b9a59c8d4407a18c0574fea5781e@o1217115.ingest.sentry.io/6359235",
+        integrations=[DjangoIntegration()],
+
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # We recommend adjusting this value in production.
+        traces_sample_rate=1.0,
+
+        # If you wish to associate users to errors (assuming you are using
+        # django.contrib.auth) you may enable sending PII data.
+        send_default_pii=False,
+        release=f"homework-app@{VERSION}",
+    )    
 
 ALLOWED_HOSTS_TYPES = {
     "dev":
@@ -76,15 +92,11 @@ INSTALLED_APPS = [
     'integrations',
     'external',
     'hijack',
-    'hijack.contrib.admin',
-    'reports',
-    "slick_reporting",
-    "crispy_forms", 
-    "crispy_bootstrap4"
+    'hijack.contrib.admin'
 
 ]
 SITE_ID = 1
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 

@@ -120,32 +120,38 @@ def sso_logout(request):
 def index(request):
     #index feature
     page_size = request.GET.get('page_size')
+    extra_message = False
     if not page_size:
-        page_size = 10
+        page_size = 10 #default page size
     #date range filter
     if request.GET.get('start') or request.GET.get('end'):
-        if not request.GET.get('start'):
-            hwlist = Homework.objects.filter(hw_user = request.user, hw_class__archived = False).order_by('due_date', 'hw_class__period', 'priority')
-        elif not request.GET.get('end'):
-            hwlist = Homework.objects.filter(hw_user = request.user, due_date__gte = request.GET.get('start'), hw_class__archived = False).order_by('due_date', 'hw_class__period', 'priority')
-        else:
-            hwlist = Homework.objects.filter(hw_user = request.user, hw_class__archived = False, due_date__range = [request.GET.get('start'), request.GET.get('end')]).order_by('due_date', 'hw_class__period', 'priority')
+        if not request.GET.get('start'): #if there is no start dt(only end dt), filter by it
+            hwlist = Homework.objects.filter(hw_user = request.user, due_date__lte = request.GET.get('end')).order_by('due_date', 'hw_class__period', 'priority')
+        elif not request.GET.get('end'): #if no end date, filter by start dt
+            hwlist = Homework.objects.filter(hw_user = request.user, due_date__gte = request.GET.get('start')).order_by('due_date', 'hw_class__period', 'priority')
+        else: #filter by specific range
+            hwlist = Homework.objects.filter(hw_user = request.user, due_date__range = [request.GET.get('start'), request.GET.get('end')]).order_by('due_date', 'hw_class__period', 'priority')
     else:
-        hwlist = Homework.objects.filter(hw_user = request.user, hw_class__archived = False).order_by('due_date', 'hw_class__period', 'priority')
+        hwlist = Homework.objects.filter(hw_user = request.user).order_by('due_date', 'hw_class__period', 'priority')
     #class filter
     if request.GET.get('class'):
         try:
-            class1 = Class.objects.get(class_user=request.user, id=request.GET.get('class'), archived = False)
-            hwlist = hwlist.filter(hw_class = class1)
+            class1 = Class.objects.get(class_user=request.user, id=request.GET.get('class'))
+            hwlist = hwlist.filter(hw_class = class1, hw_class__archived = False)
         except:
             return JsonResponse({
                 "message": "Access Denied"
             }, status=403)
+        if class1.archived == True:
+            return render(request, 'hwapp/error.html', {
+                "error": "Please unarchive your class to view homework"
+            })
     else:
         class1 = False
+    
     #active filter
     if request.GET.get('inactive') == 'true':
-        hwlist = hwlist.filter(completed=True)
+        hwlist = hwlist.filter(completed=True, archive=False, hw_class__archived=False)
     else:
         hwlist = hwlist.filter(completed=False, archive=False, hw_class__archived=False)
     #assignment filter
@@ -170,15 +176,22 @@ def index(request):
         'page_obj': page_obj,
         'length': list(h.page_range),
         'website_root': os.environ.get('website_root'),
-        'class1': class1
+        'class1': class1,
+        'extra_message': extra_message
     })
 
 
 @login_required(login_url='/login')
 def classes(request):
-    classes = Class.objects.filter(class_user=request.user, archived = False).order_by('period')
+    if str(request.GET.get("archived")) == "true":
+        classes = Class.objects.filter(class_user=request.user, archived = True).order_by('period')
+        archive=True
+    else:
+        classes = Class.objects.filter(class_user=request.user, archived = False).order_by('period')
+        archive=False
     return render(request, 'hwapp/classes.html', {
-        'classes': classes
+        'classes': classes,
+        'archived': archive
     })
 
 @login_required(login_url='/login')
@@ -731,12 +744,20 @@ def add_template(request):
 def archiveclass(request, id):
     try:
         c = Class.objects.get(class_user=request.user, id=id)
-        c.archived = True
-        c.save()
-        h = Homework.objects.filter(hw_class = c, hw_user=request.user)
-        for hw in h:
-            hw.archive = True
-            hw.save()
+        if c.archived == False:
+            c.archived = True
+            c.save()
+            h = Homework.objects.filter(hw_class = c, hw_user=request.user)
+            for hw in h:
+                hw.archive = True
+                hw.save()
+        else:
+            c.archived = False
+            c.save()
+            h = Homework.objects.filter(hw_class = c, hw_user=request.user)
+            for hw in h:
+                hw.archive = False
+                hw.save()            
         return JsonResponse({'message': 'completed', 'status': 200}, status=204)
     except:
         return JsonResponse({'error': 'Access Denied', 'status': 400}, status=400)
@@ -769,7 +790,6 @@ def helpformview(request, id):
         try:
             helpform = HelpForm.objects.get(id=id, parent_form=None)
             tracking_id = round(46789234*(int(helpform.id) + 34952)/234567)
-            print(tracking_id)
             tracking_info = f"----------------------------------------------------------------------------------------------------------------------------------------------<div style='display:none;color:white;font-size:0%'>@@@@tracking_id={tracking_id}@@@@</div>"
             email_user(email=helpform.email, content=f"{request.POST['message']}{tracking_info}", subject=f"[matthewtsai.tech] Help Form: {request.POST['subject']}", recipient_name=helpform.first_name)
             helpform.status = "Completed"
@@ -782,3 +802,9 @@ def helpformview(request, id):
         except Exception as e:
             print(e)
             return JsonResponse({"error": "form not found"}, status=404)
+@user_passes_test(matthew_check)
+def csv_export_template(request):
+    return render(request, "hwapp/csv_export.html", {
+        "class_list": Class.objects.filter(class_user=request.user),
+        'export_link': f"http://{os.environ.get('WEBSITE_ROOT')}/integrations/csv_export"
+    })
