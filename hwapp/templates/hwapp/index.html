@@ -121,6 +121,12 @@
 
 
 </script>
+{% if n_status %}
+<div id="alert" class="alert alert-danger" role="alert">Login for Notion has expired. Please 
+
+        <a href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=https%3A%2F%2Fmatthewtsai.tech%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">sign in again.</a><br>  
+</div>
+{% endif %}
 <div id="alert" class="alert alert-success" role="alert" style='display:none;'></div>
 <div id='error_message' class="alert alert-danger" role="alert" style='display:none;'></div>
 <table class='index table table-hover table-sm' width='100%'>
@@ -203,9 +209,9 @@
                 <td>
                     <span style="margin-left: 20%;">
                         {% if hw.completed %}
-                        <img alt='Completed' src="{% static 'hwapp/check.webp' %}" style="width:10%;height:10%">
+                        <img alt='Completed' src="{% static 'hwapp/check.webp' %}" title="Updated By Notion" style="width:10%;height:10%">
                         {% else %}
-                        <img alt='Not Completed' src="{% static 'hwapp/x.png' %}" style="width:15%;height:15%">
+                        <img alt='Not Completed' src="{% static 'hwapp/x.png' %}" title="Updated By Notion" style="width:15%;height:15%">
     
                         {% endif %}
                     </span>

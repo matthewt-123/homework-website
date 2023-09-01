@@ -1,0 +1,54 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+<h1 style="text-align:center">Log Entry {{log.id}} -- Error: {{log.error}}</h1>
+<table width='100%'>
+    <thead>
+        <tr>
+            <td width='20%'></td>
+            <td width='30%'>
+            </td>
+            <td width='30%'>
+            </td>
+            <td width='20%'></td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td width='20%'></td>
+            <td width='30%'>
+                <b>Source &nbsp;</b>
+            </td>
+            <td width='30%'>
+                {{log.src}}
+            </td>
+            <td width='20%'></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><b>Destination: &nbsp;</b></td>
+            <td>{{log.dest}}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><b>URL: &nbsp;</b></td>
+            <td>{{log.url}}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><b>Date: &nbsp;</b></td>
+            <td>{{log.date}}</td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><b>Message: &nbsp;</b></td>
+            <td>{{log.message}}</td>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+
+{% endblock %}

@@ -1,18 +1,52 @@
 import requests
 import json
 import sys
+import os
 from .models import NotionData, IntegrationLog
 sys.path.append("..")
 from hwapp.models import Homework
 import pytz
 from datetime import datetime
+from azure.communication.email import EmailClient
+from dotenv import load_dotenv
 
+load_dotenv()
+client = EmailClient.from_connection_string(os.environ.get('AZURE_CONNECTION_STRING'))
+
+def email_user(email, content, subject, recipient_name):
+    message = {
+        "content": {
+            "subject": subject,
+            "html": content
+        },
+        "recipients": {
+            "to": [
+                {
+                    "address": email,
+                    "displayName": recipient_name
+                }
+            ]
+        },
+        "senderAddress": f"support@email.matthewtsai.tech",
+        "replyTo": [
+            {
+                "address": "support@matthewtsai.tech",  # Email address. Required.
+                "displayName": "Homework App Support"  
+            }
+        ]
+    }
+    poller = client.begin_send(message)
+    result = poller.result()
+def notion_expired(user, notion_data):
+    content = f"Notion login has expired. Please <a href='https://{os.environ.get('website_root')}/integrations/notion_auth'>sign in again</a> to continue using Notion with HW App. Thank you"
+    email_user(user.email, content, "[ACTION REQUIRED]: HW App Notion Login Expired", user.username)   
+    notion_data.error = True
+    notion_data.save() 
 def notion_push(hw, user):
     n_data = NotionData.objects.get(notion_user=user, tag="homework")
     token = n_data.access_token
     page_id = n_data.db_id
     url = 'https://api.notion.com/v1/pages'
-    print(type(hw.due_date))
     hw.due_date = datetime.strftime(hw.due_date, '%Y-%m-%dT%H:%M')
     body = {
         "parent": {
@@ -50,6 +84,7 @@ def notion_push(hw, user):
     hw.notion_id = json.loads(response.text)['id']
     hw.save()
     if str(response) != "<Response [200]>":
+        notion_expired(user, n_data)
         error = True
     else:
         error = False
@@ -206,6 +241,7 @@ def notion_pull():
         data = {"filter": {"property": "Status", "status": {"equals": "Completed"}}}
         response = requests.post(url, headers={'Authorization': f'Bearer {notion_obj.access_token}', 'Notion-Version': '2022-06-28', "Content-Type": "application/json"}, data=json.dumps(data))
         if '200' not in str(response):
+            notion_expired(notion_obj.notion_user, notion_obj)
             IntegrationLog.objects.create(user=notion_obj.notion_user, src="notion", dest="hwapp", url = url, date = datetime.now(), message=response.text, error=True)
             break
         i = json.loads(response.text)

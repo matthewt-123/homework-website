@@ -169,6 +169,10 @@ def index(request):
         page_number=1
     page_obj = h.get_page(page_number)
     class_list = Class.objects.filter(class_user = request.user, archived = False).order_by('period')
+    try:
+        n_status = NotionData.objects.get(notion_user=request.user, tag="homework").error
+    except:
+        n_status = False
     load_dotenv()
     return render(request, 'hwapp/index.html', {
         'hwlist': page_obj,
@@ -177,7 +181,8 @@ def index(request):
         'length': list(h.page_range),
         'website_root': os.environ.get('website_root'),
         'class1': class1,
-        'extra_message': extra_message
+        'extra_message': extra_message,
+        'n_status': n_status
     })
 
 

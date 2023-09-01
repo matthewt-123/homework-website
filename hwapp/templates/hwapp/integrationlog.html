@@ -73,7 +73,7 @@ Admin Console
             <td style="color:blue">{{log.dest}}</td>
             {% endif %}
             <td>{{log.date}}</td>
-            <td {% if log.error == True %} style="color: red;word-wrap: break-word;" {% endif %} {% if log.message %} onclick="toggleModal(`{{log.message}}`)" {% endif %}>{{log.error}}</td>
+            <td {% if log.error == True %} style="color: red;word-wrap: break-word;" {% endif %}>{{log.error}}</td>
         </tr>
         {% endfor %}
     </tbody>

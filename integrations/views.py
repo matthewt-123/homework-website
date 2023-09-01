@@ -19,6 +19,7 @@ import sentry_sdk
 import secrets
 from time import time
 import csv
+from .helper import notion_expired
 
 notion_bearer_token = 'NTkyMDM3YmYtNjE2Ni00YTliLWJmNjctNjlkODc5NTA3NjNkOnNlY3JldF9IWXA0RFdCemNLckUxTGNlMkRIdjhpTG5LczJyZkVsMTBOcXg3SWV6eGc1'
 
@@ -240,6 +241,8 @@ def notion_callback(request):
         b64 = notion_bearer_token
         response = requests.post(url, data=body, headers={"Authorization": f"Basic {b64}"})
         data1 = json.loads(response.text)
+        if str(response) != "<Response [200]>":
+            notion_expired(request.user, n_data)
         try:
             n_data = NotionData.objects.get(notion_user=request.user, tag="homework")
             n_data.notion_user = request.user
@@ -247,10 +250,11 @@ def notion_callback(request):
             n_data.bot_id = data1['bot_id']
             n_data.workspace_name = data1['workspace_name']
             n_data.workspace_id = data1['workspace_id']
-            n_data.tags = "homework"
+            n_data.tag = "homework"
+            n_data.error = False
             n_data.save()
         except:
-            n_data = NotionData.objects.create(notion_user = request.user, access_token = data1['access_token'], bot_id = data1['bot_id'],workspace_name = data1['workspace_name'], workspace_id = data1['workspace_id'])
+            n_data = NotionData.objects.create(notion_user = request.user, access_token = data1['access_token'], bot_id = data1['bot_id'],workspace_name = data1['workspace_name'], workspace_id = data1['workspace_id'], error=False)
         #update notion personal if it exists:
         try:
             n_personal = NotionData.objects.get(notion_user=request.user, tag="personal")
@@ -323,13 +327,6 @@ def notion_callback(request):
     else:
         return JsonResponse({"error": "invalid request"}, status=400)
  
-@user_passes_test(matthew_check)
-def admin_notion(request):
-    m = full_notion_refresh(request.user)
-    return render(request, 'hwapp/success.html', {
-        'message': f'migration completed successfully. Added: <br> {m}'
-    })
-
 def notion_toics(request, user_id, hash_value, tag):
     try:
         user = User.objects.get(id=user_id)
@@ -343,6 +340,8 @@ def notion_toics(request, user_id, hash_value, tag):
         response = requests.post(url, headers={'Authorization': f'Bearer {notion_obj.access_token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
         if '200' not in str(response):
             IntegrationLog.objects.create(user=request.user, src="notion", dest="hwapp", url = url, date = datetime.datetime.now(), message=response.text, error=True, hw_name="None (ICS Export: Personal)")
+            notion_obj.error = True
+            notion_obj.save()
             return HttpResponseRedirect(reverse('notion_auth'))
         i = json.loads(response.text)
         for event in i['results']:
@@ -371,13 +370,7 @@ def notion_toics(request, user_id, hash_value, tag):
                 e.description = f"Class: {event['properties']['Class']['select']['name']}; Status: {event['properties']['Status']['status']['name']}"
                 c.events.add(e)
             except Exception as e:
-                print(e)
-                pass
-
-    sentry_sdk.set_context("character", {
-    "response": response,
-    "response_text": response.text,
-    })
+                IntegrationLog.objects.create(user=request.user, src="notion", dest="hwapp- ICS", url = url, date = datetime.datetime.now(), message=e, error=True, hw_name="None (ICS Export: HW)")
     response = HttpResponse(c, content_type="text/calendar")
     return response
 
@@ -405,7 +398,7 @@ def schoology_class(request):
         else:
             c = Class.objects.create(class_user=request.user, class_name=i['course_title'], external_src="Schoology", external_id=i['id'])
             SchoologyClasses.objects.create(schoology_user=request.user, class_id=i['id'], s_class_name=i['course_title'],s_grading_period=i['grading_periods'][0], linked_class=c, src='Schoology', auth_data=s)
-    Log.objects.create(user=request.user, date=datetime.now(), message="Refreshed Schoology Classes", error=False, log_type="Schoology Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+    Log.objects.create(user=request.user, date=datetime.datetime.now(), message="Refreshed Schoology Classes", error=False, log_type="Schoology Refresh", ip_address = request.META.get("REMOTE_ADDR"))
 
 @login_required(login_url='/login')
 def schoology_hw(request):
@@ -444,7 +437,7 @@ def schoology_hw(request):
                 except:
                     pass
             pass
-    Log.objects.create(user=request.user, date=datetime.now(), message="Refreshed Schoology Homework", error=False, log_type="Schoology Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+    Log.objects.create(user=request.user, date=datetime.datetime.now(), message="Refreshed Schoology Homework", error=False, log_type="Schoology Refresh", ip_address = request.META.get("REMOTE_ADDR"))
 
 @login_required(login_url='/login')
 def canvas_class(request):
@@ -473,7 +466,7 @@ def canvas_class(request):
                 if str(i['id']) not in classes:
                     c = Class.objects.create(class_user=request.user, class_name=i['name'], external_src="Canvas", external_id=i['id'])
                     SchoologyClasses.objects.create(schoology_user=request.user, class_id=i['id'], s_class_name=i['name'],s_grading_period=i['enrollment_term_id'], linked_class=c, src='Canvas', auth_data=s)
-    Log.objects.create(user=request.user, date=datetime.now(), message="Refreshed Canvas Classes", error=False, log_type="Canvas Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+    Log.objects.create(user=request.user, date=datetime.datetime.now(), message="Refreshed Canvas Classes", error=False, log_type="Canvas Refresh", ip_address = request.META.get("REMOTE_ADDR"))
 
 @login_required(login_url='/login')
 def canvas_hw(request):
@@ -526,7 +519,7 @@ def canvas_hw(request):
                 except:
                     pass
             pass
-    Log.objects.create(user=request.user, date=datetime.now(), message="Refreshed Canvas Homework", error=False, log_type="Canvas Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+    Log.objects.create(user=request.user, date=datetime.datetime.now(), message="Refreshed Canvas Homework", error=False, log_type="Canvas Refresh", ip_address = request.META.get("REMOTE_ADDR"))
     
 @user_passes_test(matthew_check, login_url='/login')
 def authentication_manager(request, user_id):
@@ -635,7 +628,20 @@ def integration_log(request):
     return render(request, 'hwapp/integrationlog.html', {
         "logs": logs,
     })
-
+@user_passes_test(matthew_check)
+def integration_log_view(request, log_id):
+    #not authorized for non-admins
+    if not request.user.is_superuser:
+        return render(request, '404.html')
+    try:
+        log = IntegrationLog.objects.get(id=log_id)
+    except:
+        return render(request, 'hwapp/error.html', {
+            'error': f"Log ID {log_id} Not Found"
+        })
+    return render(request, 'hwapp/integrationlog_view.html', {
+        "log": log,
+    })
 @login_required(login_url='/home')
 def admin_log(request):
     #not authorized for non-admins

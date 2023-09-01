@@ -12,7 +12,7 @@ import secrets
 import json
 from dateutil.relativedelta import relativedelta, MO
 sys.path.append("..")
-from integrations.views import refresh_ics, notion_push
+from integrations.views import notion_push
 from integrations.models import SchoologyAuth, SchoologyClasses, NotionData, IntegrationLog
 from mywebsite.settings import DEBUG
 from azure.communication.email import EmailClient
@@ -114,7 +114,7 @@ def email_user(email, content, subject, recipient_name):
         ]
     }
     poller = client.begin_send(message)
-    result = poller.result()
+    return poller.result()
 
 def timezone_helper(u_timezone, u_datetime):
     local_time = pytz.timezone(str(u_timezone))    
@@ -122,7 +122,7 @@ def timezone_helper(u_timezone, u_datetime):
     utc_datetime = local_datetime.astimezone(pytz.utc)
     return utc_datetime
 def email_admin(f_name, l_name, email, message):
-    content = f"First Name: {f_name}<br>Last Name: {l_name}<br>Email: {email}\nMessage: {message}"
+    content = f"First Name: {f_name}<br>Last Name: {l_name}<br>Email: {email}<br>Message: {message}"
     message = {
         "content": {
             "subject": "[matthewtsai.tech] New Help Form Submitted",
@@ -131,7 +131,7 @@ def email_admin(f_name, l_name, email, message):
         "recipients": {
             "to": [
                 {
-                    "address": "support@matthewtsai.tech",
+                    "address": "product@matthewtsai.tech",
                     "displayName": f"Homework App Support"
                 }
             ]
@@ -235,6 +235,11 @@ def canvas_hw():
         else:
             error = False
         data = json.loads(response.text)
+        if str(response) != "<Response [200]>":
+            IntegrationLog.objects.create(user=class1.schoology_user, hw=f"Canvas Class Error: {class1.s_class_name}", src="canvas", dest="hwapp", url = url, date = datetime.datetime.now(), message=response.text, error=True)
+            class1.update = False
+            class1.save()
+            break
         for hw in data:
             (data)
             if str(hw['id']) not in z:

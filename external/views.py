@@ -25,5 +25,6 @@ def contact(request):
             h1.save()
             email_admin(f_name=first_name, l_name=last_name, email=email, message=message)
             return JsonResponse({'message': 'Succcess! Your message has been sent, and our team will respond to your request within 7 business days', 'status': 201}, status=201)
-        except:
+        except Exception as e:
+            print(e)
             return JsonResponse({'message': 'Invalid Form', 'status': 400}, status=400)

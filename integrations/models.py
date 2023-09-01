@@ -22,6 +22,7 @@ class NotionData(models.Model):
     workspace_id =  models.CharField(max_length=512, default=None, blank=True, null=True)
     db_id = models.TextField(default=None, blank=True, null=True)
     tag = models.CharField(max_length = 128, default="homework", blank="homework", null="homework")
+    error = models.BooleanField(default=False, blank=False, null=False)
     def __str__(self):
         return f"{self.notion_user}"
 class GoogleData(models.Model):
