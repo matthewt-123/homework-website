@@ -1,0 +1,188 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}
+Spotify Playlist
+{% endblock %}
+{% block javascript %}
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<style>
+    .flex-container {
+      display: flex;
+      width: 100%;
+    }
+    
+    .flex-container > div {
+      margin: 10px;
+      padding: 20px;
+      font-size: 30px;
+      margin-left: 1.5%;
+      width: 30%;
+    }
+    </style>
+{% endblock %}
+{% block body %}
+
+<div id="btn_container" style='text-align:center;margin:auto' >
+    <h2>Create a Study Playlist!</h2>
+    {% if int_status %}
+
+    <div id="alert" class="alert alert-success" role="alert">Spotify has successfully been integrated with Homework App<br>
+    See previously created playlists <a href='{% url "spotify_playlists" %}'> here </a></div><hr>
+    <div width="30%" style="margin:auto;">
+       <b> Steps to Create a Playlist: </b><br>
+       1. Select up to five artists and/or tracks <br>
+       2. Name the playlist <br>
+       3. Press "GO!" to create personalized playlist based off these songs <hr>
+
+    </div>
+    {% endif %}
+    {% if not int_status %}
+    <h6>
+        Link your Spotify account with this app to create a personalized study playlist!
+    </h6><br>
+    <table>
+        <br>
+        <tr>
+    <a class="btn btn-primary" href="{{url}}">Login Here</a>
+        </tr>   
+        <br>
+    </div>
+    {% else %}
+    
+    <script>
+        function check_expired() {
+            fetch("https://api.spotify.com/v1/me", {
+                headers: {
+                    "Authorization": `Bearer {{int_status.access_token}}`
+                },
+                method: "GET"                
+            })
+            .then(response => {
+                if (response.status == 401) {
+                    fetch("http://{{website_root}}/spotify/expired", {
+                        credentials: "same-origin",
+                    })
+                    .then(response => {
+                        location.reload()
+                    })
+                }
+            })
+        }
+        document.addEventListener("DOMContentLoaded", check_expired())
+        function search_spotify() {
+            fetch(`https://api.spotify.com/v1/search?q=${document.getElementById("search").value}&type=artist,track&market=US`, {
+                headers: {
+                    "Authorization": `Bearer {{int_status.access_token}}`
+                },
+                method: "GET"
+            })
+
+            .then(response => response.json())
+            .then(result => { 
+                document.getElementById('resultstable_artists').innerHTML = '';
+                document.getElementById('resultstable_tracks').innerHTML = '';
+
+                for (let i = 0; i < 5; i++) {
+                    document.getElementById('resultstable_artists').innerHTML += `<tr><td><img width="80%" src="${result['artists']['items'][i]['images'][0]['url']}" alt="picture of ${result['artists']['items'][i]["name"]}"></td><td>${result['artists']['items'][i]["name"]}</td><td><button onclick="add_seed(img='${result['artists']['items'][i]['images'][0]['url']}', name='${result['artists']['items'][i]["name"].replace("\'", "\\'")}', type='artist', uri='${result['artists']['items'][i]["uri"]}')" class="btn btn-primary">+</button></td></tr>`
+                    document.getElementById('resultstable_tracks').innerHTML += `<tr><td><img width="80%" src="${result['tracks']['items'][i]['album']['images'][0]['url']}"></td><td>${result['tracks']['items'][i]["name"]}</td><td><button onclick="add_seed(img='${result['tracks']['items'][i]['album']['images'][0]['url']}', name='${result['tracks']['items'][i]["name"].replace("\'", "\\'")}', type='track', uri='${result['tracks']['items'][i]["uri"]}')" class="btn btn-primary">+</button></td></tr>`
+
+                }
+            })
+        }
+        function add_seed(img, name, type, uri) {
+            const next_seed = document.getElementById('next_seed').value;
+            if (next_seed >= 5) {
+                alert("Error: A maximum of 5 tracks may be selected")
+            } else {
+                document.getElementById(`seed_${next_seed}`).innerHTML = `<tr><td><img width="30%" src="${img}" alt="picture of "></td><td>${name}</td><td>${type}</td><td><button onclick="remove_seed(${next_seed})" class="btn btn-primary">-</button></td><input type="hidden" value="${uri}" id="uri_${next_seed}"></tr>`
+                document.getElementById('next_seed').value = Number(next_seed) + 1;
+                document.getElementById("search").focus()   
+            }
+
+        }
+        function remove_seed(seed_number) {
+            const next_seed = document.getElementById('next_seed').value;
+            // case: removing middle track
+            if (seed_number < next_seed - 1) {
+                document.getElementById(`seed_${seed_number}`).remove() //remove row
+                for (let i = seed_number; i < 4; i++) {
+                    console.log(i)
+                    document.getElementById(`seed_${i + 1}`).id = `seed_${i}`
+                }
+                document.getElementById("seed_tracks").innerHTML += `<tr id='seed_4'><input type="hidden" value="" id="uri_4"></td>`
+            } else { //case: removing end track
+                console.log(seed_number)
+                document.getElementById(`seed_${seed_number}`).innerHTML = `<input type="hidden" value="" id="uri_${seed_number}">`
+            } //update next_seed
+            document.getElementById('next_seed').value = Number(next_seed) - 1
+            //append new row to end of table
+        }
+        function submit_recommendations() {
+            const next_seed = document.getElementById('next_seed').value;
+            if (next_seed == 0) {
+                alert("Error: No Tracks Selected. Please try again")
+            } else {
+                fetch("/spotify/recommendations", {
+                headers: {
+                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+                },  
+                credentials: "same-origin",
+                method: "POST",
+                body: JSON.stringify({
+                    seed_0: document.getElementById('uri_0').value,
+                    seed_1: document.getElementById('uri_1').value,
+                    seed_2: document.getElementById('uri_2').value,
+                    seed_3: document.getElementById('uri_3').value,
+                    seed_4: document.getElementById('uri_4').value,
+                    playlist_name: document.getElementById('playlist_name').value, 
+                    target_acousticness:  document.getElementById('acoustic').value,
+                    target_danceability: document.getElementById('danceability').value,
+                    target_energy: document.getElementById('energy').value,
+                    target_instrumentalness: document.getElementById('instruments').value,
+                    target_liveness: document.getElementById('live').value,
+                    target_speechiness: document.getElementById('words').value,
+                })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result['status'] == "200") {
+                        location.href = `/spotify/playlists`
+                    }
+                })
+            }
+            
+        }
+    </script>
+    
+<label for="search"><b>Search for artists or tracks: </b></label>  <input type="text" id="search" name="search" autofocus onkeydown="search_spotify()">
+<div class="flex-container" style="width: 100%;">
+    <div><table ><thead><tr><b>Artists</b></tr><tr><td width="20%"></td><td width="70%"></td><td width="10%"></td></tr></thead><tbody id="resultstable_artists"></tbody></table></div>
+    <div><table ><thead><tr><b>Tracks</b></tr><tr><td width="20%"></td><td width="70%"></td><td width="10%"></td></tr></thead><tbody id="resultstable_tracks"></tbody></table></div>
+    <div><table id="attributes"><thead><tr><b>Attributes</b></tr></thead><tbody style="font-size: 12px;size: 12px;">
+        <br><tr><label for="acoustic" class="form-label"><small>Acoustic: </small></label> <input value="0.3" type="range" step="0.05" class="form-range" min="0" max="1" id="acoustic"></tr>
+        <br><tr><label for="danceability" class="form-label"><small>Danceable: </small></label> <input value="0.8" type="range" step="0.05" class="form-range" min="0" max="1" id="danceability"></tr>
+        <br><tr><label for="energy" class="form-label"><small>Energy: </small></label> <input type="range" value="0.8" step="0.05" class="form-range" min="0" max="1" id="energy"></tr>
+        <br><tr><label for="instruments" class="form-label"><small>Instruments: </small></label> <input type="range" value="0.4" step="0.05" class="form-range" min="0" max="1" id="instruments"></tr>
+        <br><tr><label for="live" class="form-label"><small>Live Performance: </small></label> <input type="range" value="0.5" step="0.05" class="form-range" min="0" max="1" id="live"></tr>
+        <br><tr><label for="words" class="form-label"><small>Words: </small></label> <input type="range" step="0.05" value="0.45" class="form-range" min="0" max="0.66" id="words"></tr>
+    </tbody></table></div>
+  </div>
+<div>
+    <hr>
+    <input type="hidden" value="0" id="next_seed">
+    <div><table ><thead><tr><b>Selected Tracks and Artists</b></tr><tr><td width="20%"></td><td width="60%"></td><td width="10%"></td><td width="10%"></td></tr></thead><tbody id="seed_tracks">
+        <tr id="seed_0"><input type="hidden" value="" id="uri_0"></tr>
+        <tr id="seed_1"><input type="hidden" value="" id="uri_1"></tr>
+        <tr id="seed_2"><input type="hidden" value="" id="uri_2"></tr>
+        <tr id="seed_3"><input type="hidden" value="" id="uri_3"></tr>
+        <tr id="seed_4"><input type="hidden" value="" id="uri_4"></tr>
+        {% csrf_token %}
+    </tbody></table></div>
+
+</div>
+<label for="playlist_name">Playlist Name: </label><input type="text" id="playlist_name">
+    <button class="btn btn-primary" onclick="submit_recommendations()">GO!</button>
+</table>
+
+
+    {% endif %}
+{% endblock %}

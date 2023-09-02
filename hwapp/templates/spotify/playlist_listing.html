@@ -1,0 +1,84 @@
+{% extends 'hwapp/layout.html' %}
+{% block javascript %}
+<script>
+    
+    function delete_class(playlist_id){
+        name_data = document.getElementById(`playlist_${playlist_id}`)
+        name = name_data.dataset.value
+        if(confirm(`Are you sure you want to delete ${name}? This action cannot be undone`)) {
+            fetch(`/spotify/deleteplaylist?playlist_id=${playlist_id}`, {
+                method: 'GET',
+                credentials: 'same-origin',
+            })
+            .then(response => response.json())
+            .then(result => {
+                if(result['status'] == 200) {
+                    /* hide error message if any */
+                    document.getElementById('error_message').innerHTML=''
+                    document.getElementById('error_message').style.display='none'
+                    /* show alert */
+                    const alert = document.getElementById('alert')
+                    alert.innerHTML = result['message']
+                    alert.style.display='block'
+
+                    /* remove element */
+                    document.getElementById(`row_${playlist_id}`).remove()
+
+                } else {
+                    document.getElementById('alert').innerHTML=''
+                    document.getElementById('alert').style.display='none'
+
+                    const alert = document.getElementById('error_message')
+                    alert.innerHTML = result['message']
+                    alert.style.display='block'
+                    }
+                })
+        }}     
+
+
+</script>
+{% endblock %}
+{% block body %}
+<h1>
+Playlist Listing for {{user.username}}
+
+</h1>
+<div id="alert" class="alert alert-success" role="alert" style='display:none;'></div>
+<div id='error_message' class="alert alert-danger" role="alert" style='display:none;'></div>
+<table class="classes" width='100%'>
+    <thead class="classes">
+        <strong><tr class="classes">
+            <td width = '5%'></td>
+            <td class="classes" width='60%'>
+                <strong>Playlist Name</strong>
+            </td>
+            <td width='20%'>
+                <strong>Created Time</strong>
+            </td>
+            <td class="classes" width=10%><strong>Delete</strong></td>
+            <td width = '5%'></td>
+
+        </tr></strong>
+    </thead>
+    <tbody class="classes">
+        {% for playlist in playlists %}
+            <tr id = "row_{{playlist.id}}" class="classes">
+                <td></td>
+                <td class="classes"><a id='playlist_{{playlist.id}}' data-value="{{playlist.playlist_name}} "href='{{playlist.url}}'>
+                    {{playlist.playlist_name}}
+                </a></td>
+                <td>
+                    {{playlist.created}}
+                </td>
+                <td class="classes">
+                    <button class="btn btn-primary" onclick='delete_class({{playlist.id}})'>x</button>
+                    {% csrf_token %}
+                </td>
+                <td></td>
+
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
