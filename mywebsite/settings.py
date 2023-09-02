@@ -24,7 +24,7 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-VERSION = "15.1"
+VERSION = "16"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -33,7 +33,7 @@ VERSION = "15.1"
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 if DEBUG:
     sentry_sdk.init(
         dsn="https://86f8b9a59c8d4407a18c0574fea5781e@o1217115.ingest.sentry.io/6359235",
@@ -92,7 +92,8 @@ INSTALLED_APPS = [
     'integrations',
     'external',
     'hijack',
-    'hijack.contrib.admin'
+    'hijack.contrib.admin',
+    'spotify'
 
 ]
 SITE_ID = 1
