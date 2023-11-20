@@ -339,7 +339,7 @@ def notion_toics(request, user_id, hash_value, tag):
         url = f'https://api.notion.com/v1/databases/{notion_obj.db_id}/query'
         response = requests.post(url, headers={'Authorization': f'Bearer {notion_obj.access_token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
         if '200' not in str(response):
-            IntegrationLog.objects.create(user=request.user, src="notion", dest="hwapp", url = url, date = datetime.datetime.now(), message=response.text, error=True, hw_name="None (ICS Export: Personal)")
+            IntegrationLog.objects.create(user=user, src="notion", dest="hwapp", url = url, date = datetime.datetime.now(), message=response.text, error=True, hw_name="None (ICS Export: Personal)")
             notion_obj.error = True
             notion_obj.save()
             return HttpResponseRedirect(reverse('notion_auth'))
@@ -349,6 +349,9 @@ def notion_toics(request, user_id, hash_value, tag):
             try:
                 e.name = event['properties']['Name']['title'][0]['plain_text']
                 e.begin = dateparser.parse(event['properties']['Date']['date']['start']) - datetime.timedelta(hours=7) + datetime.timedelta(days=1)
+                print(event['properties']['Date'])
+                if event['properties']['Date']['date']['end']:
+                    e.end = dateparser.parse(event['properties']['Date']['date']['start']) - datetime.timedelta(hours=7) + datetime.timedelta(days=1)
                 e.created = datetime.datetime.now()
                 c.events.add(e)
             except:
@@ -371,7 +374,7 @@ def notion_toics(request, user_id, hash_value, tag):
                 c.events.add(e)
             except Exception as e:
                 IntegrationLog.objects.create(user=request.user, src="notion", dest="hwapp- ICS", url = url, date = datetime.datetime.now(), message=e, error=True, hw_name="None (ICS Export: HW)")
-    response = HttpResponse(c, content_type="text/calendar")
+    response = HttpResponse(c, content_type="text/html")
     return response
 
 @login_required(login_url='/login')
@@ -684,3 +687,78 @@ def csv_export(request):
         writer.writerow(hw)
 
     return response
+
+
+@login_required(login_url='/login')
+def gcal_tonotion(request):
+    if request.method == 'GET':
+        db_id = '8bc20dc50f57446fbeecbae976a2a5d1'
+        notion_data = NotionData.objects.get(notion_user=request.user, tag='homework')
+
+
+        try:
+            #make link an https link
+            link = 'https://calendar.google.com/calendar/ical/matthew.tsai23%40gmail.com/private-57e7103bb7d3ad3042ff79ad166c762a/basic.ics'
+            #link = request.POST.get('schoology_ics_link')
+            link = link.replace('webcal', 'https')
+            c = Calendar(requests.get(link).text)
+        except:
+            return render(request, 'hwapp/error.html', {
+                'error': 'Please copy the full ICS link from the external integration with the instructions below and include the "webcal" portion of the link'
+            })
+        #SETUP: create new Class instance if not already existing(since Canvas does not provide class names with HW assignments)
+        dt_str = '23:59'
+        dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
+        #pull prior integrated events:
+        uids = IcsId.objects.filter(icsID_user=request.user)
+        uid_list = []
+        for uid in uids:
+            uid_list.append(uid.icsID)
+        #pull timezone, default to Pacific if necessary:
+        try:
+            timezone = Preferences.objects.get(preferences_user=request.user).user_timezone
+            if timezone==None:
+                return render(request, 'hwapp/error.html', {
+                    'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
+                })
+        except:
+            return render(request, 'hwapp/error.html', {
+                'error': 'Please set your timezone <a href="/preferences">here</a> to use this feature'
+            })  
+        print(True)
+        #append new hw to database and calendar
+        #convert ics to Timeline instance
+        for event in c.timeline:
+            #pull summary(name)
+            #pull end date, start date if no end date, or default time(midnight)
+            if event.end:
+                time=(event.end).to(str(timezone))
+                time.format('YYYY-MM-DD')
+                time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
+            elif event.begin:
+                time=(event.begin).to(str(timezone))
+                time.format('YYYY-MM-DD')
+                time = datetime.datetime.strptime(str(time)[0:10], '%Y-%m-%d')
+            else:
+                time=dt_obj
+            hw_name = str(event.name)
+            try:
+                notes = str(event.description)
+            except:
+                notes=None
+            try:
+                ics_uid = event.uid
+            except:
+                ics_uid = None
+                        #check if uid exists. If so, do not create the event
+            if ics_uid in uid_list:
+                pass
+            else:
+                l = Homework()
+                notion_push(hw=l, user=request.user)  
+                IcsId.objects.create(icsID_user=request.user, icsID = ics_uid)
+        return render(request, 'hwapp/success.html', {
+            'message': "Feed integrated successfully. Please <a href='/'>return home</a>"
+        })        
+    else:
+        return render(request, 'hwapp/other.html')

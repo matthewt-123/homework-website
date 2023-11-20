@@ -1,0 +1,16 @@
+{% extends "hwapp/layout.html" %}
+{% load static %}
+{% block body %}
+<div>
+    {{p.content}}
+</div>
+<hr>
+<form action="/pastebin" class="indented add_hw_form" method='POST'>
+    {% csrf_token %}
+    <textarea style="height:100%;width:100%" name="content" id="content"></textarea>
+    <button class="btn btn-primary">Submit</button>
+</form>
+
+
+
+{% endblock %}

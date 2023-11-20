@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from .models import HelpForm
-from django.http.response import JsonResponse
+from django.http.response import JsonResponse, HttpResponse
 import json
 import sys
 import html
@@ -28,3 +28,5 @@ def contact(request):
         except Exception as e:
             print(e)
             return JsonResponse({'message': 'Invalid Form', 'status': 400}, status=400)
+    else:
+        return HttpResponse(status=405)

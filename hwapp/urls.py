@@ -35,7 +35,8 @@ urlpatterns = [
     path('change_password', views.change_password),
     path('helpformview/<int:id>', views.helpformview, name="helpformview"),
     path('helpformlist', views.helpformlist),
-    path('csv_export', views.csv_export_template, name="csv_export_template")
+    path('csv_export', views.csv_export_template, name="csv_export_template"),
+    path('pastebin', views.pastebin, name="pastebin")
 
     #path('login_as', views.login_as)
 ]

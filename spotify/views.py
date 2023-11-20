@@ -13,12 +13,21 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.http.response import JsonResponse
 import re
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.clickjacking import xframe_options_exempt
 
-load_dotenv()
 
 sys.path.append("..")
 from mywebsite.settings import DEBUG
+from integrations.models import IcsHashVal
+from hwapp.models import User
+
+load_dotenv()
+def matthew_check(user):
+    return user.id == 1
+
 # Create your views here.
+@login_required(login_url='/login')
 def index(request):
     try:
         int_status = SpotifyAuth.objects.get(user=request.user, error=False)
@@ -27,13 +36,18 @@ def index(request):
     state = ''.join(secrets.choice(string.ascii_uppercase + string.digits)
               for i in range(64))
     request.session['spotify_state'] = state
-    url = f"https://accounts.spotify.com/authorize?response_type=code&client_id={os.environ.get('SPOTIFY_CLIENT_ID')}&scope=playlist-modify-public%20playlist-modify-private&redirect_uri=http{'' if DEBUG else 's'}://{os.environ.get('WEBSITE_ROOT')}/spotify/callback&state={state}"
+    if request.user.id == 1:
+        url = f"https://accounts.spotify.com/authorize?response_type=code&client_id={os.environ.get('SPOTIFY_CLIENT_ID')}&scope=playlist-modify-public%20playlist-modify-private%20user-read-playback-state%20streaming%20user-read-email%20user-read-private&redirect_uri=http{'' if DEBUG else 's'}://{os.environ.get('WEBSITE_ROOT')}/spotify/callback&state={state}"
+    else:
+        url = f"https://accounts.spotify.com/authorize?response_type=code&client_id={os.environ.get('SPOTIFY_CLIENT_ID')}&scope=playlist-modify-public%20playlist-modify-private&redirect_uri=http{'' if DEBUG else 's'}://{os.environ.get('WEBSITE_ROOT')}/spotify/callback&state={state}"
+
     return render(request, 'spotify/spotify_index.html', {
         'int_status': int_status,
         'url': url,
         'website_root': os.environ.get("WEBSITE_ROOT")
     })
 
+@login_required(login_url='/login')
 def callback(request):
     if request.method == "GET":
         if request.session['spotify_state'] and request.GET.get('state') != request.session['spotify_state']:
@@ -72,20 +86,25 @@ def callback(request):
     spotify_auth.save()
 
     return HttpResponseRedirect(reverse("spotify_index"))
+@user_passes_test(matthew_check)
 def test(request):
-    url = 'https://api.spotify.com/v1/me'
+    url = f'https://api.spotify.com/v1/playlists/6vWg8WdbX2FcF9Ncfhd3QC/followers/contains?ids=tsai_matthew'
     headers = {"Authorization": f"Bearer {SpotifyAuth.objects.get(user=request.user).access_token}"}
     response = requests.get(url, headers=headers)
+    if str(response) != "<Response[200]>":
+        expired(request)
+        response = requests.get(url, headers=headers)
     data1 = json.loads(response.text)
-    print(data1['uri'])
     print(response.text)
-
+@login_required(login_url='/login')
 def expired(request):
     url = "https://accounts.spotify.com/api/token"
+    
     try:
         spotify_auth = SpotifyAuth.objects.get(user=request.user)
     except:
         return JsonResponse({"message": "an error has occurred", "status": 401}, status=401)
+    
     data = {
         "grant_type": "refresh_token",
         "refresh_token": spotify_auth.refresh_token,
@@ -96,7 +115,7 @@ def expired(request):
     spotify_auth.access_token = json.loads(response.text)['access_token']
     spotify_auth.save()
     return JsonResponse({"message": "refresh completed successfully", "status": 200}, status=200)
-
+@login_required(login_url='/login')
 def recommendations(request):
     data = json.loads(request.body)
     seed_tracks = ""
@@ -167,7 +186,7 @@ def recommendations(request):
     }
     response = requests.post(url, data=json.dumps(data), headers=headers)
     return JsonResponse({"message": "playlist created successfully", "status": 200, "playlist_id": s_playlist.id}, status=200)
-
+@login_required(login_url='/login')
 def playlists(request):
     spotify_auth = SpotifyAuth.objects.get(user=request.user)
     if request.GET.get("playlist"):
@@ -185,6 +204,7 @@ def playlists(request):
         return render(request, 'spotify/playlist_listing.html', {
             'playlists': playlists_all
         })
+@login_required(login_url='/login')
 def deleteplaylist(request):
     try:
         playlist = SpotifyPlaylist.objects.get(auth=SpotifyAuth.objects.get(user=request.user), id=request.GET.get('playlist_id'))
@@ -192,3 +212,36 @@ def deleteplaylist(request):
         return JsonResponse({"message": "Playlist deleted successfully", "status": 200}, status=200)
     except:
         return JsonResponse({"message": "Playlist not found", "status": 404}, status=404)
+    
+# @xframe_options_exempt
+# def spotify_widget1(request, user_id, hash_value):
+#     try:
+#         user = User.objects.get(id=user_id)
+#         IcsHashVal.objects.get(hash_user=user, hash_val=hash_value)
+#         spotify_auth = SpotifyAuth.objects.get(user=user)
+#     except:
+#         return JsonResponse({"Error": "Not Authorized"}, status=403)
+#     url = "https://api.spotify.com/v1/me/player"
+#     headers = {"Authorization": f"Bearer {SpotifyAuth.objects.get(user=request.user).access_token}"}
+#     response = requests.get(url, headers=headers)
+#     if str(response) != "<Response[200]>":
+#         print(expired(request))
+#         response = requests.get(url, headers=headers)
+#     print(response)
+#     data = json.loads(response.text)
+#     return render(request, 'spotify/widget.html', {
+#         "data": data
+#     })
+   
+# @xframe_options_exempt
+# def spotify_widget(request, user_id, hash_value):
+#     try:
+#         user = User.objects.get(id=user_id)
+#         IcsHashVal.objects.get(hash_user=user, hash_val=hash_value)
+#         spotify_auth = SpotifyAuth.objects.get(user=user)
+#     except:
+#         return JsonResponse({"Error": "Not Authorized"}, status=403)
+#     expired(request)
+#     return render(request, 'spotify/widget_sdk.html', {
+#         "access_token": spotify_auth.access_token
+#     })

@@ -73,3 +73,7 @@ class AllAuth(models.Model):
     class Meta:
         verbose_name = ('Auth0 SSO')
         verbose_name_plural = ('Auth0 SSO')
+
+class PasteBin(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField(default="", blank="") 

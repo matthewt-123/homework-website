@@ -2,7 +2,7 @@ from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.forms import ModelForm
 from django.contrib.auth import login
-from .models import EmailTemplate, User, Class, Homework, Preferences, AllAuth, Day, Timezone
+from .models import EmailTemplate, User, Class, Homework, Preferences, AllAuth, Day, Timezone, PasteBin
 from django.http import HttpResponseRedirect
 import requests
 from django.urls import reverse
@@ -33,6 +33,7 @@ from integrations.views import schoology_class, schoology_hw, canvas_class, canv
 from integrations.helper import notion_push, notion_pull
 from external.forms import HelpForm1
 from external.models import HelpForm
+from mywebsite.settings import DEBUG
 load_dotenv()
 
 def matthew_check(user):
@@ -182,7 +183,8 @@ def index(request):
         'website_root': os.environ.get('website_root'),
         'class1': class1,
         'extra_message': extra_message,
-        'n_status': n_status
+        'n_status': n_status,
+        'debug': DEBUG
     })
 
 
@@ -809,7 +811,34 @@ def helpformview(request, id):
             return JsonResponse({"error": "form not found"}, status=404)
 @user_passes_test(matthew_check)
 def csv_export_template(request):
-    return render(request, "hwapp/csv_export.html", {
-        "class_list": Class.objects.filter(class_user=request.user),
-        'export_link': f"http://{os.environ.get('WEBSITE_ROOT')}/integrations/csv_export"
-    })
+    if DEBUG:
+        return render(request, "hwapp/csv_export.html", {
+            "class_list": Class.objects.filter(class_user=request.user),
+            'export_link': f"http://{os.environ.get('WEBSITE_ROOT')}/integrations/csv_export"
+        })
+    else:
+        return render(request, "hwapp/csv_export.html", {
+            "class_list": Class.objects.filter(class_user=request.user),
+            'export_link': f"https://{os.environ.get('WEBSITE_ROOT')}/integrations/csv_export"
+        })
+@login_required(login_url='/login')
+def pastebin(request):
+    if request.method == "POST":
+        try:
+            p = PasteBin.objects.get(user=request.user)
+        except:
+            p = PasteBin.objects.create(user=request.user)
+        p.content = request.POST['content']
+        p.save()
+        return render(request, 'hwapp/pastebin.html', {
+            'p': p
+        })
+    else:
+        try:
+            p = PasteBin.objects.get(user=request.user)
+        except:
+            p = PasteBin.objects.create(user=request.user)
+        return render(request, 'hwapp/pastebin.html', {
+            'p': p
+        })
+

@@ -33,7 +33,7 @@ VERSION = "16"
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     sentry_sdk.init(
         dsn="https://86f8b9a59c8d4407a18c0574fea5781e@o1217115.ingest.sentry.io/6359235",
@@ -101,7 +101,7 @@ SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-
+INTERNAL_IPS = ['10.2.0.4']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -214,7 +214,7 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'hwapp/static'),
 )
 
-ADMINS = [('Matthew', 'matthew@matthewtsai.games')]
+ADMINS = [('Matthew', 'matthew@matthewtsai.tech')]
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
@@ -231,3 +231,5 @@ SOCIALACCOUNT_PROVIDERS = {
         'AUTH0_URL': f"https://{AUTH0_DOMAIN}",
     }
 }
+
+X_FRAME_OPTIONS = "SAMEORIGIN"

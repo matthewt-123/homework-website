@@ -15,6 +15,6 @@ urlpatterns = [
     path('integration_log', views.integration_log, name='integration_log'),
     path('integration_log/<int:log_id>', views.integration_log_view, name='integration_log_view'),
     path('admin_log', views.admin_log, name='admin_log'),
-    path('csv_export', views.csv_export, name='csv_export')
-
+    path('csv_export', views.csv_export, name='csv_export'),
+    path('gcal_tonotion', views.gcal_tonotion)
 ]

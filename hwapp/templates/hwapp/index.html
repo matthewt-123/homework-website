@@ -10,7 +10,9 @@
     Homework List for {{user.username}}
     {% endif %}   
 </h1>
-
+{% if debug %}
+<div class="alert alert-primary">This is the development site</div>
+{% endif %}
 
 <script>
 

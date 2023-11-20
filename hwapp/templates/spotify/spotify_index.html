@@ -58,7 +58,7 @@ Spotify Playlist
             })
             .then(response => {
                 if (response.status == 401) {
-                    fetch("http://{{website_root}}/spotify/expired", {
+                    fetch("/spotify/expired", {
                         credentials: "same-origin",
                     })
                     .then(response => {
@@ -83,10 +83,38 @@ Spotify Playlist
 
                 for (let i = 0; i < 5; i++) {
                     document.getElementById('resultstable_artists').innerHTML += `<tr><td><img width="80%" src="${result['artists']['items'][i]['images'][0]['url']}" alt="picture of ${result['artists']['items'][i]["name"]}"></td><td>${result['artists']['items'][i]["name"]}</td><td><button onclick="add_seed(img='${result['artists']['items'][i]['images'][0]['url']}', name='${result['artists']['items'][i]["name"].replace("\'", "\\'")}', type='artist', uri='${result['artists']['items'][i]["uri"]}')" class="btn btn-primary">+</button></td></tr>`
-                    document.getElementById('resultstable_tracks').innerHTML += `<tr><td><img width="80%" src="${result['tracks']['items'][i]['album']['images'][0]['url']}"></td><td>${result['tracks']['items'][i]["name"]}</td><td><button onclick="add_seed(img='${result['tracks']['items'][i]['album']['images'][0]['url']}', name='${result['tracks']['items'][i]["name"].replace("\'", "\\'")}', type='track', uri='${result['tracks']['items'][i]["uri"]}')" class="btn btn-primary">+</button></td></tr>`
+                }
+                for (let i = 0; i < 5; i++) {
+                    document.getElementById('resultstable_tracks').innerHTML += `<tr><td><img width="80%" src="${result['tracks']['items'][i]['album']['images'][0]['url']}"></td><td><a href='#' onclick='track_details("${result['tracks']['items'][i]['id']}", "${result['tracks']['items'][i]['name']}")'>${result['tracks']['items'][i]["name"]}</a> </td><td><button onclick="add_seed(img='${result['tracks']['items'][i]['album']['images'][0]['url']}', name='${result['tracks']['items'][i]["name"].replace("\'", "\\'")}', type='track', uri='${result['tracks']['items'][i]["uri"]}')" class="btn btn-primary">+</button></td></tr>`
 
                 }
             })
+        }
+        function track_details(id, name) {
+            fetch(`https://api.spotify.com/v1/audio-features/${id}`, {
+                headers: {
+                    "Authorization": `Bearer {{int_status.access_token}}`
+                },
+                method: "GET"
+            })
+
+            .then(response => response.json())
+            .then(result => { 
+                results = document.getElementsByClassName('track_details')
+                for(let i = 0; i < results.length; i++) {
+                    results[i].style.display = 'block'
+                }
+                document.getElementById('result_acoustic').value = result['acousticness']
+                document.getElementById('result_danceability').value = result['danceability']
+                document.getElementById('result_energy').value = result['energy']
+                document.getElementById('result_instruments').value = result['instrumentalness']
+                document.getElementById('result_live').value = result['liveness']
+                document.getElementById('result_words').value = result['speechiness']
+                document.getElementById('track_name').innerHTML = name
+                document.getElementById('track_details').style.display = 'block'
+
+
+            }) 
         }
         function add_seed(img, name, type, uri) {
             const next_seed = document.getElementById('next_seed').value;
@@ -107,6 +135,8 @@ Spotify Playlist
                 for (let i = seed_number; i < 4; i++) {
                     console.log(i)
                     document.getElementById(`seed_${i + 1}`).id = `seed_${i}`
+                    document.getElementById(`uri_${i + 1}`).id = `uri_${i}`
+
                 }
                 document.getElementById("seed_tracks").innerHTML += `<tr id='seed_4'><input type="hidden" value="" id="uri_4"></td>`
             } else { //case: removing end track
@@ -151,12 +181,29 @@ Spotify Playlist
             }
             
         }
+        function close_table() {
+            document.getElementById('track_details').style.display = 'none';
+        }
     </script>
     
 <label for="search"><b>Search for artists or tracks: </b></label>  <input type="text" id="search" name="search" autofocus onkeydown="search_spotify()">
+
+
 <div class="flex-container" style="width: 100%;">
     <div><table ><thead><tr><b>Artists</b></tr><tr><td width="20%"></td><td width="70%"></td><td width="10%"></td></tr></thead><tbody id="resultstable_artists"></tbody></table></div>
     <div><table ><thead><tr><b>Tracks</b></tr><tr><td width="20%"></td><td width="70%"></td><td width="10%"></td></tr></thead><tbody id="resultstable_tracks"></tbody></table></div>
+    <div style="display:none;margin-top:5%" id="track_details">
+    <table >
+        <thead><tr><td id="track_name"></td></tr></thead><tbody>
+            <tr class="track_details"><td><label for="acoustic" class="form-label"><small>Acoustic: </small></label> <input disabled type="range" step="0.05" class="form-range" min="0" max="1" id="result_acoustic"></td></tr>
+            <tr class="track_details"><td><label for="danceability" class="form-label"><small>Danceable: </small></label> <input disabled type="range" step="0.05" class="form-range" min="0" max="1" id="result_danceability"></td></tr>
+            <tr class="track_details"><td><label for="energy" class="form-label"><small>Energy: </small></label> <input disabled type="range" step="0.05" class="form-range" min="0" max="1" id="result_energy"></td></tr>
+            <tr class="track_details"><td><label for="instruments" class="form-label"><small>Instruments: </small></label> <input disabled type="range" step="0.05" class="form-range" min="0" max="1" id="result_instruments"></td></tr>
+            <tr class="track_details"><td><label for="live" class="form-label"><small>Live Performance: </small></label> <input disabled type="range" step="0.05" class="form-range" min="0" max="1" id="result_live"></td></tr>
+            <tr class="track_details"><td><label for="words" class="form-label"><small>Words: </small></label> <input disabled type="range" step="0.05" class="form-range" min="0" max="0.66" id="result_words"></td></tr>
+            <tr class="track_details"><td><button class='btn btn-primary' onclick="close_table()">Close</button></td></tr>
+        </tbody></table>
+</div>
     <div><table id="attributes"><thead><tr><b>Attributes</b></tr></thead><tbody style="font-size: 12px;size: 12px;">
         <br><tr><label for="acoustic" class="form-label"><small>Acoustic: </small></label> <input value="0.3" type="range" step="0.05" class="form-range" min="0" max="1" id="acoustic"></tr>
         <br><tr><label for="danceability" class="form-label"><small>Danceable: </small></label> <input value="0.8" type="range" step="0.05" class="form-range" min="0" max="1" id="danceability"></tr>
@@ -167,6 +214,8 @@ Spotify Playlist
     </tbody></table></div>
   </div>
 <div>
+
+
     <hr>
     <input type="hidden" value="0" id="next_seed">
     <div><table ><thead><tr><b>Selected Tracks and Artists</b></tr><tr><td width="20%"></td><td width="60%"></td><td width="10%"></td><td width="10%"></td></tr></thead><tbody id="seed_tracks">
