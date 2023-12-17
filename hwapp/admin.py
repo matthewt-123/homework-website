@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Day, Class, Homework, Preferences, Timezone, IcsLink, EmailTemplate, IcsId, AllAuth
+from .models import User, Day, Class, Homework, Preferences, Timezone, IcsLink, EmailTemplate, IcsId, AllAuth, FileBin, PasteBin
 from django.contrib.admin.models import LogEntry
 
 # Register your models here.
@@ -35,3 +35,5 @@ admin.site.register(EmailTemplate)
 admin.site.register(IcsId)
 admin.site.register(AllAuth)
 admin.site.register(LogEntry)
+admin.site.register(PasteBin)
+admin.site.register(FileBin)

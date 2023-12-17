@@ -1,16 +1,39 @@
 {% extends "hwapp/layout.html" %}
 {% load static %}
 {% block body %}
-<div>
-    {{p.content}}
-</div>
+<table style="width:100%">
+    <tr>
+        <td style="width:5%"></td>
+        <td style="width:5%">
+            Copy <a onclick="copyText('content')" style="font-size:24px" class="fa" title="Click to Copy">&#xf0c5;</i>
+        </td>
+        <td style="width:90%">
+            <input id="content" readonly disabled value="{{p.content}}" style="width: 100%;"> 
+
+        </td>
+    </tr>
+</table>
+<a href="{{p.content}}">{{p.content}}</a>
 <hr>
 <form action="/pastebin" class="indented add_hw_form" method='POST'>
     {% csrf_token %}
     <textarea style="height:100%;width:100%" name="content" id="content"></textarea>
     <button class="btn btn-primary">Submit</button>
 </form>
+<script>
+    function copyText(identifier) {
+  // Get the text field
+  var copyText = document.getElementById(identifier);
 
+  // Select the text field
+  copyText.select();
+  copyText.setSelectionRange(0, 99999); // For mobile devices
+
+   // Copy the text inside the text field
+  navigator.clipboard.writeText(copyText.value);
+
+}
+    </script>
 
 
 {% endblock %}

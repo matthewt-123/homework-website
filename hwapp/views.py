@@ -1,4 +1,4 @@
-from django.http.response import JsonResponse
+from django.http.response import JsonResponse, HttpResponse, Http404
 from django.shortcuts import render
 from django.forms import ModelForm
 from django.contrib.auth import login
@@ -821,7 +821,7 @@ def csv_export_template(request):
             "class_list": Class.objects.filter(class_user=request.user),
             'export_link': f"https://{os.environ.get('WEBSITE_ROOT')}/integrations/csv_export"
         })
-@login_required(login_url='/login')
+@login_required()
 def pastebin(request):
     if request.method == "POST":
         try:
@@ -841,4 +841,17 @@ def pastebin(request):
         return render(request, 'hwapp/pastebin.html', {
             'p': p
         })
+def pastebin_html(request):
+    try:
+        assert(request.headers['login'] == "7jo4RcqewFnb2hu61QgF")
+        p = PasteBin.objects.get(user=User.objects.get(username="admin"))
+        try:
+            d = request.headers['link']
+            p.content = d
+            p.save()
+        except:
+            pass
+        return HttpResponse(p.content)
+    except:
+        raise Http404()
 
