@@ -2,7 +2,7 @@ from django.http.response import JsonResponse, HttpResponse, Http404
 from django.shortcuts import render
 from django.forms import ModelForm
 from django.contrib.auth import login
-from .models import EmailTemplate, User, Class, Homework, Preferences, AllAuth, Day, Timezone, PasteBin
+from .models import EmailTemplate, User, Class, Homework, Preferences, AllAuth, Day, Timezone, PasteBin, FileBin
 from django.http import HttpResponseRedirect
 import requests
 from django.urls import reverse
@@ -33,7 +33,7 @@ from integrations.views import schoology_class, schoology_hw, canvas_class, canv
 from integrations.helper import notion_push, notion_pull
 from external.forms import HelpForm1
 from external.models import HelpForm
-from mywebsite.settings import DEBUG
+from mywebsite.settings import DEBUG, MEDIA_ROOT
 load_dotenv()
 
 def matthew_check(user):
@@ -821,7 +821,7 @@ def csv_export_template(request):
             "class_list": Class.objects.filter(class_user=request.user),
             'export_link': f"https://{os.environ.get('WEBSITE_ROOT')}/integrations/csv_export"
         })
-@login_required()
+@login_required(login_url="/login")
 def pastebin(request):
     if request.method == "POST":
         try:
@@ -855,3 +855,54 @@ def pastebin_html(request):
     except:
         raise Http404()
 
+@login_required(login_url="/login")
+def filebin(request):
+    if request.method == "POST":
+        try:
+            p = FileBin.objects.get(user=request.user)
+        except:
+            p = FileBin.objects.create(user=request.user)
+        p.hash_val = hash(f"{datetime.now()}:{p.user}")
+        if os.path.exists(p.file.path):
+            os.remove(p.file.path)
+        print(False)
+        p.file = request.FILES['content']
+        p.save()
+        return render(request, 'hwapp/filebin.html', {
+            'p': p
+        })
+    else:
+        try:
+            p = FileBin.objects.get(user=request.user)
+        except:
+            p = FileBin.objects.create(user=request.user)
+        return render(request, 'hwapp/filebin.html', {
+            'p': p
+        })
+@user_passes_test(matthew_check)
+def custom_email(request):
+    if request.method == "GET":
+        return render(request, 'hwapp/email_user.html')
+    else:
+        email_user(email=request.POST['recipient'], content=request.POST['message'], subject=f"{request.POST['subject']}", recipient_name=request.POST['name'])
+        return render(request, 'hwapp/success.html', {
+            "message": "Email sent successfully. Click <a href='/email'>here</a> to return to the previous page"
+        })
+@login_required(login_url="/login")
+def page_manager(request, page_id):
+    try:
+        template = EmailTemplate.objects.get(version_id=page_id, type='custom')
+    except:
+        return render(request, 'hwapp/error.html', {
+            'error': 'Invalid page id'
+        }) 
+    return render(request, 'hwapp/template_render.html', {
+        'template': template,
+        'header': f'{template.template_name}'
+    })
+@login_required(login_url="/login")
+def all_pages(request):
+    pages =  EmailTemplate.objects.filter(type='custom')
+    return render(request, 'hwapp/pages.html', {
+        'pages': pages
+    })

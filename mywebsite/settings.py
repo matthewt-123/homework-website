@@ -24,7 +24,7 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-VERSION = "16"
+VERSION = "17"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -33,7 +33,7 @@ VERSION = "16"
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 if DEBUG:
     sentry_sdk.init(
         dsn="https://86f8b9a59c8d4407a18c0574fea5781e@o1217115.ingest.sentry.io/6359235",
@@ -234,5 +234,5 @@ SOCIALACCOUNT_PROVIDERS = {
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
-MEDIA_ROOT = "/var/www/matthewtsai.tech/media/"
+MEDIA_ROOT = "/var/www/html/media/"
 MEDIA_URL = "/media/"

@@ -14,7 +14,7 @@
 <hr>
 <form method="post" action="{% url 'helpformview' helpform.id %}">
     {% csrf_token %}
-    <label for='subject'>Subject: </label><input style='width:80%;font-size: ;' type="text" id="subject" name="subject">
+    <label for='subject'>Subject: </label><input style='width:80%;' type="text" id="subject" name="subject">
 
     <textarea cols='100' class="myeditablediv" id="message" name='message'></textarea>
 <button class='btn btn-primary'>Submit</button>

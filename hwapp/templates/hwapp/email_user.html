@@ -1,0 +1,59 @@
+{% extends "hwapp/layout.html" %}
+
+{% block body %}
+{% if message %}
+<div class="alert alert-success" role="alert">
+    {{message}}    
+    </div>
+{% endif %}
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/ui/trumbowyg.min.css">
+  
+</head>
+<h1>Replying to {{helpform.first_name}} {{helpform.last_name}}</h1>
+<hr>
+<form method="post" action="{% url 'email' %}">
+    {% csrf_token %}
+    <table style="width:80%;margin-left:10%">
+        <tr>
+          <td width="20%">
+    <label for='subject'>Recipient Email: </label><br>
+          </td>  
+          <td width="80%">
+            <input style='width:100%;' type="text" id="subject" name="recipient">
+          </td>
+        </tr>
+        <tr>
+            <td>
+                <label for='subject'>Recipient Name: </label>
+            </td>
+            <td>
+                <input style='width:100%;' type="text" id="subject" name="name"><br>
+
+            </td>
+        </tr>
+        <tr>
+            <td><label for='subject'>Subject: </label></td>
+            <td>
+                <input style='width:100%;' type="text" id="subject" name="subject"><br>
+
+            </td>
+        </tr>
+    </table>
+
+
+    <textarea cols='100' class="myeditablediv" id="message" name='message'></textarea>
+<button class='btn btn-primary'>Submit</button>
+  </form>
+<hr>
+<div>
+
+
+
+{% endblock %}
+{% block footer %}<script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/trumbowyg.min.js"></script>
+<script>
+
+    $('.myeditablediv').trumbowyg()
+
+</script>{% endblock %}

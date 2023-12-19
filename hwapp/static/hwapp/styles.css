@@ -210,7 +210,7 @@ table tr td {
 .nav_item:hover {
   background: lightgray;
 }
-#settings_dropdown {
+.dropdown_css {
   z-index: 999;
   display: none;
   position: absolute;
@@ -223,20 +223,8 @@ table tr td {
   font-size: 18px;
   font-weight:normal;
   border-radius: 1%;
-}
-#admin_dropdown {
-  z-index: 999;
-  display: none;
-  position: absolute;
-  background-color: white;
-  height: fit-content;
-  width: fit-content;
-  border: 0.1px solid lightgray;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  text-align: center;
-  font-size: 18px;
-  font-weight:normal;
-  border-radius: 1%;
+  margin-left:1%;
+  width:8%
 }
 .ics_form {
   margin-top:5%;

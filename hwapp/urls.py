@@ -37,7 +37,11 @@ urlpatterns = [
     path('helpformlist', views.helpformlist),
     path('csv_export', views.csv_export_template, name="csv_export_template"),
     path('pastebin', views.pastebin, name="pastebin"),
-    path('pastebin_html', views.pastebin_html, name="pastebin_html")
+    path('pastebin_html', views.pastebin_html, name="pastebin_html"),
+    path('filebin', views.filebin, name="filebin"),
+    path('email', views.custom_email, name="email"),
+    path('page/<int:page_id>', views.page_manager, name='page_manager'),
+    path('pages', views.all_pages, name='all_pages'),
 
     #path('login_as', views.login_as)
 ]

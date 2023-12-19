@@ -79,8 +79,9 @@ class PasteBin(models.Model):
     content = models.TextField(default="", blank="") 
 def user_directory_path(instance, filename): 
   
-    # file will be uploaded to MEDIA_ROOT / user_<id>/<filename> 
+    # file will be uploaded to MEDIA_ROOT / user_<id>/<filename>
     return 'uploads/user_{0}/{1}'.format(instance.user.id, filename) 
 class FileBin(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     file = models.FileField(upload_to=user_directory_path) 
+    hash_val = models.CharField(max_length=128, )
