@@ -16,4 +16,15 @@
         </li>
     {% endfor %}
 </ul>
+{% if user.is_superuser %}
+<hr>
+<a href="{% url 'email_template_editor' %}?type=custom" class="btn btn-primary">Edit</a>
+{% endif %}
+{% endblock %}
+{% block footer %}
+<style>
+li::marker {
+    font-size: 1.5rem;
+}
+</style>
 {% endblock %}

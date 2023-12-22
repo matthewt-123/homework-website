@@ -14,118 +14,9 @@
 <div class="alert alert-primary">This is the development site</div>
 {% endif %}
 
-<script>
 
-    document.addEventListener('DOMContentLoaded', () => {
-        row_id = 0
-        document.getElementById('non_functional_form').addEventListener('submit', () => {
-            fetch(`/addhw`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
-            },
-            credentials: "same-origin",
-            body: JSON.stringify({
-                hw_class: document.getElementById('hw_class').value,
-                hw_title: document.getElementById('hw_title').value,
-                due_date: `${document.getElementById('due_date').value}`,
-            })
-        })
-        .then(response => response.json())
-        .then(result => {
-            if(result['status'] == 400) {
-                /* show error message if error*/
-                const alert = document.getElementById('error_message')
-                alert.innerHTML = result['message']
-                alert.style.display='block'
-
-                /* hide success message if any */
-                document.getElementById('alert').style.display='none'
-            } else {
-                /* show success message if success*/
-                const alert = document.getElementById('alert');
-                alert.innerHTML = result['message'];
-                alert.style.display='block';
-
-                /* hide any error messages*/
-                document.getElementById('error_message').style.display='none';
-
-                /* add new row to end of table */
-                /* add new empty row to end of table */
-                empty = document.getElementById(`new_hw_${row_id}`);
-                table = document.getElementById('incomplete_table');
-
-
-
-                /* update link and innerHTML */
-                var new_class = document.getElementById(`new_hw_class_${row_id}`);
-                new_class.innerHTML = result['class_name'] ;
-                new_class.href = `/edit_hw/${result['hw_id']}`;
-                
-
-                var new_hw_title = document.getElementById(`new_hw_title_${row_id}`);
-                new_hw_title.innerHTML = document.getElementById('hw_title').value;
-                new_hw_title.href = `/edit_hw/${result['hw_id']}`;
-
-                var new_due_date = document.getElementById(`new_due_date_${row_id}`);
-                new_due_date.innerHTML = result['formatted_date'];
-                new_due_date.href = `/edit_hw/${result['hw_id']}`;
-
-                
-                /*increment id values*/
-                table.innerHTML += `<tr id="new_hw_${row_id + 1}" class='index'> <td></td> <td><a id='new_hw_title_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_hw_class_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_due_date_${row_id + 1}' class='new_hw_link'></a></td> <td id="checkbox_${row_id + 1}" style='display:none;'> <form action='/' method="POST" class="hwform" > {% csrf_token %} <input type='hidden' class='completed' name='hw_id'> </form></td> </tr>`;
-
-                /* show new checkbox */
-                document.getElementById(`checkbox_${row_id}`).style.display = 'block';
-                
-                /* rename new_hw_rowid to hwentry for checkbox function */
-                document.getElementById(`new_hw_${row_id}`).id = `hwentry_${result['hw_id']}`
-
-                /* increment row ID, create new row with new row ID */
-                row_id++;
-
-                
-                
-                /* clear out fields */
-                document.getElementById('hw_class').value = '';
-                document.getElementById('hw_title').value = '';
-                document.getElementById('due_date').value = '';
-
-                /* autofocus on new row*/
-                document.getElementById('hw_title').focus();
-            }
-        })
-        return false
-    })})
-
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('hw_class').onchange = () => {
-            const class_ins = document.getElementById('hw_class')
-            if(document.getElementById('hw_class').value == 'add_new_class') {
-                window.location.href='https://{{website_root}}/addclass'
-            } else {
-                    fetch(`/getclasstime/${class_ins.value}`, {
-                    method: 'GET',
-                    credentials: 'same-origin',
-                })
-                .then(response=>response.json())
-                .then(result => {
-                    if(result['status'] == 200){
-                        document.getElementById('due_date').value = result['class_time']
-                    } else {
-                        console.log(result['message'])
-                    }
-                })
-            }
-
-        }
-    })
-
-
-</script>
 {% if n_status %}
 <div id="alert" class="alert alert-danger" role="alert">Login for Notion has expired. Please 
-
         <a href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=https%3A%2F%2Fmatthewtsai.tech%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">sign in again.</a><br>  
 </div>
 {% endif %}
@@ -331,7 +222,120 @@
         <a class="dropdown-item" onclick = 'page_size(50)'>50</a>
     </div>
 </div>
+{% endblock %}
 
+{% block footer %}
+
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+        row_id = 0
+        document.getElementById('non_functional_form').addEventListener('submit', () => {
+            fetch(`/addhw`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({
+                hw_class: document.getElementById('hw_class').value,
+                hw_title: document.getElementById('hw_title').value,
+                due_date: `${document.getElementById('due_date').value}`,
+            })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if(result['status'] == 400) {
+                /* show error message if error*/
+                const alert = document.getElementById('error_message')
+                alert.innerHTML = result['message']
+                alert.style.display='block'
+
+                /* hide success message if any */
+                document.getElementById('alert').style.display='none'
+            } else {
+                /* show success message if success*/
+                const alert = document.getElementById('alert');
+                alert.innerHTML = result['message'];
+                alert.style.display='block';
+
+                /* hide any error messages*/
+                document.getElementById('error_message').style.display='none';
+
+                /* add new row to end of table */
+                /* add new empty row to end of table */
+                empty = document.getElementById(`new_hw_${row_id}`);
+                table = document.getElementById('incomplete_table');
+
+
+
+                /* update link and innerHTML */
+                var new_class = document.getElementById(`new_hw_class_${row_id}`);
+                new_class.innerHTML = result['class_name'] ;
+                new_class.href = `/edit_hw/${result['hw_id']}`;
+                
+
+                var new_hw_title = document.getElementById(`new_hw_title_${row_id}`);
+                new_hw_title.innerHTML = document.getElementById('hw_title').value;
+                new_hw_title.href = `/edit_hw/${result['hw_id']}`;
+
+                var new_due_date = document.getElementById(`new_due_date_${row_id}`);
+                new_due_date.innerHTML = result['formatted_date'];
+                new_due_date.href = `/edit_hw/${result['hw_id']}`;
+
+                
+                /*increment id values*/
+                table.innerHTML += `<tr id="new_hw_${row_id + 1}" class='index'> <td></td> <td><a id='new_hw_title_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_hw_class_${row_id + 1}' class='new_hw_link'></a></td> <td><a id='new_due_date_${row_id + 1}' class='new_hw_link'></a></td> <td id="checkbox_${row_id + 1}" style='display:none;'> <form action='/' method="POST" class="hwform" > {% csrf_token %} <input type='hidden' class='completed' name='hw_id'> </form></td> </tr>`;
+
+                /* show new checkbox */
+                document.getElementById(`checkbox_${row_id}`).style.display = 'block';
+                
+                /* rename new_hw_rowid to hwentry for checkbox function */
+                document.getElementById(`new_hw_${row_id}`).id = `hwentry_${result['hw_id']}`
+
+                /* increment row ID, create new row with new row ID */
+                row_id++;
+
+                
+                
+                /* clear out fields */
+                document.getElementById('hw_class').value = '';
+                document.getElementById('hw_title').value = '';
+                document.getElementById('due_date').value = '';
+
+                /* autofocus on new row*/
+                document.getElementById('hw_title').focus();
+            }
+        })
+        return false
+    })})
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('hw_class').onchange = () => {
+            const class_ins = document.getElementById('hw_class')
+            if(document.getElementById('hw_class').value == 'add_new_class') {
+                window.location.href='https://{{website_root}}/addclass'
+            } else {
+                    fetch(`/getclasstime/${class_ins.value}`, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                })
+                .then(response=>response.json())
+                .then(result => {
+                    if(result['status'] == 200){
+                        document.getElementById('due_date').value = result['class_time']
+                    } else {
+                        console.log(result['message'])
+                    }
+                })
+            }
+
+        }
+    })
+
+
+</script>
 <script>
 const urlParams = new URLSearchParams(window.location.search)
 if(urlParams.get('page_size') == null) {
@@ -386,8 +390,5 @@ function reset() {
     url.search = ''
     window.location.href=url   
 }
-
-
 </script>
-
 {% endblock %}

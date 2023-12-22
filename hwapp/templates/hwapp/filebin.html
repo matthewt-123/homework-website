@@ -1,15 +1,16 @@
 {% extends "hwapp/layout.html" %}
 {% load static %}
 {% block body %}
-
-<a href="{{p.file.url}}">{{p.file.name}}</a>
-
-<hr>
-<form action="/filebin" class="indented add_hw_form" method='POST' enctype="multipart/form-data">
-    {% csrf_token %}
-    <input style="height:100%;width:100%" name="content" id="content" type="file">
-    <button class="btn btn-primary">Submit</button>
-</form>
-
-
+<div style="margin-left:40%">
+    <a href="{{p.file.url}}">{{name}}</a> | 
+    <a href="{{p.file.url}}" download="{{name}}" class="btn btn-primary">Download</a>
+</div>   
+    <hr>
+    <div style="margin-left:40%">
+        <form action="/filebin" class="indented add_hw_form" method='POST' enctype="multipart/form-data">
+            {% csrf_token %}
+            <input style="height:100%;width:100%" name="content" id="content" type="file"><br><br>
+            <button class="btn btn-primary">Submit</button>
+        </form>
+    </div>
 {% endblock %}

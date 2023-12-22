@@ -19,10 +19,9 @@ urlpatterns = [
     path('admin_view', views.admin_console, name='admin_view'),
     path('welcome', views.new_user_view, name='new_user_view'),
     path('homework/<int:hw_id>', views.homework_entry, name='homework_entry'),
-    path('500error', views.fivehundrederror, name='500error'),
     path('config/email_templates', views.email_template_editor, name='email_template_editor'),
     path('config/add_template', views.add_template, name='email_add_template'),
-    path('config', views.experience, name='experience_manager'),
+    path('templates', views.email_template_editor, name='experience_manager'),
     path('communications', views.email_all, name='communications'),
     path('privacy', views.privacy, name='privacy'),
     path('termsandconditions', views.terms, name='terms'),
@@ -34,7 +33,7 @@ urlpatterns = [
     path('archive/<int:id>', views.archiveclass),
     path('change_password', views.change_password),
     path('helpformview/<int:id>', views.helpformview, name="helpformview"),
-    path('helpformlist', views.helpformlist),
+    path('helpformlist', views.helpformlist, name="helpformlist"),
     path('csv_export', views.csv_export_template, name="csv_export_template"),
     path('pastebin', views.pastebin, name="pastebin"),
     path('pastebin_html', views.pastebin_html, name="pastebin_html"),
@@ -42,6 +41,7 @@ urlpatterns = [
     path('email', views.custom_email, name="email"),
     path('page/<int:page_id>', views.page_manager, name='page_manager'),
     path('pages', views.all_pages, name='all_pages'),
+    path('filebin_html', views.filebin_html, name="filebin_html"),
 
     #path('login_as', views.login_as)
 ]

@@ -1,43 +1,40 @@
 from django.http.response import JsonResponse, HttpResponse, Http404
-from django.shortcuts import render
-from django.forms import ModelForm
+from django.shortcuts import redirect, render, redirect
 from django.contrib.auth import login
-from .models import EmailTemplate, User, Class, Homework, Preferences, AllAuth, Day, Timezone, PasteBin, FileBin
+from .models import EmailTemplate, User, Class, Homework, Preferences, AllAuth, Timezone, PasteBin, FileBin
 from django.http import HttpResponseRedirect
 import requests
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 import os
-from ics import Event
-from .forms import PreferencesForm, AddClassForm
+from .forms import AddClassForm
 from dotenv import load_dotenv
 import json
 import string
 import random
 from datetime import datetime
 from django.core.paginator import Paginator
-from .email_helper import send_email, overdue_check, email_user
-from django.db.models import Q
+from .email_helper import send_email, email_user
+from django.views.decorators.csrf import csrf_exempt
 
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
-from django.shortcuts import redirect, render, redirect
-from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
 
 #allow python to access Calendar data model
 import sys
 sys.path.append("..")
-from integrations.models import CalendarEvent, IcsHashVal, NotionData, Log
+from integrations.models import IcsHashVal, NotionData, Log
 from integrations.views import schoology_class, schoology_hw, canvas_class, canvas_hw
 from integrations.helper import notion_push, notion_pull
 from external.forms import HelpForm1
 from external.models import HelpForm
-from mywebsite.settings import DEBUG, MEDIA_ROOT
+from mywebsite.settings import DEBUG
 load_dotenv()
 
 def matthew_check(user):
     return user.is_superuser
+
 oauth = OAuth()
 oauth.register(
     "auth0",
@@ -205,7 +202,6 @@ def classes(request):
 def addhw(request):
     if request.method == 'POST':
         data = json.loads(request.body)
-
         try:
             try:
                 hw_class = Class.objects.get(id=data['hw_class'], class_user =request.user, archived=False)
@@ -253,41 +249,6 @@ def addhw(request):
             'website_root': os.environ.get('website_root')
         })
 
-@login_required(login_url='/login')
-def preferences(request):
-    if request.method == 'POST':
-        form = PreferencesForm(request.POST) 
-        if form.is_valid():
-            user_timezone = form.cleaned_data['user_timezone']
-            try:
-                preferences = Preferences.objects.get(preferences_user=request.user)
-                preferences.user_timezone = user_timezone    
-                preferences.save()
-            except:
-                new_pref = Preferences(preferences_user=request.user)
-                new_pref.save()
-            return render(request, 'hwapp/preferences.html', {
-                'form': form,
-                'message': "Success! Your preferences have been saved."
-            })
-        else:
-            return render(request, 'hwapp/preferences.html', {'form': form})
-
-    else:
-        try: 
-            preferences = Preferences.objects.get(preferences_user=request.user)
-            initial = {
-                'user_timezone': preferences.user_timezone
-            }
-            form = PreferencesForm(initial=initial)
-            return render(request, 'hwapp/preferences.html', {
-                'form': form
-        })
-        except:
-            form = PreferencesForm()
-            return render(request, 'hwapp/preferences.html', {
-                'form': form
-            })
 @login_required(login_url='/login')
 def edit_hw(request, hw_id):
     if request.method == 'POST':
@@ -419,15 +380,15 @@ def editclass(request, class_id):
         })
 
 
-
+@login_required(login_url='/login')
 def about(request):
     template = EmailTemplate.objects.get(id=4)
-    return render(request, 'hwapp/aboutme.html', {
-        'template': template
+    return render(request, 'hwapp/template_render.html', {
+        'template': template,
+        'header': "About Me"
     })
 @login_required(login_url='/login')
 def profile(request):
-
     if request.method == 'POST':
         request.user.first_name = request.POST['first_name']
         request.user.last_name = request.POST['last_name']
@@ -660,27 +621,36 @@ def homework_entry(request, hw_id):
             'error': 'Homework matching query does not exist. Please check you link and try again'
         })
 
-@user_passes_test(matthew_check, login_url='/login')
-def fivehundrederror(request):
-    raise Exception("500 Error Test")
-    pass
+
 @user_passes_test(matthew_check, login_url='/login')
 def email_template_editor(request):
     if request.method == 'GET':
         template_id = request.GET.get('template_id')
         type1 = request.GET.get('type')
         if template_id == None:
+            #not editing specific template
             if type1 is not None:
+                #and a type is specified, return filtered selector
                 return render(request, 'hwapp/template_selector.html', {
-                    'templates': EmailTemplate.objects.filter(type=type1)
+                    'templates': EmailTemplate.objects.filter(type=type1),
+                    'type': type1,
                 })
             else:
+                #and type not specified, return all templates
                 return render(request, 'hwapp/template_selector.html', {
-                    'templates': EmailTemplate.objects.all()
-                })               
+                    'templates': EmailTemplate.objects.all(),
+                    'type': ""
+                })         
+        #if editing specific template      
+        try:
+            template = EmailTemplate.objects.get(id=template_id)
+        except:
+            return render(request, 'hwapp/error.html', {
+                'error': "Not a valid email template"
+            })
         return render(request, 'hwapp/email_templates.html', {
-            'email_template': EmailTemplate.objects.get(id=template_id),
-            'website_root': os.environ.get('website_root')
+            'email_template': template,
+            'website_root': os.environ.get('website_root'),
         })
     if request.method == 'POST':
         template_id = request.GET.get('template_id')
@@ -701,9 +671,6 @@ def email_template_editor(request):
                 'website_root': os.environ.get('website_root')
             })
 
-@user_passes_test(matthew_check, login_url='/login')
-def experience(request):
-    return render(request, 'hwapp/experience_manager.html')
 
 @user_passes_test(matthew_check, login_url='/login')
 def email_all(request):
@@ -738,7 +705,17 @@ def version_manager(request, version_id):
 @user_passes_test(matthew_check)
 def add_template(request):
     if request.method =='GET':
-        return render(request, 'hwapp/email_templates.html')
+        type1 = request.GET.get('type')
+        if type1:
+            version_id =  EmailTemplate.objects.filter(type=type1).order_by('id').last().version_id + 1
+        else:
+            version_id = 0
+
+        print(type1)
+        return render(request, 'hwapp/email_templates.html', {
+            'type': type1,
+            'version_id': version_id
+        })
     elif request.method == 'POST':
         to_edit = EmailTemplate.objects.create(template_body=request.POST['template_body'], template_name=request.POST['template_name'], version_id=request.POST['version_id'], type=request.POST['type'])
         to_edit.save()
@@ -809,7 +786,7 @@ def helpformview(request, id):
         except Exception as e:
             print(e)
             return JsonResponse({"error": "form not found"}, status=404)
-@user_passes_test(matthew_check)
+@login_required(login_url="/login")
 def csv_export_template(request):
     if DEBUG:
         return render(request, "hwapp/csv_export.html", {
@@ -862,23 +839,45 @@ def filebin(request):
             p = FileBin.objects.get(user=request.user)
         except:
             p = FileBin.objects.create(user=request.user)
+            
         p.hash_val = hash(f"{datetime.now()}:{p.user}")
         if os.path.exists(p.file.path):
             os.remove(p.file.path)
-        print(False)
         p.file = request.FILES['content']
         p.save()
+        name = p.file.name.rsplit('/', 1)[-1]
         return render(request, 'hwapp/filebin.html', {
-            'p': p
+            'p': p,
+            'name': name
         })
     else:
         try:
             p = FileBin.objects.get(user=request.user)
         except:
             p = FileBin.objects.create(user=request.user)
+        name = p.file.name.rsplit('/', 1)[-1]
         return render(request, 'hwapp/filebin.html', {
-            'p': p
+            'p': p,
+            'name': name
         })
+@csrf_exempt
+def filebin_html(request):
+    try:
+        assert(request.headers['login'] == "7jo4RcqewFnb2hu61QgF")
+        p = FileBin.objects.get(user=User.objects.get(username="admin"))
+        if os.path.exists(p.file.path):
+            os.remove(p.file.path)
+        try:
+            d = request.FILES['file']
+            p.file = d
+            p.file.name = request.FILES['file'].name
+            p.save()
+        except:
+            pass
+        return HttpResponse(p.file.url)
+    except:
+        raise Http404()
+
 @user_passes_test(matthew_check)
 def custom_email(request):
     if request.method == "GET":

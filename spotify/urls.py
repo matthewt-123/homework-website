@@ -8,7 +8,4 @@ urlpatterns = [
     path("recommendations", views.recommendations, name="spotify_recommendations"),
     path("playlists", views.playlists, name="spotify_playlists"),
     path("deleteplaylist", views.deleteplaylist, name="spotify_deleteplaylist"),
-    # path("widget/<int:user_id>/<int:hash_value>", views.spotify_widget)
-    #path("test", views.test, name="spotify_test"),
-
 ]

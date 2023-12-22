@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 import sys
 import requests
 import json
-from django.http import QueryDict
 from datetime import datetime
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -19,8 +18,6 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 
 sys.path.append("..")
 from mywebsite.settings import DEBUG
-from integrations.models import IcsHashVal
-from hwapp.models import User
 
 load_dotenv()
 def matthew_check(user):
@@ -212,36 +209,3 @@ def deleteplaylist(request):
         return JsonResponse({"message": "Playlist deleted successfully", "status": 200}, status=200)
     except:
         return JsonResponse({"message": "Playlist not found", "status": 404}, status=404)
-    
-# @xframe_options_exempt
-# def spotify_widget1(request, user_id, hash_value):
-#     try:
-#         user = User.objects.get(id=user_id)
-#         IcsHashVal.objects.get(hash_user=user, hash_val=hash_value)
-#         spotify_auth = SpotifyAuth.objects.get(user=user)
-#     except:
-#         return JsonResponse({"Error": "Not Authorized"}, status=403)
-#     url = "https://api.spotify.com/v1/me/player"
-#     headers = {"Authorization": f"Bearer {SpotifyAuth.objects.get(user=request.user).access_token}"}
-#     response = requests.get(url, headers=headers)
-#     if str(response) != "<Response[200]>":
-#         print(expired(request))
-#         response = requests.get(url, headers=headers)
-#     print(response)
-#     data = json.loads(response.text)
-#     return render(request, 'spotify/widget.html', {
-#         "data": data
-#     })
-   
-# @xframe_options_exempt
-# def spotify_widget(request, user_id, hash_value):
-#     try:
-#         user = User.objects.get(id=user_id)
-#         IcsHashVal.objects.get(hash_user=user, hash_val=hash_value)
-#         spotify_auth = SpotifyAuth.objects.get(user=user)
-#     except:
-#         return JsonResponse({"Error": "Not Authorized"}, status=403)
-#     expired(request)
-#     return render(request, 'spotify/widget_sdk.html', {
-#         "access_token": spotify_auth.access_token
-#     })

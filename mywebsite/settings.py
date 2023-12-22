@@ -33,7 +33,7 @@ VERSION = "17"
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 if DEBUG:
     sentry_sdk.init(
         dsn="https://86f8b9a59c8d4407a18c0574fea5781e@o1217115.ingest.sentry.io/6359235",
@@ -236,3 +236,5 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 
 MEDIA_ROOT = "/var/www/html/media/"
 MEDIA_URL = "/media/"
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20971520

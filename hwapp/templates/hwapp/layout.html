@@ -5,17 +5,17 @@
 <meta name='viewport' content="width=device-width, initial-scale=1">
 <html lang="en">
     <head>
+
         <title>{% block title %}Homework App{% endblock %}</title>
         <link rel='icon' type="image/png" href="{% static 'hwapp/favicon.png' %}">
 
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name='keywords' content="Homework, Task Manager, To Do">
         <meta name='description' content='Task Manager for Students'>
         <link href="{% static 'hwapp/styles.css' %}" rel="stylesheet">
-<script data-jsd-embedded data-key="43e73bf1-6ae7-492f-810f-c8cd57fb0fb2" data-base-url="https://jsd-widget.atlassian.com" src="https://jsd-widget.atlassian.com/assets/embed.js"></script>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
+        <script data-jsd-embedded data-key="43e73bf1-6ae7-492f-810f-c8cd57fb0fb2" data-base-url="https://jsd-widget.atlassian.com" src="https://jsd-widget.atlassian.com/assets/embed.js"></script>
         {% block javascript %}{% endblock %}
     </head>
     <body>
@@ -66,18 +66,18 @@
                     </div>
                     </td>
                     <!-- Settings -->
-                    <td width=10% id="settings_all" style="font-weight:bold;text-align: center;" class="nav-item" >
+                    <td width=15% id="settings_all" style="font-weight:bold;text-align: center;" class="nav-item" >
                         <div id="settings_all" class="settings_all">
-                        <a class="nav-link settings_all" href = "#">Settings</a>
-                        <div id="settings_all_dropdown" class="setting_all dropdown_css" style="width:10%;margin-left:0%">
+                        <a class="nav-link settings_all" href = "#">My Settings</a>
+                        <div id="settings_all_dropdown" class="setting_all dropdown_css" style="width:13%;">
                             <a href="{% url 'profile' %}" style="text-decoration: none;"><div class="nav_item">
                                 Profile
                             </div></a>
-                            <a href="{% url 'about' %}" style="text-decoration: none;"><div class="nav_item">
-                                &nbsp About This Website &nbsp
+                            <a href="{% url 'about' %}" style="text-decoration: none;text-align: center;"><div class="nav_item">
+                                About This Website
                             </div></a>         
-                            <a href="{% url 'csv_export_template' %}" style="text-decoration: none;"><div class="nav_item">
-                                &nbsp Export Homework &nbsp
+                            <a href="{% url 'csv_export_template' %}" style="text-decoration: none; text-align: center;"><div class="nav_item">
+                                Export Homework
                             </div></a> 
                             <a href="{% url 'logout' %}" style="text-decoration: none;"><div class="nav_item">
                                 &nbsp Logout &nbsp
@@ -87,10 +87,10 @@
                     </td>
                     {% if user.is_superuser %}
                     <!-- Collections -->
-                    <td width='10%' style="font-weight:bold;text-align: center;" class="nav-item" >
+                    <td width='13%' style="font-weight:bold;text-align: center;" class="nav-item" >
                         <div id="collection_all" class="collection_all">
                             <a class="nav-link collection_all" href = "#">My Collection</a>
-                            <div id="collection_all_dropdown" class="collection_all dropdown_css">
+                            <div id="collection_all_dropdown" class="collection_all dropdown_css" style="width:11%">
                                 <a href="{% url 'pastebin' %}" style="text-decoration: none;"><div class="nav_item">
                                     &nbsp Pastebin &nbsp
                                 </div></a>
@@ -104,12 +104,12 @@
                         </div>
                     </td>
                     <!-- Admin Tab -->
-                    <td width='10%' style="font-weight:bold;text-align: center;" class="nav-item" >
+                    <td width='13%' style="font-weight:bold;text-align: center;" class="nav-item" >
                         <div id="admin_all" class="admin_all"x>
                             <a class="nav-link admin_all" href = "#">Administration</a>
-                            <div id="admin_all_dropdown" class="admin_all dropdown_css">
-                                <a href="/admin" style="text-decoration: none;"><div class="nav_item">
-                                    &nbsp Admin Console &nbsp
+                            <div id="admin_all_dropdown" class="admin_all dropdown_css" style="width:11%">
+                                <a href="/admin" style="text-decoration: none;text-align: center;"><div class="nav_item">
+                                    Admin Console
                                 </div></a>
                                 <a href="/admin_view" style="text-decoration: none;"><div class="nav_item">
                                     &nbsp Admin View &nbsp
@@ -118,9 +118,9 @@
                         </div>
                     </td>
 
-                    <td width='20%' style='display: none;'></td>
+                    <td width='19%' style='display: none;'></td>
                     {% else %}
-                    <td width='40%' style='display: none;'></td>
+                    <td width='35%' style='display: none;'></td>
 
                     {% endif %}
 
@@ -261,18 +261,19 @@
             </tr>
         </table>
         <hr>
-        <div id="content-wrap">
         {% block body %}
         {% endblock %}
     </div>
-        <div id="footer" style='text-align:center;margin:auto' >
+
+    </body>
+    <footer>
+        <div id="content-wrap">
+
+        <div id="footer" style='text-align:center;' >
             <hr>
             <a href="{% url 'terms' %}">Terms and Conditions</a> | <a href="{% url 'privacy' %}">Privacy Policy</a>
         </div>
     </div>
-    </body>
-    <footer>
-
 
         <style>
 #page-container {
@@ -283,16 +284,21 @@
 #content-wrap {
   padding-bottom: 2.5rem;    /* Footer height */
 }
-
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
 #footer {
+margin-top: auto;
   position: absolute;
-  bottom: 0;
   width: 100%;
   height: 2.5rem;            /* Footer height */
 }
         </style>
-              <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
-              <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
         <script src="{% static 'hwapp/java.js' %}"></script>
         <script src="https://kit.fontawesome.com/18cbaa6db1.js" crossorigin="anonymous"></script>
         {% block footer %}{% endblock %}

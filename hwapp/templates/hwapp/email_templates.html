@@ -25,8 +25,8 @@
 <form method="post" action='{% url "email_add_template" %}'>
     {% csrf_token %}
     <label for='template_name'>Template Name: </label><input type="text" id="template_name" name="template_name">
-    <label for="type">Type</label>  <input type="text" name="type" id="type">
-    <label for="version_id">Version ID</label>  <input type="text" name="version_id" id="version_id">
+    <label for="type">Type</label>  <input type="text" name="type" id="type" {% if type %}value="{{type}}" disabled {% endif %}>
+    <label for="version_id">Version ID</label>  <input type="text" name="version_id" id="version_id" value="{{version_id}}">
 
     <textarea cols='100' class="myeditablediv" id="template_body" name='template_body'></textarea>
 <button class='btn btn-primary'>Submit</button>
@@ -35,7 +35,11 @@
 
 
 {% endblock %}
-{% block footer %}<script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/trumbowyg.min.js"></script>
+{% block footer %}
+<!--jQuery-->
+<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/trumbowyg.min.js"></script>
 <script>
 
     $('.myeditablediv').trumbowyg()

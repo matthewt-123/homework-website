@@ -45,9 +45,13 @@
 
 
 {% endblock %}
-{% block footer %}<script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/trumbowyg.min.js"></script>
+{% block footer %}
+<!--jQuery-->
+<script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/trumbowyg.min.js"></script>
 <script>
 
     $('.myeditablediv').trumbowyg()
 
-</script>{% endblock %}
+</script>
+{% endblock %}

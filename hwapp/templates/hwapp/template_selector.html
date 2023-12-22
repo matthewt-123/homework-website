@@ -1,37 +1,54 @@
 {% extends "hwapp/layout.html" %}
-
+{% block title %}Template Selector{% endblock %}
 {% block body %}
 {% if message %}
 <div class="alert alert-danger" role="alert">
     {{message}}    
     </div>
 {% endif %}
+<table id="Templates">
+    <thead>
+        <tr>
+            <td width="10%"></td>
+            <td width="70%"><b>Name</b></td>
+            <td width="10%" class="dropdown" >
+                <button class="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <strong style="text-align: left;margin-left:-50%">Type</strong> 
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item class_filter_items" href='/templates' >All Templates</a>
+                    <a class="dropdown-item class_filter_items" href='/templates?type=email' >Email Manager</a>
+                    <a class="dropdown-item class_filter_items" href='/templates?type=custom' >Page Manager</a>
+                    <a class="dropdown-item class_filter_items" href='/templates?type=version' >Version Manager</a>
 
-<ol>
-    {% for template in templates %}
-        <li>
-            <a href='{% url "email_template_editor" %}?template_id={{template.id }}'>
-                {{ template.template_name }}
-            </a>
-        </li>
-    {% endfor %}
-</ol>
+                </div>
+              </div>
+
+            <td width="10%"><b>Version</b></td>
+            <td width="10%"></td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for template in templates %}
+        <tr>
+            <td></td>
+            <td>
+                <a href='{% url "email_template_editor" %}?template_id={{template.id }}'>
+                    {{ template.template_name }}
+                </a>
+            </td>
+            <td>
+                {{ template.type }}
+            </td>
+            <td>
+                {{ template.version_id }}
+            </td>
+            <td></td>
+        </tr>
+    {% endfor %}       
+    </tbody>
+</table>
 <hr>
-<a href="{% url 'email_add_template' %}" class="btn btn-primary">Add New Template</a>
-<h3>Available Variables: </h3>
-<ul>
-    <li>
-        $$exp_time
-    </li>
-    <li>
-        $$pw_reset_link
-    </li>
-    <li>
-        $$website_root
-    </li>
-    <li>
-        $$homework
-    </li>
-</ul>
+<a href="{% url 'email_add_template' %}?type={{type}}" class="btn btn-primary">Add New Template</a>
 
 {% endblock %}

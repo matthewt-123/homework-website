@@ -1,98 +1,68 @@
 {% extends "hwapp/layout.html" %}
+{% load static %}
 {% block title %}
 Admin Console
 {% endblock %}
 {% block body %}
-{% if user.is_superuser %}
+<div id="alert" class='alert alert-success' style="display: none;"></div>
+
+<div style="width: 20%; float: left;" class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+    <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" onclick="toggle('all')" aria-selected="true">All</a>
+    <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-Bookmarks" role="tab" aria-controls="v-pills-home" onclick="toggle('bookmarks')" aria-selected="false">Bookmarks</a>
+    <a class="nav-link" id="v-pills-messages-tab" data-toggle="pill" href="{% url 'experience_manager' %}" onclick = "window.location.href = ('{% url 'experience_manager' %}')" role="tab" aria-controls="v-pills-home" aria-selected="false">Experience Manager</a>
+    <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-Helpers" role="tab" aria-controls="v-pills-home" onclick="toggle('helpers')" aria-selected="false">Helpers</a>
+    <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-Integrations" role="tab" aria-controls="v-pills-home" onclick="toggle('integrations')" aria-selected="false">Integrations</a>
+
+  </div>
+  <div style="width: 80%;float:left;margin-left: 0%;height: 100%;" class="tab-content" id="v-pills-tabContent">
+    <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+        <div class="list-group">
+            <a href="#" onclick="admin(function1='canvas_class')" class="list-group-item list-group-item-action integrations all"><i class="fa-solid fa-people-roof"></i>&nbsp;Canvas Class Refresh</a>
+            <a href="#" onclick="admin(function1='canvas_hw')" class="list-group-item list-group-item-action integrations all"><i class="fa-solid fa-note-sticky"></i>&nbsp; Canvas HW Refresh</a>
+            <a href='cronitor.io/app/?env=production' class="list-group-item list-group-item-action bookmarks all"><i class="fa-brands fa-watchman-monitoring"></i>&nbsp;Cronitor</a>
+            <a href="{% url 'experience_manager' %}" class="list-group-item list-group-item-action all"><i class="fa-solid fa-camera-retro"></i>&nbsp;Experience</a>
+            <a href="{% url 'filebin' %}" class="list-group-item list-group-item-action helpers all"><i class="fa-solid fa-folder"></i>&nbsp;Filebin</a>
+            <a href="{% url 'helpformlist' %}" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-question"></i>&nbsp;Help Forms</a>
+            <a href="{% url 'integration_log' %}" class="list-group-item list-group-item-action integrations all"><i class="fa-regular fa-floppy-disk"></i>&nbsp;Integration Log</a>
+            <a target="_blank" href="https://matthew-homeworkapp.atlassian.net/jira/servicedesk/projects/IP/queues/custom/15" class="list-group-item list-group-item-action bookmarks all"><i class="fa-solid fa-bug"></i>&nbsp;ITSM Console</a>
+            <a target="_blank" href="https://matthew-homeworkapp.atlassian.net/jira/software/projects/HOM/boards/1" class="list-group-item list-group-item-action bookmarks"><i class="fa-solid fa-circle-exclamation"></i>&nbsp;Jira Board</a>
+            <a href="#" onclick="admin(function1='notion_pull')" class="list-group-item list-group-item-action integrations all"><i class="fa-solid fa-diagram-project"></i>&nbsp;Notion</a>
+            <a href="{% url 'pastebin' %}" class="list-group-item list-group-item-action helpers all"><i class="fa-regular fa-paste"></i>&nbsp;Pastebin</a>
+            <a href="#" onclick="admin(function1='schoology_class')" class="list-group-item list-group-item-action integrations all"><i class="fa-solid fa-people-roof"></i>&nbsp;Schoology Class Refresh</a>
+            <a href="#" onclick="admin(function1='schoology_hw')" class="list-group-item list-group-item-action integrations all"><i class="fa-solid fa-note-sticky"></i>&nbsp; Schoology HW Refresh</a>
+            <a href="#" onclick="confirm_refresh()" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-paper-plane"></i>&nbsp; Send Email</a>
+            <a target="_blank" href="https://sentry.io/organizations/homework-app/issues/?project=6359235" class="list-group-item list-group-item-action bookmarks all"><i class="fa-brands fa-watchman-monitoring"></i>&nbsp;Sentry</a>
+
+          </div>
+    </div>
+  </div>
+{% csrf_token %}
+
+{% endblock %}
+
+{% block footer %}
+<style>
+    tr:nth-child(even) {
+  background-color: white;
+}
+</style>
+<script src="{% static 'hwapp/admin_console.js' %}"></script>
 <script>
-    function confirm_refresh() {
-        var result = confirm("Would you like to send an email to all users?");
-            if (result == true) {
-                doc = admin(function1="refresh");
-            } else {
-                alert("Action Cancelled");
-            }
-    };
-    function admin(function1) {
-        fetch(`/admin_view`, {
-            method: 'POST',
-            headers: {
-                    'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
-                },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-                'function': `${function1}`
-            })
-        })
-        .then(response=>response.json())
-        .then(result => {
-            if(result['status'] == 200) {
-                const alert = document.getElementById('alert')
-                alert.innerHTML = `${function1} completed successfully`
-                alert.style.display='block'
-            }
-        })
+    function toggle(box) {
+        const allDivs = document.getElementsByClassName("all")
+        const selectedDivs = document.getElementsByClassName(box)
+        if (box == "all") {
+            for (let i = 0; i < allDivs.length; i++) {
+                allDivs[i].style.display = 'block'
+            } 
+        } else {
+            for (let i = 0; i < allDivs.length; i++) {
+                allDivs[i].style.display = 'none'
+            }           
+            for (let i = 0; i < selectedDivs.length; i++) {
+                selectedDivs[i].style.display = 'block'
+            }           
+        }
     }
 </script>
-{% csrf_token %}
-<div id="alert" class='alert alert-success' style="display: none;"></div>
-<div class='flex-container' style='display:flex;height:100px;align-items: space-around;justify-content: center;flex-direction: row;gap:5%;flex-wrap: wrap;'>
-    <div>
-        <button class='btn btn-primary' onclick="confirm_refresh()">Send Email</button>
-    </div>
-    <div>
-        <a class='btn btn-primary' target="_blank" href='https://matthew-homeworkapp.atlassian.net/jira/software/projects/HOM/boards/1'>Jira Board</a>
-    </div>
-    <div>
-        <a class='btn btn-primary' target="_blank" href='https://matthew-homeworkapp.atlassian.net/jira/servicedesk/projects/IP/queues/custom/15'>
-            ITSM Console
-        </a>
-    </div>
-    <div>
-        <button class='btn btn-primary' onclick='window.location.href="/500error"'>Test 500</button>
-    </div>
-    <div>
-        <a class='btn btn-primary' href='/config'>Experience Manager</a>
-    </div>
-    <div>
-        <a class='btn btn-primary' href='https://sentry.io/organizations/homework-app/issues/?project=6359235'>Sentry</a>
-    </div>
-    <div>
-        <a class='btn btn-primary' href='cronitor.io/app/?env=production'>Cronitor</a>
-    </div>    
-    <div>
-        <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='schoology_class')">Schoology Classes</a>
-    </div>
-    <div>
-        <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='schoology_hw')">Schoology HW</a>
-    </div>
-    <div>
-        <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='canvas_class')">Canvas Classes</a>
-    </div>
-    <div>
-        <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='canvas_hw')">Canvas HW</a>
-    </div>
-    <div>
-        <a class='btn btn-primary' style ="color: white;" href="/integrations/integration_log">Integration Log</a>
-    </div>
-    <div>
-        <a class='btn btn-primary' style ="color: white;" onclick="admin(function1='notion_pull')">Notion Pull</a>
-    </div>
-    <div>
-        <a class='btn btn-primary' style ="color: white;" href="/helpformlist">Help Forms</a>
-    </div>
-    <div>
-        <a class='btn btn-primary' style ="color: white;" href="{% url 'admin_log' %}">Admin Log</a>
-    </div>
-    <div>
-        <a class='btn btn-primary' style ="color: white;" href="{% url 'pastebin' %}">Pastebin</a>
-    </div>
-    <div>
-        <a class='btn btn-primary' style ="color: white;" href="{% url 'filebin' %}">Filebin</a>
-    </div>
-</div>
-
-{% else %}
-<div class="alert alert-danger" role="alert">Error: Access Denied</div>
-{% endif %}
 {% endblock %}

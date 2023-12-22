@@ -3,9 +3,6 @@ var validate = function(e) {
     e.value = (t.indexOf(".") >= 0) ? (t.substr(0, t.indexOf(".")) + t.substr(t.indexOf("."), 1)) : t;
     
 }
-
-
-
 $('#add_hw_form').submit(function () {
     return false;
    });
@@ -13,10 +10,6 @@ $('#add_hw_form').submit(function () {
 $('#non_functional_form').submit(function () {
     return false;
    });
-$(document).ready(function() {
-    $('#class_filter').multiselect();
-});
-
 function openNav() {
     document.getElementById("mySidenav").style.width = "250px";
   }
