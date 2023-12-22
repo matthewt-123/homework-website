@@ -269,7 +269,6 @@ def notion_toics(request, user_id, hash_value, tag):
             try:
                 e.name = event['properties']['Name']['title'][0]['plain_text']
                 e.begin = dateparser.parse(event['properties']['Date']['date']['start']) - datetime.timedelta(hours=7) + datetime.timedelta(days=1)
-                print(event['properties']['Date'])
                 if event['properties']['Date']['date']['end']:
                     e.end = dateparser.parse(event['properties']['Date']['date']['start']) - datetime.timedelta(hours=7) + datetime.timedelta(days=1)
                 e.created = datetime.datetime.now()
@@ -567,7 +566,6 @@ def admin_log_ajax(request):
         return_val += "},"
     return_val = return_val[:-1]
     return_val += "}"
-    print(return_val)
     return JsonResponse(return_val, safe=False)
 @user_passes_test(matthew_check)
 def admin_log(request):

@@ -1,11 +1,8 @@
 {% load static %}
-{% load has_group %}
-
 <!DOCTYPE html>
 <meta name='viewport' content="width=device-width, initial-scale=1">
 <html lang="en">
     <head>
-
         <title>{% block title %}Homework App{% endblock %}</title>
         <link rel='icon' type="image/png" href="{% static 'hwapp/favicon.png' %}">
 
@@ -65,6 +62,8 @@
                         </div>
                     </div>
                     </td>
+
+                    {% if user.is_superuser %}
                     <!-- Settings -->
                     <td width=15% id="settings_all" style="font-weight:bold;text-align: center;" class="nav-item" >
                         <div id="settings_all" class="settings_all">
@@ -85,7 +84,6 @@
                         </div>
                     </div>
                     </td>
-                    {% if user.is_superuser %}
                     <!-- Collections -->
                     <td width='13%' style="font-weight:bold;text-align: center;" class="nav-item" >
                         <div id="collection_all" class="collection_all">
@@ -120,6 +118,26 @@
 
                     <td width='19%' style='display: none;'></td>
                     {% else %}
+                    <!-- Settings -->
+                    <td width=15% id="settings_all" style="font-weight:bold;text-align: center" class="nav-item" >
+                        <div id="settings_all"  class="settings_all">
+                        <a class="nav-link settings_all" style="text-align: center;margin-left:-15%" href = "#">My Settings</a>
+                        <div id="settings_all_dropdown" class="setting_all dropdown_css" style="width:13%;">
+                            <a href="{% url 'profile' %}" style="text-decoration: none;"><div class="nav_item">
+                                Profile
+                            </div></a>
+                            <a href="{% url 'about' %}" style="text-decoration: none;text-align: center;"><div class="nav_item">
+                                About This Website
+                            </div></a>         
+                            <a href="{% url 'csv_export_template' %}" style="text-decoration: none; text-align: center;"><div class="nav_item">
+                                Export Homework
+                            </div></a> 
+                            <a href="{% url 'logout' %}" style="text-decoration: none;"><div class="nav_item">
+                                &nbsp Logout &nbsp
+                            </div></a>                    
+                        </div>
+                    </div>
+                    </td>
                     <td width='35%' style='display: none;'></td>
 
                     {% endif %}
@@ -264,16 +282,14 @@
         {% block body %}
         {% endblock %}
     </div>
-
     </body>
     <footer>
         <div id="content-wrap">
-
-        <div id="footer" style='text-align:center;' >
-            <hr>
-            <a href="{% url 'terms' %}">Terms and Conditions</a> | <a href="{% url 'privacy' %}">Privacy Policy</a>
+            <div id="footer" style='text-align:center;' >
+                <hr>
+                <a href="{% url 'terms' %}">Terms and Conditions</a> | <a href="{% url 'privacy' %}">Privacy Policy</a>
+            </div>
         </div>
-    </div>
 
         <style>
 #page-container {
@@ -317,6 +333,5 @@ margin-top: auto;
                 }
             })
         </script>
-
     </footer>
 </html>

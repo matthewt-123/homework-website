@@ -711,7 +711,6 @@ def add_template(request):
         else:
             version_id = 0
 
-        print(type1)
         return render(request, 'hwapp/email_templates.html', {
             'type': type1,
             'version_id': version_id
@@ -761,7 +760,6 @@ def helpformview(request, id):
         helpform = HelpForm.objects.get(id=id, parent_form = None)
         email_history = HelpForm.objects.filter(parent_form=HelpForm.objects.get(id=id))
     except Exception as e:
-        print(e)
         return render(request, 'hwapp/error.html', {
             'error': f'no help form matching id {id} found'
         })
@@ -784,7 +782,6 @@ def helpformview(request, id):
                 'message': f"Message sent successfully. Click <a href='/helpformlist'>here</a> to return to the help form listing or <a href='/helpformview/{helpform.id}'>here</a> to return to your previous page"
             })
         except Exception as e:
-            print(e)
             return JsonResponse({"error": "form not found"}, status=404)
 @login_required(login_url="/login")
 def csv_export_template(request):

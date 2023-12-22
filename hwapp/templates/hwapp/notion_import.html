@@ -5,6 +5,7 @@
 <div id="btn_container" style='text-align:center;margin:auto' >
 
 <h1>Integrate with Notion</h1>
+{% if int_status %}
 {% if int_status.error %}
 <div id="alert" class="alert alert-danger" role="alert">Login for Notion Workspace "{{int_status.workspace_name}}" has expired. Please 
     {% if DEBUG %}
@@ -16,6 +17,7 @@
 
 {% else %}
 <div id="alert" class="alert alert-success" role="alert">Notion Workspace "{{int_status.workspace_name}}" has successfully been integrated with Homework App</div>
+{% endif %}
 {% endif %}
 <h3>WARNING: This will update your database schema. Please follow these exact steps</h3>
 <h6>

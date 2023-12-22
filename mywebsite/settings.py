@@ -33,35 +33,13 @@ VERSION = "17"
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-if DEBUG:
-    sentry_sdk.init(
-        dsn="https://86f8b9a59c8d4407a18c0574fea5781e@o1217115.ingest.sentry.io/6359235",
-        integrations=[DjangoIntegration()],
-
-        #No logging for development
-        traces_sample_rate=0,
-
-        # If you wish to associate users to errors (assuming you are using
-        # django.contrib.auth) you may enable sending PII data.
-        send_default_pii=False,
-        release=f"homework-app-DEVELOPMENT@{VERSION}",
-    )
-else:
-    sentry_sdk.init(
-        dsn="https://86f8b9a59c8d4407a18c0574fea5781e@o1217115.ingest.sentry.io/6359235",
-        integrations=[DjangoIntegration()],
-
-        # Set traces_sample_rate to 1.0 to capture 100%
-        # of transactions for performance monitoring.
-        # We recommend adjusting this value in production.
-        traces_sample_rate=1.0,
-
-        # If you wish to associate users to errors (assuming you are using
-        # django.contrib.auth) you may enable sending PII data.
-        send_default_pii=False,
-        release=f"homework-app@{VERSION}",
-    )    
+DEBUG = True
+sentry_sdk.init(
+    dsn="https://8c2277f2745be76cc3c8f9b1fb3afd3b@o1217115.ingest.sentry.io/4506261170356224",
+    traces_sample_rate=0.0 if DEBUG else 1.0,
+    profiles_sample_rate= 0.0 if DEBUG else 1.0,
+    environment=f"{'development' if DEBUG else 'production'}",
+)
 
 ALLOWED_HOSTS_TYPES = {
     "dev":
@@ -98,7 +76,7 @@ INSTALLED_APPS = [
 ]
 SITE_ID = 1
 
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/login'
 LOGOUT_REDIRECT_URL = '/'
 
 INTERNAL_IPS = ['10.2.0.4']
@@ -141,10 +119,6 @@ WSGI_APPLICATION = 'mywebsite.wsgi.application'
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
-    "dev1": {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(os.path.join(BASE_DIR, "db.sqlite3")),
-    },
     "dev": {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': str(os.path.join(BASE_DIR, "db1.sqlite3")),
@@ -155,12 +129,6 @@ DATABASES = {
     },
 }
 DATABASES['default'] = DATABASES['dev' if DEBUG else 'prod']
-#db_from_env = dj_database_url.config(conn_max_age=600)
-#DATABASES['default'].update(db_from_env)
-
-#old database-sqlite for dev env
-#DATABASES = {
-#    'default': {       'ENGINE': 'django.db.backends.sqlite3','NAME': str(os.path.join(BASE_DIR, "db.sqlite3")),}}
 
 db_from_env = dj_database_url.config(conn_max_age=600)
 DATABASES['default'].update(db_from_env)
