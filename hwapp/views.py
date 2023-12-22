@@ -460,12 +460,18 @@ def profile(request):
             selected = Preferences.objects.get(preferences_user=request.user).user_timezone
         except:
             selected = -1
+        template = EmailTemplate.objects.get(id=4)
+        export_link = f"http{'' if DEBUG else 's'}://{os.environ.get('WEBSITE_ROOT')}/integrations/csv_export"
+        class_list = Class.objects.filter(class_user=request.user)
         return render(request, 'hwapp/profile.html', {
                 'first_name': request.user.first_name,
                 'last_name': request.user.last_name,
                 'email': request.user.email,
                 'selected': selected,
-                'timezones': Timezone.objects.all()
+                'timezones': Timezone.objects.all(),
+                'template': template,
+                'export_link': export_link,
+                'class_list': class_list
             })
 @login_required(login_url='/login')  
 def change_password(request):

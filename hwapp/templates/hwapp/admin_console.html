@@ -9,6 +9,8 @@ Admin Console
 <div style="width: 20%; float: left;" class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
     <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" onclick="toggle('all')" aria-selected="true">All</a>
     <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-Bookmarks" role="tab" aria-controls="v-pills-home" onclick="toggle('bookmarks')" aria-selected="false">Bookmarks</a>
+    <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-Communications" role="tab" aria-controls="v-pills-home" onclick="toggle('communications')" aria-selected="false">Communications</a>
+
     <a class="nav-link" id="v-pills-messages-tab" data-toggle="pill" href="{% url 'experience_manager' %}" onclick = "window.location.href = ('{% url 'experience_manager' %}')" role="tab" aria-controls="v-pills-home" aria-selected="false">Experience Manager</a>
     <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-Helpers" role="tab" aria-controls="v-pills-home" onclick="toggle('helpers')" aria-selected="false">Helpers</a>
     <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-Integrations" role="tab" aria-controls="v-pills-home" onclick="toggle('integrations')" aria-selected="false">Integrations</a>
@@ -25,12 +27,13 @@ Admin Console
             <a href="{% url 'helpformlist' %}" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-question"></i>&nbsp;Help Forms</a>
             <a href="{% url 'integration_log' %}" class="list-group-item list-group-item-action integrations all"><i class="fa-regular fa-floppy-disk"></i>&nbsp;Integration Log</a>
             <a target="_blank" href="https://matthew-homeworkapp.atlassian.net/jira/servicedesk/projects/IP/queues/custom/15" class="list-group-item list-group-item-action bookmarks all"><i class="fa-solid fa-bug"></i>&nbsp;ITSM Console</a>
-            <a target="_blank" href="https://matthew-homeworkapp.atlassian.net/jira/software/projects/HOM/boards/1" class="list-group-item list-group-item-action bookmarks"><i class="fa-solid fa-circle-exclamation"></i>&nbsp;Jira Board</a>
+            <a target="_blank" href="https://matthew-homeworkapp.atlassian.net/jira/software/projects/HOM/boards/1" class="list-group-item list-group-item-action bookmarks all"><i class="fa-solid fa-circle-exclamation"></i>&nbsp;Jira Board</a>
             <a href="#" onclick="admin(function1='notion_pull')" class="list-group-item list-group-item-action integrations all"><i class="fa-solid fa-diagram-project"></i>&nbsp;Notion</a>
             <a href="{% url 'pastebin' %}" class="list-group-item list-group-item-action helpers all"><i class="fa-regular fa-paste"></i>&nbsp;Pastebin</a>
             <a href="#" onclick="admin(function1='schoology_class')" class="list-group-item list-group-item-action integrations all"><i class="fa-solid fa-people-roof"></i>&nbsp;Schoology Class Refresh</a>
             <a href="#" onclick="admin(function1='schoology_hw')" class="list-group-item list-group-item-action integrations all"><i class="fa-solid fa-note-sticky"></i>&nbsp; Schoology HW Refresh</a>
-            <a href="#" onclick="confirm_refresh()" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-paper-plane"></i>&nbsp; Send Email</a>
+            <a href="/email" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-paper-plane"></i>&nbsp; Send Email</a>
+            <a href="#" onclick="confirm_refresh()" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-paper-plane"></i>&nbsp; Send Homework Email</a>
             <a target="_blank" href="https://sentry.io/organizations/homework-app/issues/?project=6359235" class="list-group-item list-group-item-action bookmarks all"><i class="fa-brands fa-watchman-monitoring"></i>&nbsp;Sentry</a>
 
           </div>

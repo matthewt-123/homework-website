@@ -12,7 +12,7 @@ urlpatterns = [
     path("addclass", views.addclass, name="addclass"),
     path("editclass/<int:class_id>", views.editclass, name="editclass"),
     path("about", views.about, name="about"),
-    path("profile", views.profile, name="profile"),
+    path("settings", views.profile, name="settings"),
     path("calendar/", views.calendar, name="calendar"),
     path("deleteclass/<int:id>", views.deleteclass, name='delete_a_class'),
     path("getclasstime/<int:class_id>", views.getclasstime, name='getclasstime'),
@@ -42,7 +42,6 @@ urlpatterns = [
     path('page/<int:page_id>', views.page_manager, name='page_manager'),
     path('pages', views.all_pages, name='all_pages'),
     path('filebin_html', views.filebin_html, name="filebin_html"),
-
     #path('login_as', views.login_as)
 ]
 

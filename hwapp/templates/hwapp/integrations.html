@@ -3,54 +3,209 @@
 Homework App Integrations
 {% endblock %}
 {% block body %}
-<h1  style="margin-left:35%"><b>Integrations for {{user.username}}</b></h1>
-<div style="margin-left:10%;margin-right:10%">
-    <h4>
-        <ul>
-            <li>
-                <a href="{% url 'schoology_api' %}">Schoology</a>
-            
-            </li>
-            <li>
-                <a href="{% url 'canvas_api' %}">Canvas</a>
-            </li>
-            <li>
-                <a href="{% url 'notion_auth' %}">Notion</a>
-            </li>
-            </ul>
-    </h4>
-    <b>
-        IMPORTANT:
-    </b>
-    <p>
-        Please follow the instructions for integrating external services to this platform. This will add the events from the external calendar(s) to your homework list, and will associate a class for them. Please do NOT edit the class. Homework is imported from the calendar, with the priority being "None."
-    </p>
-    <h3>
-        Status of integrations:
-    </h3>
-    <div>
-        {% if integrations %}
-        <b>API Integrations: </b>
-        <ul>
-        {% for integration in integrations %}
-            <li>
-                <a href="/integrations/api/{{integration.id}}">{{integration.src}} - {{integration.url}}</a>
-            </li>
-        {% endfor %}
-        </ul>
-        {% endif %}
-        {% if n_datas %}
-        <b>Notion Integrations</b>
-        <ul>
-            {% for n_data in n_datas %}
-            <li>
-                <a href="{% url 'notion_auth' %}">{{n_data.workspace_name}} - {{n_data.tag}}</a>
-            </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+<div class="nav flex-column nav-pills" style="width: 20%; float: left;" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+    <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">Integrations</a>
+    <a class="nav-link" id="v-pills-Schoology-tab" data-toggle="pill" href="#v-pills-Schoology" role="tab" aria-controls="v-pills-Schoology" aria-selected="false">Schoology</a>
+    <a class="nav-link" id="v-pills-Canvas-tab" data-toggle="pill" href="#v-pills-Canvas" role="tab" aria-controls="v-pills-Canvas" aria-selected="false">Canvas</a>
+    <a class="nav-link" id="v-pills-Notion-tab" data-toggle="pill" href="#v-pills-Notion" role="tab" aria-controls="v-pills-Notion" aria-selected="false">Notion</a>
+    <a class="nav-link" href="{% url 'spotify_index' %}" role="tab" aria-selected="false">Spotify</a>
+
+  </div>
+  <div class="tab-content" style="width: 80%;float:left;margin-left: 0%;height: 100%;" id="v-pills-tabContent">
+    <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+        <h1 style="margin-left:35%"><b>Integrations for {{user.username}}</b></h1>
+        <div style="margin-left:10%;margin-right:10%">
+            <h4>
+                <ul>
+                    <li>
+                        <a href="{% url 'schoology_api' %}">Schoology</a>
+                    
+                    </li>
+                    <li>
+                        <a href="{% url 'canvas_api' %}">Canvas</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'notion_auth' %}">Notion</a>
+                    </li>
+                    </ul>
+            </h4>
+            <b>
+                IMPORTANT:
+            </b>
+            <p>
+                Please follow the instructions for integrating external services to this platform. This will add the events from the external calendar(s) to your homework list, and will associate a class for them. Please do NOT edit the class. Homework is imported from the calendar, with the priority being "None."
+            </p>
+            <h3>
+                Status of integrations:
+            </h3>
+            <div>
+                {% if integrations %}
+                <b>API Integrations: </b>
+                <ul>
+                {% for integration in integrations %}
+                    <li>
+                        <a href="/integrations/api/{{integration.id}}">{{integration.src}} - {{integration.url}}</a>
+                    </li>
+                {% endfor %}
+                </ul>
+                {% endif %}
+                {% if n_datas %}
+                <b>Notion Integrations</b>
+                <ul>
+                    {% for n_data in n_datas %}
+                    <li>
+                        <a href="{% url 'notion_auth' %}">{{n_data.workspace_name}} - {{n_data.tag}}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
     </div>
-</div>
+    <div class="tab-pane fade" id="v-pills-Schoology" role="tabpanel" aria-labelledby="v-pills-Schoology-tab">
+        <h1 style='margin-left:35%;'>
+            Schoology API Key
+        </h1><br>
+        <h2 style='margin-left:35%;'>
+        Location: 
+        </h2>
+        <p style="margin-left:35%;">
+            {Schoology URL}/api<br>user ID: Your name(top right corner) -> Your Profile -> in URL({Schoology link}/user/<b>{USER_ID}</b>/info)
+        
+        
+        </p><br>
+        <form method="POST" action="/integrations/schoology_api" autocomplete="off">
+            {% csrf_token %}
+            <table style='margin-left:35%;'>
+                <tbody>
+                    <tr>
+                        <td>
+                            <label for='base_url'>Name: </label>
+                        </td>
+                        <td>
+                            <input type="text" name="base_url" id="base_url" autocomplete = "off">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for='consumer_key'>Consumer Key: </label>
+                        </td>
+                        <td>
+                            <input type="password" name="consumer_key" id="consumer_key" autofocus> <br>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for='secret_key'>Secret Key: </label>
+                        </td>
+                        <td>
+                            <input type="password" name="secret_key" id="secret_key">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for='user_id'>User ID: </label>
+                        </td>
+                        <td>
+                            <input type="number" name="user_id" id="user_id">
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table><br>
+            <button type="submit" class="btn btn-primary" style="margin-left:35%;">Submit</button>
+        </form>
+    </div>
+    <div class="tab-pane fade" id="v-pills-Canvas" role="tabpanel" aria-labelledby="v-pills-Canvas-tab">
+        <h1 style='margin-left:35%;'>
+            Canvas API Key
+        </h1><br>
+        <h2 style='margin-left:35%;'>
+        Location: 
+        </h2>
+        <p style="margin-left:35%;">
+            Profile -> Settings -> Add New Access Token 
+        
+        </p><br>
+        <form method="POST" action="/integrations/canvas_api" autocomplete="off">
+            {% csrf_token %}
+            <table style='margin-left:35%;'>
+                <tbody>
+                    <tr>
+                        <td>
+                            <label for='base_url'>Name: </label>
+                        </td>
+                        <td>
+                            <input type="text" name="base_url" id="base_url" value="{{integration.url}}">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for='secret_key'>Secret Key: </label>
+                        </td>
+                        <td>
+                            <input type="password" name="secret_key" id="secret_key">
+                        </td>
+                    </tr>
+                    
+                </tbody>
+            </table><br>
+            <button type="submit" class="btn btn-primary" style="margin-left:35%;">Submit</button>
+        </form>
+    </div>
+    <div class="tab-pane fade" id="v-pills-Notion" role="tabpanel" aria-labelledby="v-pills-Notion-tab">
+        
+<div id="btn_container" style='text-align:center;margin:auto' >
+
+    <h1>Integrate with Notion</h1>
+    {% if int_status %}
+    {% if int_status.error %}
+    <div id="alert" class="alert alert-danger" role="alert">Login for Notion Workspace "{{int_status.workspace_name}}" has expired. Please 
+        {% if DEBUG %}
+        <a href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=http%3A%2F%2Flocalhost:8000%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">sign in again.</a><br>
+        {% else %}
+                <a href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=https%3A%2F%2Fmatthewtsai.tech%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">sign in again.</a><br>
+        {% endif %}    
+        </div>
+    
+    {% else %}
+    <div id="alert" class="alert alert-success" role="alert">Notion Workspace "{{int_status.workspace_name}}" has successfully been integrated with Homework App</div>
+    {% endif %}
+    {% endif %}
+    <h3>WARNING: This will update your database schema. Please follow these exact steps</h3>
+    <h6>
+        Import all your feeds and data into Notion for use with their software. Read more <a href="https://notion.so">here</a>. Please only import <b>ONE</b> page for use with this site
+    </h6><br>
+    <table>
+        <tr>
+                <li>
+                    Click <a class = 'btn btn-primary' href="https://www.notion.so/matthewtsai/087be0651e8b40a7ac9144d9a9d9db33?v=a2fd6322156c49009f2523e1f131bba9&duplicate=true">here</a> to duplicate the template page
+                </li>
+        </tr>
+        <br>
+        <tr>
+            <li>
+                Select the page you just duplicated(titled Homework App Template) from the following screen: 
+    
+            </li>
+        </tr>
+        <br>
+        <tr>
+    {% if DEBUG %}
+    <a class="btn btn-danger" href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=http%3A%2F%2Flocalhost:8000%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">Integrate with Notion</a><br>
+    {% else %}
+            <a class="btn btn-primary" href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=https%3A%2F%2Fmatthewtsai.tech%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">Integrate with Notion</a><br>
+    {% endif %}
+        </tr>
+    
+        <br>
+        
+    </table>
+    </div>
+    </div>
+
+  </div>
+
 
 
 {% endblock %}

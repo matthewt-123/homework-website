@@ -39,9 +39,15 @@ def index(request):
         n_data = NotionData.objects.filter(notion_user=request.user)
     except:
         n_data = False
+    try:
+        n = n_data.get(tag="homework")
+    except:
+        n = False
     return render(request, 'hwapp/integrations.html', {
         'integrations': integrations,
-        'n_datas': n_data
+        'n_datas': n_data,
+        'int_status': n,
+        'DEBUG': DEBUG
     })
 
 def export(request, user_id, hash_value):

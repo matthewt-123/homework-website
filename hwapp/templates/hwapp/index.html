@@ -89,18 +89,18 @@
             {% else %}
         <tr class='index' id="hwentry_{{hw.id}}">
             <td class='index'></td>
-            <td class='index'>
+            <td class='index' id="hw_title_mobile_selector">
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_title}}</a>
             </td>
-            <td class='index'>
+            <td class='index' id="hw_class_mobile_selector">
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.hw_class}}</a>
             </td>
-            <td class='index date_field'>
+            <td class='index date_field' id="hw_due_date_mobile_selector">
                 <a href = '{% url "edit_hw" hw.id %}'>{{hw.due_date}}</a>
             </td>
             {% endif %}
                 <td>
-                    <span style="margin-left: 20%;">
+                    <span style="margin-left: 20%;" id="completed_val">
                         {% if hw.completed %}
                         <img alt='Completed' src="{% static 'hwapp/check.webp' %}" title="Updated By Notion" style="width:10%;height:10%">
                         {% else %}

@@ -14,19 +14,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.http.response import Http404
 from django.urls import path, include
 admin.site.enable_nav_sidebar = False
-from importlib import import_module
-
+def redirect_404(request):
+    raise Http404
 urlpatterns = [
+    path('admin/login/', redirect_404),
     path('admin/', admin.site.urls),
     path('', include('hwapp.urls')),
     path('integrations/', include('integrations.urls')),
     path('home/', include('external.urls')),
     path('hijack/', include('hijack.urls')),
     path('spotify/', include('spotify.urls')),
-
-    #path('reports/', include('reports.urls'))
 ]
 
 

@@ -24,42 +24,20 @@
                     <a href='{% url "index" %}'><img alt='HW App logo' src='/static/hwapp/hwapp logo.png'></a>
                     {% if user.is_authenticated %}
                     <td width=10% class="nav-item" style="font-weight:bold;text-align: center;";>
-                        <a class="nav-link" href="{% url 'index' %}">Home</a>
+                        <a class="nav-link" href="{% url 'index' %}">Homework</a>
                     </td>
                     <!-- Homework Dropdown -->
                     <td width=10% id="homework_all" style="font-weight:bold;text-align: center;"; class="nav-item" >
                         <div id="homework_all" class="homework_all">
-                        <a class="nav-link homework_all" href = "{% url 'classes' %}">Homework</a>
-                        <div id="homework_all_dropdown" class="homework_all dropdown_css">
-                            <a href="{% url 'classes' %}" style="text-decoration: none;"><div class="nav_item">
-                                Classes
-                            </div></a>
-                            <a href="{% url 'homework' %}" style="text-decoration: none;"><div class="nav_item">
-                                Homework
-                            </div></a>
-                        </div>
+                        <a class="nav-link homework_all" href = "{% url 'classes' %}">Classes</a>
                     </div>
                     </td>
                     <!-- Calendar -->
-                    <td width=10% class="nav-item" style="font-weight:bold;text-align: center;";><a href='/calendar/'>Calendar</a></td>
+                    <td width=10% class="nav-item" style="font-weight:bold;text-align: center;";><a class="nav-link" href='/calendar/'>Calendar</a></td>
                     <!--integrations-->
                     <td width=10% id="integrations_all" style="font-weight:bold;text-align: center;" class="nav-item" >
                         <div id="integrations_all" class="integrations_all">
                         <a class="nav-link integrations_all" href = "/integrations">Integrations</a>
-                        <div id="integrations_all_dropdown" style='display:none' class="integrations_all dropdown_css">
-                            <a href="{% url 'notion_auth' %}" style="text-decoration: none;"><div class="nav_item">
-                                Notion
-                            </div></a>
-                            <a href="{% url 'schoology_api' %}" style="text-decoration: none;"><div class="nav_item">
-                                Schoology
-                            </div></a>
-                            <a href="{% url 'canvas_api' %}" style="text-decoration: none;"><div class="nav_item">
-                                Canvas
-                            </div></a>
-                            <a href="{% url 'spotify_index' %}" style="text-decoration: none;"><div class="nav_item">
-                                Spotify
-                            </div></a>
-                        </div>
                     </div>
                     </td>
 
@@ -67,21 +45,7 @@
                     <!-- Settings -->
                     <td width=15% id="settings_all" style="font-weight:bold;text-align: center;" class="nav-item" >
                         <div id="settings_all" class="settings_all">
-                        <a class="nav-link settings_all" href = "#">My Settings</a>
-                        <div id="settings_all_dropdown" class="setting_all dropdown_css" style="width:13%;">
-                            <a href="{% url 'profile' %}" style="text-decoration: none;"><div class="nav_item">
-                                Profile
-                            </div></a>
-                            <a href="{% url 'about' %}" style="text-decoration: none;text-align: center;"><div class="nav_item">
-                                About This Website
-                            </div></a>         
-                            <a href="{% url 'csv_export_template' %}" style="text-decoration: none; text-align: center;"><div class="nav_item">
-                                Export Homework
-                            </div></a> 
-                            <a href="{% url 'logout' %}" style="text-decoration: none;"><div class="nav_item">
-                                &nbsp Logout &nbsp
-                            </div></a>                    
-                        </div>
+                        <a class="nav-link settings_all" href = "{% url 'settings' %}">My Settings</a>
                     </div>
                     </td>
                     <!-- Collections -->
@@ -121,21 +85,7 @@
                     <!-- Settings -->
                     <td width=15% id="settings_all" style="font-weight:bold;text-align: center" class="nav-item" >
                         <div id="settings_all"  class="settings_all">
-                        <a class="nav-link settings_all" style="text-align: center;margin-left:-15%" href = "#">My Settings</a>
-                        <div id="settings_all_dropdown" class="setting_all dropdown_css" style="width:13%;">
-                            <a href="{% url 'profile' %}" style="text-decoration: none;"><div class="nav_item">
-                                Profile
-                            </div></a>
-                            <a href="{% url 'about' %}" style="text-decoration: none;text-align: center;"><div class="nav_item">
-                                About This Website
-                            </div></a>         
-                            <a href="{% url 'csv_export_template' %}" style="text-decoration: none; text-align: center;"><div class="nav_item">
-                                Export Homework
-                            </div></a> 
-                            <a href="{% url 'logout' %}" style="text-decoration: none;"><div class="nav_item">
-                                &nbsp Logout &nbsp
-                            </div></a>                    
-                        </div>
+                        <a class="nav-link settings_all" style="text-align: center;margin-left:-15%" href = "{% url 'settings' %}">My Settings</a>
                     </div>
                     </td>
                     <td width='35%' style='display: none;'></td>
@@ -146,82 +96,11 @@
                         <!-- from W3 Schools, sidenav for MOBILE ONLY-->
                         <div id="mySidenav" class="sidenav" >
                             <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-                            <a href="/">Home</a>
-                            <a href="#" onclick='show_item("homework_block")'>Homework &#9660;</a>
-                            <div id='homework_block' style='display:none;'>
-                                <ul style="list-style-type:none;">
-                                    <li>
-                                        <a style='font-size:20px' href='/classes'>
-                                            Classes
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a style='font-size:20px' href='/'>
-                                            Homework
-                                        </a>
-                                    </li>
-                                </ul>
-
-                            </div>
+                            <a href="/">Homework</a>
+                            <a href="{% url 'classes' %}">Classes</a>
                             <a href="/calendar">Calendar</a>
-                            <a href="#" onclick = 'show_item("integrations_block")'>Integrations &#9660;</a>
-                            <div id='integrations_block' style='display:none;'>
-                                <ul style="list-style-type:none;">
-                                    <li>
-                                        <a style='font-size:20px' href='{% url "integrations_index" %}'>
-                                            Information
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a style='font-size:20px' href='{% url "homework" %}'>
-                                            Schoology
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a style='font-size:20px' href='{% url "homework" %}'>
-                                            Canvas
-                                        </a>
-                                    </li>  
-                                    <li>
-                                        <a style='font-size:20px' href='{% url "notion_auth" %}'>
-                                            Notion
-                                        </a>
-                                    </li>          
-                                    <li>
-                                        <a style='font-size:20px' href='{% url "spotify_index" %}'>
-                                            Spotify
-                                        </a>
-                                    </li>  
-                                </ul>
-
-                            </div>
-                            <a href="#" onclick='show_item("settings_block")'>Settings &#9660;</a>
-                            <div id='settings_block' style='display:none;'>
-                                <ul style="list-style-type:none;">
-                                    <li>
-                                        <a style='font-size:20px' href='/profile'>
-                                            Profile
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a style='font-size:20px' href='/about'>
-                                            About This Website
-                                        </a>
-                                    </li>   
-                                    <li>
-                                        <a style='font-size:20px' href='{% url "csv_export_template" %}'>
-                                            Export Homework
-                                        </a>
-                                    </li>                                   
-                                    <li>
-                                        <a style='font-size:20px' href="{% url 'logout' %}">
-                                            Log Out
-                                        </a>
-                                    </li>
-                                </ul>
-
-                            </div>
+                            <a href="/integrations">Integrations</a>
+                            <a href="{% url 'settings' %}">Settings</a>
                             {% if user.is_superuser %}
                             <a href='#' onclick = 'show_item("collections")'>My Collection &#9660;</a>
                             <div id='collections' style='display:none;'>
@@ -320,7 +199,7 @@ margin-top: auto;
         {% block footer %}{% endblock %}
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                elements = ['homework_all', 'integrations_all', 'settings_all', 'admin_all', 'collection_all']
+                elements = ['integrations_all', 'admin_all', 'collection_all']
                 for (let i = 0; i < elements.length; i++) {
                     //show menu on element hover
                     document.getElementById(elements[i]).onmouseover = () => {
