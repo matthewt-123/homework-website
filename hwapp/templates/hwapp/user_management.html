@@ -1,0 +1,32 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}User Management{% endblock %}
+{% block body %}
+
+<table style="margin-left:5%;width:90%">
+    <thead>
+        <tr>
+            <td>
+                <b>Username</b>
+            </td>
+            <td>
+                <b>First Name</b>
+            </td>
+            <td>
+                <b>Last Name</b>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr><td><a href='{% url "user_management_individual" user.id %}'>{{user.username}}</a></td>
+        <td>
+            {{user.first_name}}
+        </td>
+        <td>
+            {{user.last_name}}
+        </td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

@@ -7,7 +7,7 @@ function confirm_refresh() {
         }
 };
 function admin(function1) {
-    fetch(`/admin_view`, {
+    fetch(`/admin_dashboard`, {
         method: 'POST',
         headers: {
                 'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,

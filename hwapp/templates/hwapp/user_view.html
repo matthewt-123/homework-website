@@ -1,0 +1,38 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}User Management{% endblock %}
+{% block body %}
+
+<ul>
+    <li>
+        <b>Name: </b>{{user.first_name}} {{user.last_name}}
+    </li>
+    <li>
+        <b>Email: </b>{{user.email}}
+    </li>
+    <li>
+        <b>Username: </b>{{user.username}}
+    </li>
+    <li>
+        <b>Last Login: </b>{{user.last_login}}
+    </li>
+    <li>
+        <b>Member Since: </b>{{user.date_joined}}
+    </li>
+    <li>
+        <b>Groups: </b>
+        {% if user.groups.all %}
+        <ul>
+            {% for group in user.groups.all %}
+            <li>{{group.name}}</li>
+            {% endfor %}
+        </ul>
+        {% else %} No Groups Found {% endif %}
+    </li>
+    <li>
+        <b>Staff Status: </b> {% if user.is_staff %} True {% else %} False {% endif %}
+    </li>
+    <li>
+        <b>Active: </b> {% if user.is_active %} True {% else %} False {% endif %}
+    </li>
+</ul>
+{% endblock %}

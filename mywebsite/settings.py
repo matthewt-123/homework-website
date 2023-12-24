@@ -35,9 +35,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 sentry_sdk.init(
-    dsn="https://8c2277f2745be76cc3c8f9b1fb3afd3b@o1217115.ingest.sentry.io/4506261170356224",
+    dsn="https://86f8b9a59c8d4407a18c0574fea5781e@o1217115.ingest.sentry.io/6359235",
     traces_sample_rate=0.0 if DEBUG else 1.0,
-    profiles_sample_rate= 0.0 if DEBUG else 1.0,
     environment=f"{'development' if DEBUG else 'production'}",
 )
 

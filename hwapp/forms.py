@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from .models import Homework, Preferences, Class, Day, EmailTemplate
+from .models import Homework, Preferences, Class, EmailTemplate
 from django import forms
 from django.contrib.admin import widgets
 

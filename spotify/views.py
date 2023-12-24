@@ -123,7 +123,6 @@ def recommendations(request):
     #part 1: get recommendations
     for uri in data:
         if data[uri] != "" and str(data[uri]).startswith("spotify:"):
-            print(data[uri])
             t_type = re.search("(?<=spotify:)(.*)(?=:)", data[uri]).group(0)
             if str(t_type) == "artist":
                 seed_artists += f'{re.search(f"(?<=artist:)(.*)", data[uri]).group(0)},'
@@ -150,7 +149,6 @@ def recommendations(request):
         body["seed_artists"]= seed_artists[:-1]
     elif seed_tracks != "":
         body["seed_tracks"] = seed_tracks[:-1] 
-    body['target_danceability'] = 0.8  
     headers = {"Authorization": f"Bearer {spotify_auth.access_token}"}
     response = requests.get(url, params=body, headers=headers)
     if str(response) != "<Response[200]>":
@@ -160,7 +158,9 @@ def recommendations(request):
     uri = []
     for track in tracks['tracks']:
         uri.append(track["uri"])
-
+    seed_tracks = seed_tracks[:-1].split(",")
+    for seed_track in seed_tracks:
+        uri.append(f"spotify:track:{seed_track}")
 
     #Part 2: Create New Playlist
     url = f"https://api.spotify.com/v1/users/{spotify_auth.s_user_id}/playlists"
@@ -182,6 +182,7 @@ def recommendations(request):
         "uris": uri
     }
     response = requests.post(url, data=json.dumps(data), headers=headers)
+    print(response.text)
     return JsonResponse({"message": "playlist created successfully", "status": 200, "playlist_id": s_playlist.id}, status=200)
 @login_required(login_url='/login')
 def playlists(request):

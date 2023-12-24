@@ -1,7 +1,7 @@
 import os
 from datetime import date
 import datetime
-from .models import User, Homework, Class, Preferences, EmailTemplate, Day
+from .models import Homework, Class, Preferences, EmailTemplate
 import requests
 from time import time
 from requests.auth import HTTPBasicAuth
@@ -10,11 +10,9 @@ import sys
 import pytz 
 import secrets
 import json
-from dateutil.relativedelta import relativedelta, MO
 sys.path.append("..")
 from integrations.views import notion_push
-from integrations.models import SchoologyAuth, SchoologyClasses, NotionData, IntegrationLog
-from mywebsite.settings import DEBUG
+from integrations.models import SchoologyAuth, SchoologyClasses, IntegrationLog
 from azure.communication.email import EmailClient
 
 def overdue_check():

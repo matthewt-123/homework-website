@@ -4,12 +4,6 @@ from django.db import models
 # Create your models here.
 class User(AbstractUser):
     pass
-
-class Day(models.Model):
-    days = models.CharField(max_length=128)
-    abbreviation = models.CharField(max_length=128)
-    def __str__(self):
-        return f"{self.days}"
 class Class(models.Model):
     class_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='class_owner')
     class_name = models.CharField(max_length=128)

@@ -16,11 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.http.response import Http404
 from django.urls import path, include
-admin.site.enable_nav_sidebar = False
+admin.site.site_header = 'Homework App Dashboard'
+admin.site.site_title  =  "Homework App Dashboard"
+admin.site.index_title  =  "User Data"
 def redirect_404(request):
     raise Http404
 urlpatterns = [
-    path('admin/login/', redirect_404),
     path('admin/', admin.site.urls),
     path('', include('hwapp.urls')),
     path('integrations/', include('integrations.urls')),

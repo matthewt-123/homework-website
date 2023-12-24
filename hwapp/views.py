@@ -34,7 +34,12 @@ load_dotenv()
 
 def matthew_check(user):
     return user.is_superuser
-
+def security_admin(user):
+    try:
+        user.groups.get(name="Security Admin")
+        return True
+    except:
+        return False
 oauth = OAuth()
 oauth.register(
     "auth0",
@@ -908,3 +913,24 @@ def all_pages(request):
     return render(request, 'hwapp/pages.html', {
         'pages': pages
     })
+
+@user_passes_test(security_admin)
+def user_management(request):
+    users = User.objects.all()
+    return render(request, 'hwapp/user_management.html', {
+        'users': users
+    })
+@user_passes_test(security_admin)
+def user_management_individual(request, user_id):
+    user = User.objects.get(id=user_id)
+    try:
+        user.groups.get(name="Security Admin")
+        return render(request, 'hwapp/error.html', {
+            'error': "cannot view user"
+        })
+
+    except:
+        return render(request, 'hwapp/user_view.html', {
+            'user': user
+        })
+    raise Http404

@@ -68,15 +68,7 @@
                     <!-- Admin Tab -->
                     <td width='13%' style="font-weight:bold;text-align: center;" class="nav-item" >
                         <div id="admin_all" class="admin_all"x>
-                            <a class="nav-link admin_all" href = "#">Administration</a>
-                            <div id="admin_all_dropdown" class="admin_all dropdown_css" style="width:11%">
-                                <a href="/admin" style="text-decoration: none;text-align: center;"><div class="nav_item">
-                                    Admin Console
-                                </div></a>
-                                <a href="/admin_view" style="text-decoration: none;"><div class="nav_item">
-                                    &nbsp Admin View &nbsp
-                                </div></a>
-                            </div>
+                            <a class="nav-link admin_all" href='{% url "admin_dashboard" %}'>Administration</a>
                         </div>
                     </td>
 
@@ -121,20 +113,7 @@
                                     </a>
                                 </li></ul>
                             </div>
-                            <a href='#' onclick = 'show_item("admin_block")'>Administration &#9660;</a>
-                            <div id='admin_block' style='display:none;'>
-                            <ul style='list-style-type:none;'>
-                                <li>
-                                    <a style='font-size:20px' href='/admin'>
-                                        Admin Console
-                                    </a>
-                                </li>
-                                <li>
-                                    <a style='font-size:20px' href='/admin_view'>
-                                        Admin View
-                                    </a>
-                                </li></ul>
-                            </div>
+                            <a href='{% url "admin_dashboard" %}'>Administration &#9660;</a>
                               {% endif %}
                         </div>
 
@@ -199,7 +178,7 @@ margin-top: auto;
         {% block footer %}{% endblock %}
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                elements = ['integrations_all', 'admin_all', 'collection_all']
+                elements = ['collection_all']
                 for (let i = 0; i < elements.length; i++) {
                     //show menu on element hover
                     document.getElementById(elements[i]).onmouseover = () => {

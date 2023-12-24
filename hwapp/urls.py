@@ -16,7 +16,7 @@ urlpatterns = [
     path("calendar/", views.calendar, name="calendar"),
     path("deleteclass/<int:id>", views.deleteclass, name='delete_a_class'),
     path("getclasstime/<int:class_id>", views.getclasstime, name='getclasstime'),
-    path('admin_view', views.admin_console, name='admin_view'),
+    path('admin_dashboard', views.admin_console, name='admin_dashboard'),
     path('welcome', views.new_user_view, name='new_user_view'),
     path('homework/<int:hw_id>', views.homework_entry, name='homework_entry'),
     path('config/email_templates', views.email_template_editor, name='email_template_editor'),
@@ -34,7 +34,6 @@ urlpatterns = [
     path('change_password', views.change_password),
     path('helpformview/<int:id>', views.helpformview, name="helpformview"),
     path('helpformlist', views.helpformlist, name="helpformlist"),
-    path('csv_export', views.csv_export_template, name="csv_export_template"),
     path('pastebin', views.pastebin, name="pastebin"),
     path('pastebin_html', views.pastebin_html, name="pastebin_html"),
     path('filebin', views.filebin, name="filebin"),
@@ -42,6 +41,8 @@ urlpatterns = [
     path('page/<int:page_id>', views.page_manager, name='page_manager'),
     path('pages', views.all_pages, name='all_pages'),
     path('filebin_html', views.filebin_html, name="filebin_html"),
-    #path('login_as', views.login_as)
+    path('admin_dashboard/users', views.user_management, name="user_management"),
+    path('admin_dashboard/users/<int:user_id>', views.user_management_individual, name="user_management_individual")
+
 ]
 

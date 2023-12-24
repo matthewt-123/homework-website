@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Day, Class, Homework, Preferences, Timezone, IcsLink, EmailTemplate, IcsId, AllAuth, FileBin, PasteBin
+from .models import User, Class, Homework, Preferences, Timezone, IcsLink, EmailTemplate, IcsId, AllAuth, FileBin, PasteBin
 from django.contrib.admin.models import LogEntry
 
 # Register your models here.
@@ -25,7 +25,6 @@ class HomeworkAdmin(admin.ModelAdmin):
 class PreferencesAdmin(admin.ModelAdmin):
     list_display = ("id", "preferences_user")
 admin.site.register(User)
-admin.site.register(Day)
 admin.site.register(Class, ClassAdmin)
 admin.site.register(Homework, HomeworkAdmin)
 admin.site.register(Preferences, PreferencesAdmin)

@@ -1,13 +1,13 @@
 {% extends "hwapp/layout.html" %}
 {% block title %}
-Homework App Integrations
+Integrations
 {% endblock %}
 {% block body %}
 <div class="nav flex-column nav-pills" style="width: 20%; float: left;" id="v-pills-tab" role="tablist" aria-orientation="vertical">
     <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">Integrations</a>
-    <a class="nav-link" id="v-pills-Schoology-tab" data-toggle="pill" href="#v-pills-Schoology" role="tab" aria-controls="v-pills-Schoology" aria-selected="false">Schoology</a>
     <a class="nav-link" id="v-pills-Canvas-tab" data-toggle="pill" href="#v-pills-Canvas" role="tab" aria-controls="v-pills-Canvas" aria-selected="false">Canvas</a>
     <a class="nav-link" id="v-pills-Notion-tab" data-toggle="pill" href="#v-pills-Notion" role="tab" aria-controls="v-pills-Notion" aria-selected="false">Notion</a>
+    <a class="nav-link" id="v-pills-Schoology-tab" data-toggle="pill" href="#v-pills-Schoology" role="tab" aria-controls="v-pills-Schoology" aria-selected="false">Schoology</a>
     <a class="nav-link" href="{% url 'spotify_index' %}" role="tab" aria-selected="false">Spotify</a>
 
   </div>
@@ -63,20 +63,20 @@ Homework App Integrations
         </div>
     </div>
     <div class="tab-pane fade" id="v-pills-Schoology" role="tabpanel" aria-labelledby="v-pills-Schoology-tab">
-        <h1 style='margin-left:35%;'>
+        <h1 style='margin-left:10%;'>
             Schoology API Key
-        </h1><br>
-        <h2 style='margin-left:35%;'>
+        </h1><hr>
+        <h2 style='margin-left:10%;'>
         Location: 
         </h2>
-        <p style="margin-left:35%;">
+        <p style="margin-left:10%;">
             {Schoology URL}/api<br>user ID: Your name(top right corner) -> Your Profile -> in URL({Schoology link}/user/<b>{USER_ID}</b>/info)
         
         
         </p><br>
         <form method="POST" action="/integrations/schoology_api" autocomplete="off">
             {% csrf_token %}
-            <table style='margin-left:35%;'>
+            <table style='margin-left:10%;'>
                 <tbody>
                     <tr>
                         <td>
@@ -113,23 +113,23 @@ Homework App Integrations
                     
                 </tbody>
             </table><br>
-            <button type="submit" class="btn btn-primary" style="margin-left:35%;">Submit</button>
+            <button type="submit" class="btn btn-primary" style="margin-left:18%;">Submit</button>
         </form>
     </div>
     <div class="tab-pane fade" id="v-pills-Canvas" role="tabpanel" aria-labelledby="v-pills-Canvas-tab">
-        <h1 style='margin-left:35%;'>
+        <h1 style='margin-left:10%;'>
             Canvas API Key
-        </h1><br>
-        <h2 style='margin-left:35%;'>
+        </h1><hr>
+        <h2 style='margin-left:10%;'>
         Location: 
         </h2>
-        <p style="margin-left:35%;">
+        <p style="margin-left:10%;">
             Profile -> Settings -> Add New Access Token 
         
         </p><br>
         <form method="POST" action="/integrations/canvas_api" autocomplete="off">
             {% csrf_token %}
-            <table style='margin-left:35%;'>
+            <table style='margin-left:10%;'>
                 <tbody>
                     <tr>
                         <td>
@@ -150,7 +150,7 @@ Homework App Integrations
                     
                 </tbody>
             </table><br>
-            <button type="submit" class="btn btn-primary" style="margin-left:35%;">Submit</button>
+            <button type="submit" class="btn btn-primary" style="margin-left:18%;">Submit</button>
         </form>
     </div>
     <div class="tab-pane fade" id="v-pills-Notion" role="tabpanel" aria-labelledby="v-pills-Notion-tab">

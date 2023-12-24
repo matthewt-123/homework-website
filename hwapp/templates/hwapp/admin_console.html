@@ -7,13 +7,13 @@ Admin Console
 <div id="alert" class='alert alert-success' style="display: none;"></div>
 
 <div style="width: 20%; float: left;" class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-    <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" onclick="toggle('all')" aria-selected="true">All</a>
-    <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-Bookmarks" role="tab" aria-controls="v-pills-home" onclick="toggle('bookmarks')" aria-selected="false">Bookmarks</a>
-    <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-Communications" role="tab" aria-controls="v-pills-home" onclick="toggle('communications')" aria-selected="false">Communications</a>
-
-    <a class="nav-link" id="v-pills-messages-tab" data-toggle="pill" href="{% url 'experience_manager' %}" onclick = "window.location.href = ('{% url 'experience_manager' %}')" role="tab" aria-controls="v-pills-home" aria-selected="false">Experience Manager</a>
-    <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-Helpers" role="tab" aria-controls="v-pills-home" onclick="toggle('helpers')" aria-selected="false">Helpers</a>
-    <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-Integrations" role="tab" aria-controls="v-pills-home" onclick="toggle('integrations')" aria-selected="false">Integrations</a>
+    <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" onclick="toggle('all')" aria-selected="true"><i class="fa-solid fa-globe"></i>&nbsp;<span class="mobile_hide">All</span></a>
+    <a class="nav-link" id="v-pills-messages-tab" href="/admin" role="tab" aria-selected="false"><i class="fa-solid fa-screwdriver-wrench"></i>&nbsp;<span class="mobile_hide">Admin Console</span></a>
+    <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-Bookmarks" role="tab" aria-controls="v-pills-home" onclick="toggle('bookmarks')" aria-selected="false"><i class="fa-solid fa-bookmark"></i>&nbsp;<span class="mobile_hide">Bookmarks</span></a>
+    <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-Communications" role="tab" aria-controls="v-pills-home" onclick="toggle('communications')" aria-selected="false"><i class="fa-solid fa-envelope"></i>&nbsp;<span class="mobile_hide">Communications</span></a>
+    <a class="nav-link" id="v-pills-messages-tab" href="{% url 'experience_manager' %}" role="tab" aria-selected="false"><i class="fa-solid fa-camera"></i>&nbsp;<span class="mobile_hide">Experience Manager</span></a>
+    <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-Helpers" role="tab" aria-controls="v-pills-home" onclick="toggle('helpers')" aria-selected="false"><i class="fa-solid fa-handshake-angle"></i>&nbsp;<span class="mobile_hide">Helpers</span></a>
+    <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-Integrations" role="tab" aria-controls="v-pills-home" onclick="toggle('integrations')" aria-selected="false"><i class="fa-solid fa-circle-nodes"></i>&nbsp;<span class="mobile_hide">Integrations</span></a>
 
   </div>
   <div style="width: 80%;float:left;margin-left: 0%;height: 100%;" class="tab-content" id="v-pills-tabContent">
@@ -35,7 +35,6 @@ Admin Console
             <a href="/email" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-paper-plane"></i>&nbsp; Send Email</a>
             <a href="#" onclick="confirm_refresh()" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-paper-plane"></i>&nbsp; Send Homework Email</a>
             <a target="_blank" href="https://sentry.io/organizations/homework-app/issues/?project=6359235" class="list-group-item list-group-item-action bookmarks all"><i class="fa-brands fa-watchman-monitoring"></i>&nbsp;Sentry</a>
-
           </div>
     </div>
   </div>
@@ -47,6 +46,14 @@ Admin Console
 <style>
     tr:nth-child(even) {
   background-color: white;
+}
+@media
+only screen and (max-width: 760px),
+(min-device-width: 0px) and (max-device-width: 1024px) {
+    .mobile_hide {
+        display: none;
+    }
+
 }
 </style>
 <script src="{% static 'hwapp/admin_console.js' %}"></script>

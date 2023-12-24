@@ -30,8 +30,6 @@ function reset_pw() {
 }
 function generate_link_class() {
     globalUrl.searchParams.set('class_id', document.getElementById('class_select').value)
-    console.log(globalUrl)
-    console.log(document.getElementById("download").href)
     document.getElementById("download").setAttribute('href', globalUrl)
 }
 function generate_link_complete() {
