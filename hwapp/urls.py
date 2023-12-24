@@ -30,6 +30,7 @@ urlpatterns = [
     path('login', views.sso_login, name='login'),
     path('logout', views.sso_logout, name='logout'),
     path('version/<int:version_id>', views.version_manager, name='version_manager'),
+    path('version', views.latest_version, name='latest_version'),
     path('archive/<int:id>', views.archiveclass),
     path('change_password', views.change_password),
     path('helpformview/<int:id>', views.helpformview, name="helpformview"),

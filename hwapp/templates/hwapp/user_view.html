@@ -4,35 +4,35 @@
 
 <ul>
     <li>
-        <b>Name: </b>{{user.first_name}} {{user.last_name}}
+        <b>Name: </b>{{user1.first_name}} {{user1.last_name}}
     </li>
     <li>
-        <b>Email: </b>{{user.email}}
+        <b>Email: </b><a href="{% url 'email' %}?email={{user1.email}}&name={{user1.first_name}} {{user1.last_name}}">{{user1.email}}</a>
     </li>
     <li>
-        <b>Username: </b>{{user.username}}
+        <b>Username: </b>{{user1.username}}
     </li>
     <li>
-        <b>Last Login: </b>{{user.last_login}}
+        <b>Last Login: </b>{{user1.last_login}}
     </li>
     <li>
-        <b>Member Since: </b>{{user.date_joined}}
+        <b>Member Since: </b>{{user1.date_joined}}
     </li>
     <li>
         <b>Groups: </b>
-        {% if user.groups.all %}
+        {% if user1.groups.all %}
         <ul>
-            {% for group in user.groups.all %}
+            {% for group in user1.groups.all %}
             <li>{{group.name}}</li>
             {% endfor %}
         </ul>
         {% else %} No Groups Found {% endif %}
     </li>
     <li>
-        <b>Staff Status: </b> {% if user.is_staff %} True {% else %} False {% endif %}
+        <b>Staff Status: </b> {% if user1.is_staff %} True {% else %} False {% endif %}
     </li>
     <li>
-        <b>Active: </b> {% if user.is_active %} True {% else %} False {% endif %}
+        <b>Active: </b> {% if user1.is_active %} True {% else %} False {% endif %}
     </li>
 </ul>
 {% endblock %}

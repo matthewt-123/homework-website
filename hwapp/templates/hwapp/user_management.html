@@ -17,13 +17,13 @@
         </tr>
     </thead>
     <tbody>
-        {% for user in users %}
-        <tr><td><a href='{% url "user_management_individual" user.id %}'>{{user.username}}</a></td>
+        {% for user1 in users %}
+        <tr><td><a href='{% url "user_management_individual" user.id %}'>{{user1.username}}</a></td>
         <td>
-            {{user.first_name}}
+            {{user1.first_name}}
         </td>
         <td>
-            {{user.last_name}}
+            {{user1.last_name}}
         </td></tr>
         {% endfor %}
     </tbody>

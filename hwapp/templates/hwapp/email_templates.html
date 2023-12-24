@@ -25,7 +25,7 @@
 <form method="post" action='{% url "email_add_template" %}'>
     {% csrf_token %}
     <label for='template_name'>Template Name: </label><input type="text" id="template_name" name="template_name">
-    <label for="type">Type</label>  <input type="text" name="type" id="type" {% if type %}value="{{type}}" disabled {% endif %}>
+    <label for="type">Type</label>  <input type="text" name="type" id="type" {% if type %}value="{{type}}" readonly {% endif %}>
     <label for="version_id">Version ID</label>  <input type="text" name="version_id" id="version_id" value="{{version_id}}">
 
     <textarea cols='100' class="myeditablediv" id="template_body" name='template_body'></textarea>

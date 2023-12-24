@@ -170,7 +170,8 @@ def recommendations(request):
         playlist_name = data['playlist_name']
     data = {
         "name": playlist_name,
-        "public": False
+        "public": False,
+        "description": f"Created by Homework App on {datetime.now().strftime('%m-%d-%Y')}"
     }
     response = requests.post(url, data=json.dumps(data), headers=headers)
     data1 = json.loads(response.text)
@@ -182,7 +183,6 @@ def recommendations(request):
         "uris": uri
     }
     response = requests.post(url, data=json.dumps(data), headers=headers)
-    print(response.text)
     return JsonResponse({"message": "playlist created successfully", "status": 200, "playlist_id": s_playlist.id}, status=200)
 @login_required(login_url='/login')
 def playlists(request):

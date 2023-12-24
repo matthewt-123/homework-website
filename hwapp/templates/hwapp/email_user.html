@@ -20,7 +20,7 @@
     <label for='subject'>Recipient Email: </label><br>
           </td>  
           <td width="80%">
-            <input style='width:100%;' type="text" id="subject" name="recipient">
+            <input style='width:100%;' type="text" id="email" name="recipient">
           </td>
         </tr>
         <tr>
@@ -28,7 +28,7 @@
                 <label for='subject'>Recipient Name: </label>
             </td>
             <td>
-                <input style='width:100%;' type="text" id="subject" name="name"><br>
+                <input style='width:100%;' type="text" id="name" name="name"><br>
 
             </td>
         </tr>
@@ -57,7 +57,14 @@
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.25.1/trumbowyg.min.js"></script>
 <script>
-
     $('.myeditablediv').trumbowyg()
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email')
+    const name = urlParams.get('name')
 
-</script>{% endblock %}
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById('email').value = email
+        document.getElementById('name').value = name
+
+    })
+</script>{% endblock %} 

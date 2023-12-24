@@ -681,8 +681,10 @@ def email_template_editor(request):
                 'email_template': EmailTemplate.objects.get(id=template_id),
                 'website_root': os.environ.get('website_root')
             })
-
-
+@user_passes_test(matthew_check, login_url='/login')
+def latest_version(request):
+    latest_version = EmailTemplate.objects.filter(type='version').latest('id')
+    return HttpResponseRedirect(f"/version/{latest_version.version_id}")
 @user_passes_test(matthew_check, login_url='/login')
 def email_all(request):
     if request.method == 'POST':
@@ -916,21 +918,13 @@ def all_pages(request):
 
 @user_passes_test(security_admin)
 def user_management(request):
-    users = User.objects.all()
+    users = User.objects.all().order_by('last_name', 'first_name', 'username')
     return render(request, 'hwapp/user_management.html', {
         'users': users
     })
 @user_passes_test(security_admin)
 def user_management_individual(request, user_id):
     user = User.objects.get(id=user_id)
-    try:
-        user.groups.get(name="Security Admin")
-        return render(request, 'hwapp/error.html', {
-            'error': "cannot view user"
-        })
-
-    except:
-        return render(request, 'hwapp/user_view.html', {
-            'user': user
-        })
-    raise Http404
+    return render(request, 'hwapp/user_view.html', {
+        'user1': user
+    })
