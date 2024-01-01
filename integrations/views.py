@@ -5,8 +5,7 @@ from django.http.response import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 import os
-from .models import CalendarEvent, IcsHashVal, NotionData, SchoologyClasses, SchoologyAuth, IntegrationLog, Log
-from dotenv import load_dotenv
+from .models import IcsHashVal, NotionData, SchoologyClasses, SchoologyAuth, IntegrationLog, Log
 import datetime
 import json
 import pytz
@@ -21,14 +20,21 @@ import csv
 #import hwapp models
 import sys
 sys.path.append("..")
-from hwapp.models import Homework, Class, IcsId, Preferences, User
+from hwapp.models import Homework, Class, Preferences, User
 from mywebsite.settings import DEBUG
-def matthew_check(user):
-    return user.id == 1
-def google_check(user):
-    return user.groups.filter(name='Authorized Google Users') or user.is_superuser
-load_dotenv()
-# Create your views here.
+def superuser(user):
+    return user.is_superuser
+def user_in_group(*group_names):
+    """Requires user membership in at least one of the groups passed in."""
+    def in_groups(u):
+        if u.is_authenticated:
+            if bool(u.groups.filter(name__in=group_names)) | u.is_superuser:
+                return True
+        return False
+    return user_passes_test(in_groups, login_url='403')
+"""
+LOGIN REQUIRED
+"""
 @login_required(login_url='/login')
 def index(request):
     try:
@@ -48,87 +54,7 @@ def index(request):
         'n_datas': n_data,
         'int_status': n,
         'DEBUG': DEBUG
-    })
-
-def export(request, user_id, hash_value):
-    #check if user is authorized
-    if request.method == 'GET':
-        #setup hashing functions:
-        #sys_val = abs(hash(str(user_id)))
-        try:
-            sys_val = IcsHashVal.objects.get(hash_user=request.user, hash_type='default')
-        except:
-            return render(request, 'hwapp/error.html', {
-                'error': 'User not found'
-            })
-        prov_val = abs(hash_value)
-        if prov_val == int(sys_val.hash_val):
-            pass
-        else:
-            return render(request, 'hwapp/error.html', {
-                'error': 'Access Denied'
-            })
-        allhw =  CalendarEvent.objects.filter(calendar_user=request.user)
-        
-        c=Calendar()
-        for hw in allhw:
-            c.events.add(hw.ics)
-        response = HttpResponse(c, content_type="text/calendar")
-        return response
-
-    else:
-        return JsonResponse({'error': 'method not supported'}, status=405)
-
-def refresh_ics():
-    classes = Class.objects.exclude(ics_link__isnull=True)
-    for class1 in classes:
-        link = class1.ics_link
-        try:
-            #make link an https link
-            c = Calendar(requests.get(link).text)
-        except:
-            pass
-        #SETUP: create new Class instance if not already existing(since Canvas does not provide class names with HW assignments)
-        dt_str = '23:59'
-        dt_obj = datetime.datetime.strptime(dt_str, '%H:%M')
-        #pull prior integrated events:
-        uids = IcsId.objects.filter(icsID_user=class1.class_user)
-        uid_list = []
-        for uid in uids:
-            uid_list.append(uid.icsID)
-        timezone = Preferences.objects.get(preferences_user = class1.class_user).user_timezone
-        #append new hw to database and calendar
-        #convert ics to Timeline instance
-        for event in c.timeline:
-            #pull summary(name)
-            #pull end date, start date if no end date, or default time(midnight)
-            if event.end:
-                time=(event.end).to(str(timezone))
-                time.format('YYYY-MM-DD')
-                time = datetime.datetime.strptime(str(time)[0:10] + ' 11:59', '%Y-%m-%d %H:%M')
-            elif event.begin:
-                time=(event.begin).to(str(timezone))
-                time.format('YYYY-MM-DD')
-                time = datetime.datetime.strptime(str(time)[0:10] + ' 11:59', '%Y-%m-%d %H:%M')
-            else:
-                time=dt_obj
-            time = time
-            hw_name = str(event.name)
-            try:
-                notes = str(event.description)
-            except:
-                notes=None
-            try:
-                ics_uid = event.uid
-            except:
-                ics_uid = None
-                        #check if uid exists. If so, do not create the event
-            if ics_uid in uid_list:
-                pass
-            else:
-                IcsId.objects.create(icsID_user=class1.class_user, icsID = ics_uid)
-                l = Homework.objects.create(hw_user=class1.class_user, hw_class=class1, due_date=time, hw_title=hw_name, notes=str(notes), completed=False)
-                notion_push(hw=l, user=class1.class_user)  
+    })  
 
 @login_required(login_url='/login')
 def notion_auth(request):
@@ -487,7 +413,7 @@ def schoology_api(request):
             'service': 'Schoology',
         })
 
-@user_passes_test(matthew_check)
+@login_required(login_url='/login')
 def edit_api(request, integration_id):
     if request.method == 'GET':
         try:
@@ -532,53 +458,7 @@ def edit_api(request, integration_id):
         return render(request, 'hwapp/success.html', {
             "message": f"{s_obj.url} updated successfully"
         })
-@user_passes_test(matthew_check)
-def integration_log(request):
-    #not authorized for non-admins
-    if not request.user.is_superuser:
-        return render(request, '404.html')
-    if request.GET.get("error") == 'true':
-        logs = IntegrationLog.objects.filter(error=True).order_by("-id")
-    else:
-        logs = IntegrationLog.objects.all().order_by("-id")
-    Log.objects.create(user=request.user, date=datetime.datetime.now(), message="Viewed Integration Log", error=False, log_type="Integration Log Access", ip_address = request.META.get("REMOTE_ADDR"))
-    return render(request, 'hwapp/integrationlog.html', {
-        "logs": logs,
-    })
-@user_passes_test(matthew_check)
-def integration_log_view(request, log_id):
-    #not authorized for non-admins
-    if not request.user.is_superuser:
-        return render(request, '404.html')
-    try:
-        log = IntegrationLog.objects.get(id=log_id)
-    except:
-        return render(request, 'hwapp/error.html', {
-            'error': f"Log ID {log_id} Not Found"
-        })
-    return render(request, 'hwapp/integrationlog_view.html', {
-        "log": log,
-    })
-@user_passes_test(matthew_check)
-def admin_log_ajax(request):
-    if request.GET.get("error") == 'true':
-        logs = Log.objects.filter(error=True).order_by("-id")[:50]
-    else:
-        logs = Log.objects.all().order_by("-id")[:50]
-    return_val = "{"
-    for log in logs:
-        return_val += "{"
-        return_val += f'"id": "{log.id}", "username": "{log.user.username}", "log_type": "{log.log_type}", "date": "{log.date}", "error": "{log.error}"'
-        return_val += "},"
-    return_val = return_val[:-1]
-    return_val += "}"
-    return JsonResponse(return_val, safe=False)
-@user_passes_test(matthew_check)
-def admin_log(request):
-    return render(request, 'hwapp/admin_log.html', {
-        'website_root': os.environ.get("WEBSITE_ROOT")
-    })
-@login_required(login_url='/home')
+@login_required(login_url='/login')
 def csv_export(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="homework.csv"'
@@ -597,13 +477,38 @@ def csv_export(request):
         hws = hws.filter(completed = True)
     elif str(request.GET.get("completed")) == 'false':
         hws = hws.filter(completed = False)
-
-    
     writer = csv.writer(response)
     writer.writerow(['hw_class', 'hw_title', 'due_date', 'completed'])
-
     hws = hws.values_list('hw_class__class_name', 'hw_title', 'due_date', 'completed')
     for hw in hws:
         writer.writerow(hw)
-
     return response
+
+@user_passes_test(superuser)
+def integration_log(request):
+    #not authorized for non-admins
+    if not request.user.is_superuser:
+        return render(request, '404.html')
+    if request.GET.get("error") == 'true':
+        logs = IntegrationLog.objects.filter(error=True).order_by("-id")
+    else:
+        logs = IntegrationLog.objects.all().order_by("-id")
+    Log.objects.create(user=request.user, date=datetime.datetime.now(), message="Viewed Integration Log", error=False, log_type="Integration Log Access", ip_address = request.META.get("REMOTE_ADDR"))
+    return render(request, 'hwapp/integrationlog.html', {
+        "logs": logs,
+    })
+@user_passes_test(superuser)
+def integration_log_view(request, log_id):
+    #not authorized for non-admins
+    if not request.user.is_superuser:
+        return render(request, '404.html')
+    try:
+        log = IntegrationLog.objects.get(id=log_id)
+    except:
+        return render(request, 'hwapp/error.html', {
+            'error': f"Log ID {log_id} Not Found"
+        })
+    return render(request, 'hwapp/integrationlog_view.html', {
+        "log": log,
+    })
+

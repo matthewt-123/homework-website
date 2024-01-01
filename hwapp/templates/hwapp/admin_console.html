@@ -1,20 +1,29 @@
 {% extends "hwapp/layout.html" %}
 {% load static %}
+{% load has_group %}
+
 {% block title %}
 Admin Console
 {% endblock %}
 {% block body %}
 <div id="alert" class='alert alert-success' style="display: none;"></div>
 
-<div style="width: 20%; float: left;" class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+<div style="width: 20%; float: left;display:none" class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+    {% if request.user.is_superuser %}
     <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" onclick="toggle('all')" aria-selected="true"><i class="fa-solid fa-globe"></i>&nbsp;<span class="mobile_hide">All</span></a>
     <a class="nav-link" id="v-pills-messages-tab" href="/admin" role="tab" aria-selected="false"><i class="fa-solid fa-screwdriver-wrench"></i>&nbsp;<span class="mobile_hide">Admin Console</span></a>
     <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-Bookmarks" role="tab" aria-controls="v-pills-home" onclick="toggle('bookmarks')" aria-selected="false"><i class="fa-solid fa-bookmark"></i>&nbsp;<span class="mobile_hide">Bookmarks</span></a>
+    {% endif %}
+    {% if request.user|has_group:"Help Desk Admins" or request.user.is_superuser %}
     <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-Communications" role="tab" aria-controls="v-pills-home" onclick="toggle('communications')" aria-selected="false"><i class="fa-solid fa-envelope"></i>&nbsp;<span class="mobile_hide">Communications</span></a>
+    {% endif %} 
+    {% if request.user.is_superuser %}
     <a class="nav-link" id="v-pills-messages-tab" href="{% url 'experience_manager' %}" role="tab" aria-selected="false"><i class="fa-solid fa-camera"></i>&nbsp;<span class="mobile_hide">Experience Manager</span></a>
     <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-Helpers" role="tab" aria-controls="v-pills-home" onclick="toggle('helpers')" aria-selected="false"><i class="fa-solid fa-handshake-angle"></i>&nbsp;<span class="mobile_hide">Helpers</span></a>
+    {% endif %}
+    {% if request.user|has_group:"Integration Admins" or request.user.is_superuser %}
     <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-Integrations" role="tab" aria-controls="v-pills-home" onclick="toggle('integrations')" aria-selected="false"><i class="fa-solid fa-circle-nodes"></i>&nbsp;<span class="mobile_hide">Integrations</span></a>
-
+    {% endif %}
   </div>
   <div style="width: 80%;float:left;margin-left: 0%;height: 100%;" class="tab-content" id="v-pills-tabContent">
     <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
@@ -74,6 +83,23 @@ only screen and (max-width: 760px),
                 selectedDivs[i].style.display = 'block'
             }           
         }
-    }
+    };
+    document.addEventListener('DOMContentLoaded', () => {
+        {% if groups %}
+        const allDivs = document.getElementsByClassName("all")
+        remove_list = []
+        for(let i = 0; i<allDivs.length; i++) {
+            if (!({% for group in groups %} allDivs[i].classList.contains("{{group}}") | {% endfor %} false)) {
+                remove_list.push(allDivs[i])
+            } 
+        }
+        for(let i = 0; i<remove_list.length; i++) {
+            remove_list[i].remove()
+        }
+        document.getElementById("v-pills-tab").style.display='block'
+        {% else %}
+        document.getElementById("v-pills-tab").style.display='block'
+        {% endif %}
+    })
 </script>
 {% endblock %}

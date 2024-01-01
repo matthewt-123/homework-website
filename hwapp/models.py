@@ -3,7 +3,7 @@ from django.db import models
 
 # Create your models here.
 class User(AbstractUser):
-    pass
+    bookmarks = models.ManyToManyField("EmailTemplate")
 class Class(models.Model):
     class_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='class_owner')
     class_name = models.CharField(max_length=128)
@@ -46,10 +46,6 @@ class Preferences(models.Model):
     class Meta:
         verbose_name = ('Preferences')
         verbose_name_plural = ('Preferences')
-class IcsLink(models.Model):
-    link_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='links')
-    link_application = models.CharField(max_length=128)
-    link = models.TextField()
 class EmailTemplate(models.Model):
     template_name = models.CharField(max_length=64)
     template_body = models.TextField()
@@ -57,22 +53,22 @@ class EmailTemplate(models.Model):
     version_id = models.IntegerField(default=False, blank=False, null=True)
     def __str__(self):
         return f"{self.template_name}"
-class IcsId(models.Model):
-    icsID_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='icsID_user')
-    icsID = models.CharField(max_length=512)
+    class Meta:
+        verbose_name = ('Site Template')
+        verbose_name_plural = ('Site Templates')
 class AllAuth(models.Model):
     allauth_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='allauth_user')
     uid = models.CharField(max_length=512)
     extra_data = models.TextField()
     class Meta:
-        verbose_name = ('Auth0 SSO')
-        verbose_name_plural = ('Auth0 SSO')
+        verbose_name = ('SSO Credential')
+        verbose_name_plural = ('SSO Credentials')
 
 class PasteBin(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField(default="", blank="") 
+
 def user_directory_path(instance, filename): 
-  
     # file will be uploaded to MEDIA_ROOT / user_<id>/<filename>
     return 'uploads/user_{0}/{1}'.format(instance.user.id, filename) 
 class FileBin(models.Model):

@@ -3,7 +3,6 @@ from .models import SpotifyAuth, SpotifyPlaylist
 import secrets
 import os
 import string
-from dotenv import load_dotenv
 import sys
 import requests
 import json
@@ -13,18 +12,24 @@ from django.urls import reverse
 from django.http.response import JsonResponse
 import re
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.views.decorators.clickjacking import xframe_options_exempt
 
 
 sys.path.append("..")
 from mywebsite.settings import DEBUG
 
-load_dotenv()
 def matthew_check(user):
     return user.id == 1
+def user_in_group(*group_names):
+    """Requires user membership in at least one of the groups passed in."""
+    def in_groups(u):
+        if u.is_authenticated:
+            if bool(u.groups.filter(name__in=group_names)) | u.is_superuser:
+                return True
+        return False
+    return user_passes_test(in_groups, login_url='403')
 
 # Create your views here.
-@login_required(login_url='/login')
+@user_in_group("Spotify Users")
 def index(request):
     try:
         int_status = SpotifyAuth.objects.get(user=request.user, error=False)
@@ -83,16 +88,7 @@ def callback(request):
     spotify_auth.save()
 
     return HttpResponseRedirect(reverse("spotify_index"))
-@user_passes_test(matthew_check)
-def test(request):
-    url = f'https://api.spotify.com/v1/playlists/6vWg8WdbX2FcF9Ncfhd3QC/followers/contains?ids=tsai_matthew'
-    headers = {"Authorization": f"Bearer {SpotifyAuth.objects.get(user=request.user).access_token}"}
-    response = requests.get(url, headers=headers)
-    if str(response) != "<Response[200]>":
-        expired(request)
-        response = requests.get(url, headers=headers)
-    data1 = json.loads(response.text)
-    print(response.text)
+
 @login_required(login_url='/login')
 def expired(request):
     url = "https://accounts.spotify.com/api/token"

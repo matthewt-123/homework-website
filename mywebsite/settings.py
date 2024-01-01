@@ -12,15 +12,10 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 import os
-import dj_database_url
-from dotenv import load_dotenv, find_dotenv
-import django.contrib.gis.db.backends.mysql
-import django.db.backends.mysql
-import django.db.backends.mysql.client
-import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegration
 
-load_dotenv()
+import sentry_sdk
+import dj_database_url
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,7 +28,15 @@ VERSION = "17"
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
+
+if DEBUG:
+    from dotenv import load_dotenv, find_dotenv
+    load_dotenv()
+    ENV_FILE = find_dotenv()
+    if ENV_FILE:
+        load_dotenv(ENV_FILE)
+
 sentry_sdk.init(
     dsn="https://86f8b9a59c8d4407a18c0574fea5781e@o1217115.ingest.sentry.io/6359235",
     traces_sample_rate=0.0 if DEBUG else 1.0,
@@ -77,6 +80,8 @@ SITE_ID = 1
 
 LOGIN_REDIRECT_URL = '/login'
 LOGOUT_REDIRECT_URL = '/'
+
+LOGIN_URL = '/login'
 
 INTERNAL_IPS = ['10.2.0.4']
 
@@ -182,10 +187,6 @@ STATICFILES_DIRS = (
 )
 
 ADMINS = [('Matthew', 'matthew@matthewtsai.tech')]
-
-ENV_FILE = find_dotenv()
-if ENV_FILE:
-    load_dotenv(ENV_FILE)
 
 
 # Load Auth0 application settings into memory

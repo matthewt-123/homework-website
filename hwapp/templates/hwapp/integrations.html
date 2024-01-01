@@ -1,4 +1,5 @@
 {% extends "hwapp/layout.html" %}
+{% load has_group %}
 {% block title %}
 Integrations
 {% endblock %}
@@ -8,8 +9,9 @@ Integrations
     <a class="nav-link" id="v-pills-Canvas-tab" data-toggle="pill" href="#v-pills-Canvas" role="tab" aria-controls="v-pills-Canvas" aria-selected="false">Canvas</a>
     <a class="nav-link" id="v-pills-Notion-tab" data-toggle="pill" href="#v-pills-Notion" role="tab" aria-controls="v-pills-Notion" aria-selected="false">Notion</a>
     <a class="nav-link" id="v-pills-Schoology-tab" data-toggle="pill" href="#v-pills-Schoology" role="tab" aria-controls="v-pills-Schoology" aria-selected="false">Schoology</a>
+    {% if request.user|has_group:"Spotify Users" or request.user.is_superuser %}
     <a class="nav-link" href="{% url 'spotify_index' %}" role="tab" aria-selected="false">Spotify</a>
-
+    {% endif %}
   </div>
   <div class="tab-content" style="width: 80%;float:left;margin-left: 0%;height: 100%;" id="v-pills-tabContent">
     <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">

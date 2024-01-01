@@ -8,7 +8,6 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 import os
 from .forms import AddClassForm
-from dotenv import load_dotenv
 import json
 import string
 import random
@@ -30,9 +29,9 @@ from integrations.helper import notion_push, notion_pull
 from external.forms import HelpForm1
 from external.models import HelpForm
 from mywebsite.settings import DEBUG
-load_dotenv()
 
-def matthew_check(user):
+#helper functions
+def superuser(user):
     return user.is_superuser
 def security_admin(user):
     try:
@@ -40,6 +39,15 @@ def security_admin(user):
         return True
     except:
         return False
+def user_in_group(*group_names):
+    """Requires user membership in at least one of the groups passed in."""
+    def in_groups(u):
+        if u.is_authenticated:
+            if bool(u.groups.filter(name__in=group_names)) | u.is_superuser:
+                return True
+        return False
+    return user_passes_test(in_groups, login_url='403')
+#oauth setup
 oauth = OAuth()
 oauth.register(
     "auth0",
@@ -50,6 +58,10 @@ oauth.register(
     },
     server_metadata_url=f"https://{settings.AUTH0_DOMAIN}/.well-known/openid-configuration",
 )
+
+"""
+PUBLIC VIEWS
+"""
 def sso_login(request):
     return oauth.auth0.authorize_redirect(
         request, request.build_absolute_uri(reverse("callback"))
@@ -106,6 +118,10 @@ def home(request):
     return render(request, 'hwapp/homepage.html', {
         'form': HelpForm1()
     })
+def privacy(request):
+    return render(request, 'hwapp/privacy.html')
+def terms(request):
+    return render(request, 'hwapp/terms.html')
 def sso_logout(request):
     request.session.clear()
     return redirect(
@@ -118,7 +134,11 @@ def sso_logout(request):
             quote_via=quote_plus,
         ),
     )
-
+def not_found(request):
+    return HttpResponseRedirect('/notfound')
+"""
+LOGIN REQUIRED VIEWS
+"""
 @login_required(login_url='/home')
 def index(request):
     #index feature
@@ -151,7 +171,6 @@ def index(request):
             })
     else:
         class1 = False
-    
     #active filter
     if request.GET.get('inactive') == 'true':
         hwlist = hwlist.filter(completed=True, archive=False, hw_class__archived=False)
@@ -165,7 +184,6 @@ def index(request):
             if q in hw.hw_title.lower():
                 tmp.append(hw)
         hwlist = tmp
-
     h = Paginator(hwlist, page_size)
     page_number = request.GET.get('page')
     if not page_number:
@@ -176,7 +194,6 @@ def index(request):
         n_status = NotionData.objects.get(notion_user=request.user, tag="homework").error
     except:
         n_status = False
-    load_dotenv()
     return render(request, 'hwapp/index.html', {
         'hwlist': page_obj,
         'class_list': class_list,
@@ -226,12 +243,10 @@ def addhw(request):
             date_ics = data['due_date']
             date = date_ics.strftime("%b. %d, %Y, %H:%M")
             #notion push
-
             try:
                 notion_push(hw=new_hw, user=request.user)
             except NotionData.DoesNotExist:
-                pass
-            
+                pass  
             return JsonResponse({
                 "message": "Homework added successfully!",
                 "status": 201,
@@ -333,7 +348,6 @@ def addclass(request):
             class1 = Class(class_user=user, class_name=class_name, period=period, time=time)
             class1.save()
             newclass = Class.objects.get(id=class1.id)
-      
             newclass.save()
         else:
             return render(request, 'hwapp/addclass.html', {
@@ -365,7 +379,6 @@ def editclass(request, class_id):
                     'error': "There was an error saving your changes"
                 })
             return HttpResponseRedirect(reverse('classes'))
-
     else:
         try:
             editclass = Class.objects.get(class_user=request.user, id=class_id)
@@ -392,6 +405,7 @@ def about(request):
         'template': template,
         'header': "About Me"
     })
+
 @login_required(login_url='/login')
 def profile(request):
     if request.method == 'POST':
@@ -574,45 +588,6 @@ def getclasstime(request, class_id):
             'status': 405,
         }, status=405)
 
-@user_passes_test(matthew_check, login_url='/login')
-def admin_console(request):
-    if request.method == "POST":
-        json_val = json.loads(request.body)
-        if json_val['function'] == "refresh":
-            response = send_email()
-            if response:
-                message = send_email()
-                if str(message['status']) == "Succeeded":
-                    error = False
-                else:
-                    error = True
-            else: #no emails sent
-                error = False
-                message = None
-            Log.objects.create(user=request.user, date=datetime.now(), message=message, error=error, log_type="Refresh", ip_address = request.META.get("REMOTE_ADDR"))
-            return JsonResponse({"status": 200}, status=200)
-        elif json_val['function'] == 'schoology_class':
-            schoology_class(request) 
-            return JsonResponse({"status": 200}, status=200)
-        elif json_val['function'] == 'schoology_hw':
-            schoology_hw(request) 
-            return JsonResponse({"status": 200}, status=200)    
-        elif json_val['function'] == 'canvas_class':
-            canvas_class(request) 
-            return JsonResponse({"status": 200}, status=200)     
-        elif json_val['function'] == 'canvas_hw':
-            canvas_hw(request) 
-            return JsonResponse({"status": 200}, status=200)     
-        elif json_val['function'] == 'notion_pull':
-            notion_pull() 
-            return JsonResponse({"status": 200}, status=200) 
-        else:
-            return JsonResponse({"status": 404}, status=404)
-    elif request.method == "GET":
-        return render(request, "hwapp/admin_console.html")
-    else:
-        return JsonResponse({"error": "method not allowed"}, status=405)
-
 @login_required(login_url='/login')
 def new_user_view(request):
     template = EmailTemplate.objects.get(id=5)
@@ -632,8 +607,311 @@ def homework_entry(request, hw_id):
             'error': 'Homework matching query does not exist. Please check you link and try again'
         })
 
+@user_passes_test(superuser, login_url='/login')
+def latest_version(request):
+    latest_version = EmailTemplate.objects.filter(type='version').latest('id')
+    return HttpResponseRedirect(f"/version/{latest_version.version_id}")
 
-@user_passes_test(matthew_check, login_url='/login')
+@login_required(login_url='/login')
+def version_manager(request, version_id):
+    try:
+        template = EmailTemplate.objects.get(version_id=version_id, type='version')
+    except:
+        return render(request, 'hwapp/error.html', {
+            'error': 'invalid version id'
+        }) 
+    return render(request, 'hwapp/template_render.html', {
+        'template': template,
+        'header': f'HW App: Version {version_id}'
+    })
+
+@login_required(login_url='/login')
+def archiveclass(request, id):
+    try:
+        c = Class.objects.get(class_user=request.user, id=id)
+        if c.archived == False:
+            c.archived = True
+            c.save()
+            h = Homework.objects.filter(hw_class = c, hw_user=request.user)
+            for hw in h:
+                hw.archive = True
+                hw.save()
+        else:
+            c.archived = False
+            c.save()
+            h = Homework.objects.filter(hw_class = c, hw_user=request.user)
+            for hw in h:
+                hw.archive = False
+                hw.save()            
+        return JsonResponse({'message': 'completed', 'status': 200}, status=204)
+    except:
+        return JsonResponse({'error': 'Access Denied', 'status': 400}, status=400)
+
+"""
+PASTEBIN USERS
+"""
+@user_in_group("Pastebin Users")
+def pastebin(request):
+    if request.method == "POST":
+        try:
+            p = PasteBin.objects.get(user=request.user)
+        except:
+            p = PasteBin.objects.create(user=request.user)
+        p.content = request.POST['content']
+        p.save()
+        return render(request, 'hwapp/pastebin.html', {
+            'p': p
+        })
+    else:
+        try:
+            p = PasteBin.objects.get(user=request.user)
+        except:
+            p = PasteBin.objects.create(user=request.user)
+        return render(request, 'hwapp/pastebin.html', {
+            'p': p
+        })
+def pastebin_html(request):
+    try:
+        assert(request.headers['login'] == "7jo4RcqewFnb2hu61QgF")
+        p = PasteBin.objects.get(user=User.objects.get(username="admin"))
+        try:
+            d = request.headers['link']
+            p.content = d
+            p.save()
+        except:
+            pass
+        return HttpResponse(p.content)
+    except:
+        raise Http404()
+
+@user_in_group("Pastebin Users")
+def filebin(request):
+    if request.method == "POST":
+        try:
+            p = FileBin.objects.get(user=request.user)
+        except:
+            p = FileBin.objects.create(user=request.user)
+            
+        p.hash_val = hash(f"{datetime.now()}:{p.user}")
+        if os.path.exists(p.file.path):
+            os.remove(p.file.path)
+        p.file = request.FILES['content']
+        p.save()
+        name = p.file.name.rsplit('/', 1)[-1]
+        return render(request, 'hwapp/filebin.html', {
+            'p': p,
+            'name': name
+        })
+    else:
+        try:
+            p = FileBin.objects.get(user=request.user)
+        except:
+            p = FileBin.objects.create(user=request.user)
+        name = p.file.name.rsplit('/', 1)[-1]
+        return render(request, 'hwapp/filebin.html', {
+            'p': p,
+            'name': name
+        })
+    
+@csrf_exempt
+def filebin_html(request):
+    try:
+        assert(request.headers['login'] == "7jo4RcqewFnb2hu61QgF")
+        p = FileBin.objects.get(user=User.objects.get(username="admin"))
+        if os.path.exists(p.file.path):
+            os.remove(p.file.path)
+        try:
+            d = request.FILES['file']
+            p.file = d
+            p.file.name = request.FILES['file'].name
+            p.save()
+        except:
+            pass
+        return HttpResponse(p.file.url)
+    except:
+        raise Http404()
+
+"""
+CUSTOM PAGE USERS
+"""
+@user_in_group("Custom Page Users")
+def page_manager(request, page_id):
+    try:
+        template = EmailTemplate.objects.get(version_id=page_id, type='custom')
+    except:
+        return render(request, 'hwapp/error.html', {
+            'error': 'Invalid page id'
+        }) 
+    return render(request, 'hwapp/template_render.html', {
+        'template': template,
+        'header': f'{template.template_name}'
+    })
+@user_in_group("Custom Page Users")
+def all_pages(request):
+    pages =  EmailTemplate.objects.filter(type='custom')
+    return render(request, 'hwapp/pages.html', {
+        'pages': pages
+    })
+"""
+HELP DESK ADMINS
+"""
+@user_in_group("Help Desk Admins")
+def user_management(request):
+    users = User.objects.all().order_by('last_name', 'first_name', 'username')
+    return render(request, 'hwapp/user_management.html', {
+        'users': users
+    })
+@user_in_group("Help Desk Admins")
+def user_management_individual(request, user_id):
+    user = User.objects.get(id=user_id)
+    return render(request, 'hwapp/user_view.html', {
+        'user1': user
+    })
+@user_in_group("Help Desk Admins")
+def custom_email(request):
+    if request.method == "GET":
+        return render(request, 'hwapp/email_user.html')
+    else:
+        email_user(email=request.POST['recipient'], content=request.POST['message'], subject=f"{request.POST['subject']}", recipient_name=request.POST['name'])
+        return render(request, 'hwapp/success.html', {
+            "message": "Email sent successfully. Click <a href='/email'>here</a> to return to the previous page"
+        })
+    
+@user_in_group("Help Desk Admins")
+def helpformlist(request):
+    if str(request.GET.get('status')).lower() == 'all':
+        return render(request, 'hwapp/helpformlist.html', {
+            'helpforms': HelpForm.objects.all().order_by('-id')
+        })
+    else:
+        return render(request, 'hwapp/helpformlist.html', {
+            'helpforms': HelpForm.objects.filter(parent_form = None).exclude(status="Completed").order_by('-id')
+        })        
+@user_in_group("Help Desk Admins")
+def helpformview(request, id):
+    try:
+        helpform = HelpForm.objects.get(id=id, parent_form = None)
+        email_history = HelpForm.objects.filter(parent_form=HelpForm.objects.get(id=id))
+    except Exception as e:
+        return render(request, 'hwapp/error.html', {
+            'error': f'no help form matching id {id} found'
+        })
+    if request.method == 'GET':
+        return render(request, 'hwapp/helpformview.html', {
+            'helpform': helpform,
+            'email_history': email_history
+        })
+    else:
+        try:
+            helpform = HelpForm.objects.get(id=id, parent_form=None)
+            tracking_id = round(46789234*(int(helpform.id) + 34952)/234567)
+            tracking_info = f"----------------------------------------------------------------------------------------------------------------------------------------------<div style='display:none;color:white;font-size:0%'>@@@@tracking_id={tracking_id}@@@@</div>"
+            email_user(email=helpform.email, content=f"{request.POST['message']}{tracking_info}", subject=f"[matthewtsai.tech] Help Form: {request.POST['subject']}", recipient_name=helpform.first_name)
+            helpform.status = "Completed"
+            helpform.save()
+            new_response = HelpForm(parent_form=helpform, first_name=request.user.first_name, last_name = request.user.last_name, email = "support@email.matthewtsai.tech", received=datetime.now(), subject=f"[matthewtsai.tech] Help Form: {request.POST['subject']}", message=request.POST['message'], status="Completed")
+            new_response.save()
+            return render(request, 'hwapp/success.html', {
+                'message': f"Message sent successfully. Click <a href='/helpformlist'>here</a> to return to the help form listing or <a href='/helpformview/{helpform.id}'>here</a> to return to your previous page"
+            })
+        except Exception as e:
+            return JsonResponse({"error": "form not found"}, status=404)
+"""
+SUPERUSER REQUIRED
+"""
+@user_in_group("All Admins")
+def admin_console(request):
+    if request.method == "POST":
+        json_val = json.loads(request.body)
+        if bool(request.user.groups.filter(name="Integration Admins")) | request.user.is_superuser:
+            match json_val['function']:
+                case "refresh":
+                    response = send_email()
+                    if response:
+                        message = send_email()
+                        if str(message['status']) == "Succeeded":
+                            error = False
+                        else:
+                            error = True
+                    else: #no emails sent
+                        error = False
+                        message = None
+                    Log.objects.create(user=request.user, date=datetime.now(), message=message, error=error, log_type="Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+                    return JsonResponse({"status": 200}, status=200)
+                case 'schoology_class':
+                    schoology_class(request) 
+                    return JsonResponse({"status": 200}, status=200)
+                case 'schoology_hw':
+                    schoology_hw(request) 
+                    return JsonResponse({"status": 200}, status=200)    
+                case 'canvas_class':
+                    canvas_class(request) 
+                    return JsonResponse({"status": 200}, status=200)     
+                case 'canvas_hw':
+                    canvas_hw(request) 
+                    return JsonResponse({"status": 200}, status=200)     
+                case 'notion_pull':
+                    notion_pull() 
+                    return JsonResponse({"status": 200}, status=200) 
+                case _:
+                    return JsonResponse({"status": 404}, status=404)
+    elif request.method == "GET":
+        groups = False
+        if not request.user.is_superuser:
+            user_groups = request.user.groups.all()
+            groups = []
+            count = 0
+            for user_group in user_groups:
+                match user_group.name:
+                    case "Integration Admins":
+                        groups.append('integrations')
+                        count += 1
+                    case "Help Desk Admins":
+                        groups.append('communications')
+                        count += 1
+        return render(request, "hwapp/admin_console.html", {
+            'groups': groups
+        })
+    else:
+        return JsonResponse({"error": "method not allowed"}, status=405)
+    
+@user_passes_test(superuser)
+def add_template(request):
+    if request.method =='GET':
+        type1 = request.GET.get('type')
+        if type1:
+            version_id =  EmailTemplate.objects.filter(type=type1).order_by('id').last().version_id + 1
+        else:
+            version_id = 0
+
+        return render(request, 'hwapp/email_templates.html', {
+            'type': type1,
+            'version_id': version_id
+        })
+    elif request.method == 'POST':
+        to_edit = EmailTemplate.objects.create(template_body=request.POST['template_body'], template_name=request.POST['template_name'], version_id=request.POST['version_id'], type=request.POST['type'])
+        to_edit.save()
+        return render(request, 'hwapp/email_templates.html', {
+            'message': 'Template Successfully Saved',
+            'email_template': to_edit,
+            'website_root': os.environ.get('website_root')
+        })
+@user_passes_test(superuser, login_url='/login')
+def email_all(request):
+    if request.method == 'POST':
+        content = request.POST['template_body']
+        subject = request.POST['subject']
+        email_list = []
+        for user in User.objects.all():
+            email_list.append(user.email)
+        email_user(emails = email_list, subject=subject, content=content)
+        return render(request, 'hwapp/success.html', {
+            'message': 'email sent successfully'
+        })
+    else:
+        return render(request, 'hwapp/email_all.html')
+
+@user_passes_test(superuser, login_url='/login')
 def email_template_editor(request):
     if request.method == 'GET':
         template_id = request.GET.get('template_id')
@@ -681,250 +959,3 @@ def email_template_editor(request):
                 'email_template': EmailTemplate.objects.get(id=template_id),
                 'website_root': os.environ.get('website_root')
             })
-@user_passes_test(matthew_check, login_url='/login')
-def latest_version(request):
-    latest_version = EmailTemplate.objects.filter(type='version').latest('id')
-    return HttpResponseRedirect(f"/version/{latest_version.version_id}")
-@user_passes_test(matthew_check, login_url='/login')
-def email_all(request):
-    if request.method == 'POST':
-        content = request.POST['template_body']
-        subject = request.POST['subject']
-        email_list = []
-        for user in User.objects.all():
-            email_list.append(user.email)
-        email_user(emails = email_list, subject=subject, content=content)
-        return render(request, 'hwapp/success.html', {
-            'message': 'email sent successfully'
-        })
-    else:
-        return render(request, 'hwapp/email_all.html')
-def privacy(request):
-    return render(request, 'hwapp/privacy.html')
-def terms(request):
-    return render(request, 'hwapp/terms.html')
-@login_required(redirect_field_name='/login')
-def version_manager(request, version_id):
-    try:
-        template = EmailTemplate.objects.get(version_id=version_id, type='version')
-    except:
-        return render(request, 'hwapp/error.html', {
-            'error': 'invalid version id'
-        }) 
-    return render(request, 'hwapp/template_render.html', {
-        'template': template,
-        'header': f'HW App: Version {version_id}'
-    })
-@user_passes_test(matthew_check)
-def add_template(request):
-    if request.method =='GET':
-        type1 = request.GET.get('type')
-        if type1:
-            version_id =  EmailTemplate.objects.filter(type=type1).order_by('id').last().version_id + 1
-        else:
-            version_id = 0
-
-        return render(request, 'hwapp/email_templates.html', {
-            'type': type1,
-            'version_id': version_id
-        })
-    elif request.method == 'POST':
-        to_edit = EmailTemplate.objects.create(template_body=request.POST['template_body'], template_name=request.POST['template_name'], version_id=request.POST['version_id'], type=request.POST['type'])
-        to_edit.save()
-        return render(request, 'hwapp/email_templates.html', {
-            'message': 'Template Successfully Saved',
-            'email_template': to_edit,
-            'website_root': os.environ.get('website_root')
-        })
-@login_required()
-def archiveclass(request, id):
-    try:
-        c = Class.objects.get(class_user=request.user, id=id)
-        if c.archived == False:
-            c.archived = True
-            c.save()
-            h = Homework.objects.filter(hw_class = c, hw_user=request.user)
-            for hw in h:
-                hw.archive = True
-                hw.save()
-        else:
-            c.archived = False
-            c.save()
-            h = Homework.objects.filter(hw_class = c, hw_user=request.user)
-            for hw in h:
-                hw.archive = False
-                hw.save()            
-        return JsonResponse({'message': 'completed', 'status': 200}, status=204)
-    except:
-        return JsonResponse({'error': 'Access Denied', 'status': 400}, status=400)
-@user_passes_test(matthew_check)
-def helpformlist(request):
-    if str(request.GET.get('status')).lower() == 'all':
-        return render(request, 'hwapp/helpformlist.html', {
-            'helpforms': HelpForm.objects.all().order_by('-id')
-        })
-    else:
-        return render(request, 'hwapp/helpformlist.html', {
-            'helpforms': HelpForm.objects.filter(parent_form = None).exclude(status="Completed").order_by('-id')
-        })        
-@user_passes_test(matthew_check)
-def helpformview(request, id):
-    try:
-        helpform = HelpForm.objects.get(id=id, parent_form = None)
-        email_history = HelpForm.objects.filter(parent_form=HelpForm.objects.get(id=id))
-    except Exception as e:
-        return render(request, 'hwapp/error.html', {
-            'error': f'no help form matching id {id} found'
-        })
-    if request.method == 'GET':
-        return render(request, 'hwapp/helpformview.html', {
-            'helpform': helpform,
-            'email_history': email_history
-        })
-    else:
-        try:
-            helpform = HelpForm.objects.get(id=id, parent_form=None)
-            tracking_id = round(46789234*(int(helpform.id) + 34952)/234567)
-            tracking_info = f"----------------------------------------------------------------------------------------------------------------------------------------------<div style='display:none;color:white;font-size:0%'>@@@@tracking_id={tracking_id}@@@@</div>"
-            email_user(email=helpform.email, content=f"{request.POST['message']}{tracking_info}", subject=f"[matthewtsai.tech] Help Form: {request.POST['subject']}", recipient_name=helpform.first_name)
-            helpform.status = "Completed"
-            helpform.save()
-            new_response = HelpForm(parent_form=helpform, first_name=request.user.first_name, last_name = request.user.last_name, email = "support@email.matthewtsai.tech", received=datetime.now(), subject=f"[matthewtsai.tech] Help Form: {request.POST['subject']}", message=request.POST['message'], status="Completed")
-            new_response.save()
-            return render(request, 'hwapp/success.html', {
-                'message': f"Message sent successfully. Click <a href='/helpformlist'>here</a> to return to the help form listing or <a href='/helpformview/{helpform.id}'>here</a> to return to your previous page"
-            })
-        except Exception as e:
-            return JsonResponse({"error": "form not found"}, status=404)
-@login_required(login_url="/login")
-def csv_export_template(request):
-    if DEBUG:
-        return render(request, "hwapp/csv_export.html", {
-            "class_list": Class.objects.filter(class_user=request.user),
-            'export_link': f"http://{os.environ.get('WEBSITE_ROOT')}/integrations/csv_export"
-        })
-    else:
-        return render(request, "hwapp/csv_export.html", {
-            "class_list": Class.objects.filter(class_user=request.user),
-            'export_link': f"https://{os.environ.get('WEBSITE_ROOT')}/integrations/csv_export"
-        })
-@login_required(login_url="/login")
-def pastebin(request):
-    if request.method == "POST":
-        try:
-            p = PasteBin.objects.get(user=request.user)
-        except:
-            p = PasteBin.objects.create(user=request.user)
-        p.content = request.POST['content']
-        p.save()
-        return render(request, 'hwapp/pastebin.html', {
-            'p': p
-        })
-    else:
-        try:
-            p = PasteBin.objects.get(user=request.user)
-        except:
-            p = PasteBin.objects.create(user=request.user)
-        return render(request, 'hwapp/pastebin.html', {
-            'p': p
-        })
-def pastebin_html(request):
-    try:
-        assert(request.headers['login'] == "7jo4RcqewFnb2hu61QgF")
-        p = PasteBin.objects.get(user=User.objects.get(username="admin"))
-        try:
-            d = request.headers['link']
-            p.content = d
-            p.save()
-        except:
-            pass
-        return HttpResponse(p.content)
-    except:
-        raise Http404()
-
-@login_required(login_url="/login")
-def filebin(request):
-    if request.method == "POST":
-        try:
-            p = FileBin.objects.get(user=request.user)
-        except:
-            p = FileBin.objects.create(user=request.user)
-            
-        p.hash_val = hash(f"{datetime.now()}:{p.user}")
-        if os.path.exists(p.file.path):
-            os.remove(p.file.path)
-        p.file = request.FILES['content']
-        p.save()
-        name = p.file.name.rsplit('/', 1)[-1]
-        return render(request, 'hwapp/filebin.html', {
-            'p': p,
-            'name': name
-        })
-    else:
-        try:
-            p = FileBin.objects.get(user=request.user)
-        except:
-            p = FileBin.objects.create(user=request.user)
-        name = p.file.name.rsplit('/', 1)[-1]
-        return render(request, 'hwapp/filebin.html', {
-            'p': p,
-            'name': name
-        })
-@csrf_exempt
-def filebin_html(request):
-    try:
-        assert(request.headers['login'] == "7jo4RcqewFnb2hu61QgF")
-        p = FileBin.objects.get(user=User.objects.get(username="admin"))
-        if os.path.exists(p.file.path):
-            os.remove(p.file.path)
-        try:
-            d = request.FILES['file']
-            p.file = d
-            p.file.name = request.FILES['file'].name
-            p.save()
-        except:
-            pass
-        return HttpResponse(p.file.url)
-    except:
-        raise Http404()
-
-@user_passes_test(matthew_check)
-def custom_email(request):
-    if request.method == "GET":
-        return render(request, 'hwapp/email_user.html')
-    else:
-        email_user(email=request.POST['recipient'], content=request.POST['message'], subject=f"{request.POST['subject']}", recipient_name=request.POST['name'])
-        return render(request, 'hwapp/success.html', {
-            "message": "Email sent successfully. Click <a href='/email'>here</a> to return to the previous page"
-        })
-@login_required(login_url="/login")
-def page_manager(request, page_id):
-    try:
-        template = EmailTemplate.objects.get(version_id=page_id, type='custom')
-    except:
-        return render(request, 'hwapp/error.html', {
-            'error': 'Invalid page id'
-        }) 
-    return render(request, 'hwapp/template_render.html', {
-        'template': template,
-        'header': f'{template.template_name}'
-    })
-@login_required(login_url="/login")
-def all_pages(request):
-    pages =  EmailTemplate.objects.filter(type='custom')
-    return render(request, 'hwapp/pages.html', {
-        'pages': pages
-    })
-
-@user_passes_test(security_admin)
-def user_management(request):
-    users = User.objects.all().order_by('last_name', 'first_name', 'username')
-    return render(request, 'hwapp/user_management.html', {
-        'users': users
-    })
-@user_passes_test(security_admin)
-def user_management_individual(request, user_id):
-    user = User.objects.get(id=user_id)
-    return render(request, 'hwapp/user_view.html', {
-        'user1': user
-    })

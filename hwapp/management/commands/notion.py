@@ -1,6 +1,4 @@
-import requests
-import json
-from hwapp.models import Homework, User
+from hwapp.models import Homework
 from django.core.management.base import BaseCommand
 
 from integrations.models import NotionData
