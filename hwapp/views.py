@@ -15,11 +15,12 @@ from datetime import datetime
 from django.core.paginator import Paginator
 from .email_helper import send_email, email_user
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
 
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
 from urllib.parse import quote_plus, urlencode
-
+from django.contrib.auth.models import Group
 #allow python to access Calendar data model
 import sys
 sys.path.append("..")
@@ -426,6 +427,7 @@ def profile(request):
                 "email": request.POST['email']
             }
             response = requests.get(url, headers=headers)
+            print(response.text)
             if not json.loads(response.text):
                 uid = AllAuth.objects.get(allauth_user=request.user).uid
                 #updating user
@@ -440,6 +442,7 @@ def profile(request):
                     "user_id": uid,
                 }
                 response = requests.post(url, data = json.dumps(data), headers=headers)
+                print(response.text)
                 extra_msg = "Please check your email for a verification link"
             else:
                 return render(request, 'hwapp/profile.html', {
@@ -752,6 +755,22 @@ def all_pages(request):
     return render(request, 'hwapp/pages.html', {
         'pages': pages
     })
+@user_in_group("Custom Page Users")
+def bookmark(request):
+    data = json.loads(request.body)
+    try:
+        page = EmailTemplate.objects.get(id=data["template_id"], type='custom')
+    except:
+        return JsonResponse({"error": "no such page", "status": 404}, status=404)
+    if page in request.user.bookmarks.all():
+        request.user.bookmarks.remove(page)
+        b = 0
+    else:
+        request.user.bookmarks.add(page)
+        b = 1
+    request.user.save()
+    return JsonResponse({"status": 200, "b": b}, status=202)
+
 """
 HELP DESK ADMINS
 """
@@ -816,6 +835,48 @@ def helpformview(request, id):
             })
         except Exception as e:
             return JsonResponse({"error": "form not found"}, status=404)
+
+@user_in_group("Permission Admins")
+def group_management(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        try:
+            group = Group.objects.get(id=data['group_id'])
+        except:
+            return JsonResponse({"error": "invalid group"}, status=404)
+        try:
+            user = User.objects.get(id=data['user_id'])
+        except:
+            return JsonResponse({"error": "invalid user"}, status=404)
+        if group in user.groups.all():
+            user.groups.remove(group)
+        else:
+            user.groups.add(group)
+        user.save()
+        return JsonResponse({"status": 200}, status=200)        
+    else:
+        if request.GET.get('group_id'):
+            try:
+                group = Group.objects.get(id=request.GET.get('group_id'))
+            except:
+                return render(request, 'hwapp/error.html', {
+                    'error': 'Invalid Group ID'
+                })
+            if request.GET.get('username'):
+                all_users = User.objects.filter(Q(username__contains = request.GET.get('username')) | Q(first_name__contains = request.GET.get('username')) | Q(last_name__contains = request.GET.get('username'))).exclude(groups__name__in=[group])
+                users = User.objects.filter(Q(groups__name__in=[group.name]) & (Q(username__contains = request.GET.get('username')) | Q(first_name__contains = request.GET.get('username')) | Q(last_name__contains = request.GET.get('username'))))
+            else:
+                all_users = User.objects.all().exclude(groups__name__in=[group])
+                users = User.objects.filter(groups__name__in=[group.name])
+            return render(request, 'hwapp/users_in_group.html', {
+                'users': users,
+                'group': group,
+                'all_users': all_users
+            })
+        return render(request, 'hwapp/groups.html',{
+            'groups': Group.objects.all().order_by('name')
+        })
+
 """
 SUPERUSER REQUIRED
 """
@@ -824,51 +885,48 @@ def admin_console(request):
     if request.method == "POST":
         json_val = json.loads(request.body)
         if bool(request.user.groups.filter(name="Integration Admins")) | request.user.is_superuser:
-            match json_val['function']:
-                case "refresh":
-                    response = send_email()
-                    if response:
-                        message = send_email()
-                        if str(message['status']) == "Succeeded":
-                            error = False
-                        else:
-                            error = True
-                    else: #no emails sent
+            if json_val['function'] == "refresh":
+                response = send_email()
+                if response:
+                    message = send_email()
+                    if str(message['status']) == "Succeeded":
                         error = False
-                        message = None
-                    Log.objects.create(user=request.user, date=datetime.now(), message=message, error=error, log_type="Refresh", ip_address = request.META.get("REMOTE_ADDR"))
-                    return JsonResponse({"status": 200}, status=200)
-                case 'schoology_class':
-                    schoology_class(request) 
-                    return JsonResponse({"status": 200}, status=200)
-                case 'schoology_hw':
-                    schoology_hw(request) 
-                    return JsonResponse({"status": 200}, status=200)    
-                case 'canvas_class':
-                    canvas_class(request) 
-                    return JsonResponse({"status": 200}, status=200)     
-                case 'canvas_hw':
-                    canvas_hw(request) 
-                    return JsonResponse({"status": 200}, status=200)     
-                case 'notion_pull':
-                    notion_pull() 
-                    return JsonResponse({"status": 200}, status=200) 
-                case _:
-                    return JsonResponse({"status": 404}, status=404)
+                    else:
+                        error = True
+                else: #no emails sent
+                    error = False
+                    message = None
+                Log.objects.create(user=request.user, date=datetime.now(), message=message, error=error, log_type="Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+                return JsonResponse({"status": 200}, status=200)
+            elif json_val['function'] == 'schoology_class':
+                schoology_class(request) 
+                return JsonResponse({"status": 200}, status=200)
+            elif json_val['function'] == 'schoology_hw':
+                schoology_hw(request) 
+                return JsonResponse({"status": 200}, status=200)    
+            elif json_val['function'] == 'canvas_class':
+                canvas_class(request) 
+                return JsonResponse({"status": 200}, status=200)     
+            elif json_val['function'] == 'canvas_hw':
+                canvas_hw(request) 
+                return JsonResponse({"status": 200}, status=200)     
+            elif json_val['function'] == 'notion_pull':
+                notion_pull() 
+                return JsonResponse({"status": 200}, status=200) 
+            else:
+                return JsonResponse({"status": 404}, status=404)
     elif request.method == "GET":
         groups = False
         if not request.user.is_superuser:
             user_groups = request.user.groups.all()
             groups = []
-            count = 0
             for user_group in user_groups:
-                match user_group.name:
-                    case "Integration Admins":
-                        groups.append('integrations')
-                        count += 1
-                    case "Help Desk Admins":
-                        groups.append('communications')
-                        count += 1
+                if user_group.name == "Integration Admins":
+                    groups.append('integrations')
+                elif user_group.name == "Help Desk Admins":
+                    groups.append('communications')
+                elif user_group.name == "Permission Admins":
+                    groups.append('permission')
         return render(request, "hwapp/admin_console.html", {
             'groups': groups
         })

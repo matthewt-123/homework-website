@@ -42,12 +42,16 @@ urlpatterns = [
     #Custom Page Users
     path('page/<int:page_id>', views.page_manager, name='page_manager'),
     path('pages', views.all_pages, name='all_pages'),
+    path('bookmark', views.bookmark, name='bookmark'),
 
     #pastebin users
     path('pastebin', views.pastebin, name="pastebin"),
     path('pastebin_html', views.pastebin_html, name="pastebin_html"),
     path('filebin', views.filebin, name="filebin"),
     path('filebin_html', views.filebin_html, name="filebin_html"),
+
+    #permission admins
+    path('groups', views.group_management, name="group_management"),
 
     #is_superuser required
     path('admin_dashboard', views.admin_console, name='admin_dashboard'),

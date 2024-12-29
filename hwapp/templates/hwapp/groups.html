@@ -1,0 +1,27 @@
+{% extends "hwapp/layout.html" %}
+{% block title %}Group Listing{% endblock %}
+{% block body %}
+
+<table style="margin-left:5%;width:90%">
+    <thead>
+        <tr>
+            <td>
+                <b>Group ID</b>
+            </td>
+            <td>
+                <b>Group Name</b>
+            </td>
+        </tr>
+    </thead>
+    <tbody>
+        {% for group in groups %}
+        <tr><td>{{group.id}}</td>
+        <td>
+            <a href='{% url "group_management" %}?group_id={{group.id}}'>{{group.name}}</a>
+        </td>
+    </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

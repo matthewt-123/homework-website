@@ -9,13 +9,14 @@ import json
 from datetime import datetime
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.http.response import JsonResponse
+from django.http.response import JsonResponse, HttpResponse, Http404
 import re
 from django.contrib.auth.decorators import login_required, user_passes_test
 
 
 sys.path.append("..")
 from mywebsite.settings import DEBUG
+from hwapp.models import User
 
 def matthew_check(user):
     return user.id == 1
@@ -39,7 +40,7 @@ def index(request):
               for i in range(64))
     request.session['spotify_state'] = state
     if request.user.id == 1:
-        url = f"https://accounts.spotify.com/authorize?response_type=code&client_id={os.environ.get('SPOTIFY_CLIENT_ID')}&scope=playlist-modify-public%20playlist-modify-private%20user-read-playback-state%20streaming%20user-read-email%20user-read-private&redirect_uri=http{'' if DEBUG else 's'}://{os.environ.get('WEBSITE_ROOT')}/spotify/callback&state={state}"
+        url = f"https://accounts.spotify.com/authorize?response_type=code&client_id={os.environ.get('SPOTIFY_CLIENT_ID')}&scope=playlist-modify-public%20playlist-modify-private%20user-read-playback-state%20streaming%20user-read-email%20user-read-currently-playing%20user-read-private&redirect_uri=http{'' if DEBUG else 's'}://{os.environ.get('WEBSITE_ROOT')}/spotify/callback&state={state}"
     else:
         url = f"https://accounts.spotify.com/authorize?response_type=code&client_id={os.environ.get('SPOTIFY_CLIENT_ID')}&scope=playlist-modify-public%20playlist-modify-private&redirect_uri=http{'' if DEBUG else 's'}://{os.environ.get('WEBSITE_ROOT')}/spotify/callback&state={state}"
 
@@ -49,7 +50,7 @@ def index(request):
         'website_root': os.environ.get("WEBSITE_ROOT")
     })
 
-@login_required(login_url='/login')
+@user_in_group("Spotify Users")
 def callback(request):
     if request.method == "GET":
         if request.session['spotify_state'] and request.GET.get('state') != request.session['spotify_state']:
@@ -89,7 +90,7 @@ def callback(request):
 
     return HttpResponseRedirect(reverse("spotify_index"))
 
-@login_required(login_url='/login')
+@user_in_group("Spotify Users")
 def expired(request):
     url = "https://accounts.spotify.com/api/token"
     
@@ -108,7 +109,7 @@ def expired(request):
     spotify_auth.access_token = json.loads(response.text)['access_token']
     spotify_auth.save()
     return JsonResponse({"message": "refresh completed successfully", "status": 200}, status=200)
-@login_required(login_url='/login')
+@user_in_group("Spotify Users")
 def recommendations(request):
     data = json.loads(request.body)
     seed_tracks = ""
@@ -180,7 +181,7 @@ def recommendations(request):
     }
     response = requests.post(url, data=json.dumps(data), headers=headers)
     return JsonResponse({"message": "playlist created successfully", "status": 200, "playlist_id": s_playlist.id}, status=200)
-@login_required(login_url='/login')
+@user_in_group("Spotify Users")
 def playlists(request):
     spotify_auth = SpotifyAuth.objects.get(user=request.user)
     if request.GET.get("playlist"):
@@ -198,7 +199,7 @@ def playlists(request):
         return render(request, 'spotify/playlist_listing.html', {
             'playlists': playlists_all
         })
-@login_required(login_url='/login')
+@user_in_group("Spotify Users")
 def deleteplaylist(request):
     try:
         playlist = SpotifyPlaylist.objects.get(auth=SpotifyAuth.objects.get(user=request.user), id=request.GET.get('playlist_id'))
@@ -206,3 +207,94 @@ def deleteplaylist(request):
         return JsonResponse({"message": "Playlist deleted successfully", "status": 200}, status=200)
     except:
         return JsonResponse({"message": "Playlist not found", "status": 404}, status=404)
+
+@user_in_group("Spotify Users")
+def queuedump(request):
+    if request.method == "POST":
+        spotify_auth = SpotifyAuth.objects.get(user=request.user)
+        url = "https://api.spotify.com/v1/me/player/queue"
+
+        #Part 1: Get Queue
+        headers = {"Authorization": f"Bearer {spotify_auth.access_token}"}
+        response = requests.get(url, headers=headers)
+        if str(response) != "<Response[200]>":
+            expired(request)
+            response = requests.get(url, headers=headers)
+        tracks = json.loads(response.text)
+        uri = []
+        for track in tracks['queue']:
+            if track['type'] == "track":
+                uri.append(track["uri"])
+        
+        #Part 2: Create New Playlist
+        url = f"https://api.spotify.com/v1/users/{spotify_auth.s_user_id}/playlists"
+        name = request.POST.get("playlist_name")
+        if name == "":
+            playlist_name = f"Queue {datetime.now().strftime('%m-%d-%Y')}"
+        else:
+            playlist_name = name
+        data = {
+            "name": playlist_name,
+            "public": False,
+            "description": f"Created by Homework App on {datetime.now().strftime('%m-%d-%Y')}"
+        }
+        response = requests.post(url, data=json.dumps(data), headers=headers)
+        data1 = json.loads(response.text)
+        s_playlist = SpotifyPlaylist.objects.create(auth=spotify_auth, playlist_name=playlist_name, url = data1['external_urls']['spotify'], uri = data1['id'], created=datetime.now())
+
+        #Part 3: Add to Playlist
+        url = f"https://api.spotify.com/v1/playlists/{s_playlist.uri}/tracks"
+        data = {
+            "uris": uri
+        }
+        response = requests.post(url, data=json.dumps(data), headers=headers)
+        return JsonResponse({"message": "playlist created successfully", "status": 200, "playlist_id": s_playlist.id}, status=200)
+    else:
+        return render(request, 'spotify/queue.html')
+
+def queue_html(request):
+    try:
+        assert(request.headers['login'] == "^j8mCFM]a%1@d4Gbeg}TVQv@1H]+]9s5kqb6)qTeW7.kexK#p6uzn*togpKij07yv")
+        user = User.objects.get(id=1)
+        spotify_auth = SpotifyAuth.objects.get(user=user)
+        url = "https://api.spotify.com/v1/me/player/queue"
+
+        #Part 1: Get Queue
+        headers = {"Authorization": f"Bearer {spotify_auth.access_token}"}
+        response = requests.get(url, headers=headers)
+        if str(response) != "<Response[200]>":
+            from django.contrib.auth import login
+            login(request, user)
+            expired(request)
+            response = requests.get(url, headers=headers)
+        tracks = json.loads(response.text)
+        uri = []
+        for track in tracks['queue']:
+            if track['type'] == "track":
+                uri.append(track["uri"])
+        
+        #Part 2: Create New Playlist
+        url = f"https://api.spotify.com/v1/users/{spotify_auth.s_user_id}/playlists"
+        name = request.GET.get('playlist_name')
+        if name == "":
+            playlist_name = f"Queue {datetime.now().strftime('%m-%d-%Y')}"
+        else:
+            playlist_name = name
+        data = {
+            "name": playlist_name,
+            "public": False,
+            "description": f"Created by Homework App on {datetime.now().strftime('%m-%d-%Y')}"
+        }
+        response = requests.post(url, data=json.dumps(data), headers=headers)
+        data1 = json.loads(response.text)
+        s_playlist = SpotifyPlaylist.objects.create(auth=spotify_auth, playlist_name=playlist_name, url = data1['external_urls']['spotify'], uri = data1['id'], created=datetime.now())
+
+        #Part 3: Add to Playlist
+        url = f"https://api.spotify.com/v1/playlists/{s_playlist.uri}/tracks"
+        data = {
+            "uris": uri
+        }
+        response = requests.post(url, data=json.dumps(data), headers=headers)
+        return HttpResponse("playlist created successfully")
+    except Exception as e:
+        raise HttpResponse(e)

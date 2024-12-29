@@ -10,7 +10,7 @@ import datetime
 import json
 import pytz
 import requests
-from ics import Calendar, Event
+# from ics import Calendar, Event
 from .helper import notion_push, notion_expired
 import secrets
 from time import time
@@ -180,6 +180,7 @@ def notion_callback(request):
         return JsonResponse({"error": "invalid request"}, status=400)
  
 def notion_toics(request, user_id, hash_value, tag):
+    return 0
     try:
         user = User.objects.get(id=user_id)
         IcsHashVal.objects.get(hash_user=user, hash_val=hash_value)
@@ -303,7 +304,7 @@ def canvas_class(request):
         })
 
     for s in all:
-        url = f'https://canvas.instructure.com/api/v1/courses?access_token={s.s_secret_key}'
+        url = f'https://canvas.instructure.com/api/v1/courses?access_token={s.s_secret_key}&per_page=256'
         headers = {
             "Authorization": f'Bearer {s.s_secret_key}'
         }

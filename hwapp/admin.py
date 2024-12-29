@@ -41,7 +41,6 @@ class CustomUserAdmin(UserAdmin):
             for f in disabled_fields:
                 if f in form.base_fields:
                     form.base_fields[f].disabled = True
-        form.base_fields['bookmarks'] = True
         return form
 
 admin.site.register(Class, ClassAdmin)

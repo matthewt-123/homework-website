@@ -8,4 +8,7 @@ urlpatterns = [
     path("recommendations", views.recommendations, name="spotify_recommendations"),
     path("playlists", views.playlists, name="spotify_playlists"),
     path("deleteplaylist", views.deleteplaylist, name="spotify_deleteplaylist"),
+    path("queue", views.queuedump, name="spotify_queuedump"),
+    path("queue_html", views.queue_html, name="spotify_queuedump_html"),
+
 ]

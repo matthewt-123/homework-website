@@ -1,0 +1,17 @@
+{% extends 'hwapp/layout.html' %}
+
+{% block title %}Queue Dump{% endblock %}
+
+{% block body %}
+<div style="margin-left:40%">
+    <h1>Dump Spotify Queue</h1>
+    <p>This will dump your Spotify Queue into a playlist(Limit 20 songs)</p>
+    <form method="POST" action="{% url 'spotify_queuedump' %}">
+        {% csrf_token %}
+        <label for="playlist_name">Playlist Name: </label> <input type="text" id="playlist_name" name="playlist_name"><br>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+
+
+{% endblock %}

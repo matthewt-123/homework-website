@@ -22,7 +22,7 @@
         <table>
             <tr>
                 <td width=10%>
-                    <a href='{% url "index" %}'><img alt='HW App logo' src='/static/hwapp/hwapp logo.png'></a>
+                    <a href='{% url "index" %}'><img alt='HW App logo' src='/static/hwapp/hwapp logo.png' draggable='false'></a>
                     {% if user.is_authenticated %}
                     <td width=10% class="nav-item" style="font-weight:bold;text-align: center;";>
                         <a class="nav-link" href="{% url 'index' %}">Homework</a>
@@ -52,7 +52,7 @@
                     <!-- Collections -->
                     <td width='13%' style="font-weight:bold;text-align: center;" class="nav-item" >
                         <div id="collection_all" class="collection_all">
-                            <a class="nav-link collection_all" href = "#">My Collection</a>
+                            <a class="nav-link collection_all" href = "#">My Bookmarks</a>
                             <div id="collection_all_dropdown" class="collection_all dropdown_css" style="width:11%">
                                 <a href="{% url 'pastebin' %}" style="text-decoration: none;"><div class="nav_item">
                                     &nbsp Pastebin &nbsp
@@ -85,17 +85,67 @@
                         <a class="nav-link settings_all" style="text-align: center;margin-left:-15%" href = "{% url 'settings' %}">My Settings</a>
                     </div>
                     </td>
-                    <td width='35%' style='display: none;'></td>
+                    {% if request.user|has_group:"Custom Page Users" %}
+                                        <!-- Collections -->
+                                        <td width='13%' style="font-weight:bold;text-align: center;" class="nav-item" >
+                                            <div id="collection_all" class="collection_all">
+                                                <a class="nav-link collection_all" href = "#">My Bookmarks</a>
+                                                <div id="collection_all_dropdown" class="collection_all dropdown_css" style="width:11%">
+                                                    <a href="{% url 'pastebin' %}" style="text-decoration: none;"><div class="nav_item">
+                                                        &nbsp Pastebin &nbsp
+                                                    </div></a>
+                                                    <a href="{% url 'filebin' %}" style="text-decoration: none;"><div class="nav_item">
+                                                        &nbsp Filebin &nbsp
+                                                    </div></a>
+                                                    <a href="{% url 'all_pages' %}" style="text-decoration: none;"><div class="nav_item">
+                                                        &nbsp Pages &nbsp
+                                                    </div></a>
+                                                    {% for page in request.user.bookmarks.all %}
+                                                    <a href="/page/{{page.version_id}}" style="text-decoration: none;"><div class="nav_item">
+                                                        &nbsp {{page.template_name}} &nbsp
+                                                    </div></a>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </td>
+                    {% endif %}
                     <!-- Admin Tab -->
                     <td width='13%' style="font-weight:bold;text-align: center;" class="nav-item" >
                         <div id="admin_all" class="admin_all"x>
                             <a class="nav-link admin_all" href='{% url "admin_dashboard" %}'>Site Management</a>
                         </div>
                     </td>
-                    {% endif %}
+                    {% else %}
+                    {% if request.user|has_group:"Custom Page Users" %}
+                    <!-- Collections -->
+                    <td width='13%' style="font-weight:bold;text-align: center;" class="nav-item" >
+                        <div id="collection_all" class="collection_all">
+                            <a class="nav-link collection_all" href = "#">My Bookmarks</a>
+                            <div id="collection_all_dropdown" class="collection_all dropdown_css" style="width:11%">
+                                <a href="{% url 'pastebin' %}" style="text-decoration: none;"><div class="nav_item">
+                                    &nbsp Pastebin &nbsp
+                                </div></a>
+                                <a href="{% url 'filebin' %}" style="text-decoration: none;"><div class="nav_item">
+                                    &nbsp Filebin &nbsp
+                                </div></a>
+                                <a href="{% url 'all_pages' %}" style="text-decoration: none;"><div class="nav_item">
+                                    &nbsp Pages &nbsp
+                                </div></a>
+                                {% for page in request.user.bookmarks.all %}
+                                <a href="/page/{{page.version_id}}" style="text-decoration: none;"><div class="nav_item">
+                                    &nbsp {{page.template_name}} &nbsp
+                                </div></a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </td>
+{% endif %}
                     <!-- Settings -->
-
-
+                    <td width=15% id="settings_all" style="font-weight:bold;text-align: center" class="nav-item" >
+                        <div id="settings_all"  class="settings_all">
+                        <a class="nav-link settings_all" style="text-align: center;margin-left:-15%" href = "{% url 'settings' %}">My Settings</a>
+                    </div>
+                    {% endif %}
                     {% endif %}
 
                     <td width='10%' class="mobile_nav" >
@@ -118,7 +168,7 @@
                                 </li>
                                 <li>
                                     <a style='font-size:20px' href="{% url 'filebin' %}">
-                                        File Bin
+                                        Filebin
                                     </a>
                                 </li>
                                 <li>

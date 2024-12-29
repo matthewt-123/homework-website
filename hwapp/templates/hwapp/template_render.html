@@ -1,11 +1,70 @@
 {% extends "hwapp/layout.html" %}
 {% block title %}
+{% load has_bookmark %}
 {{header}}
 {% endblock %}
 {% block body %}
-{{template.template_body|safe}}
+<div class="alert alert-success" style="display:none;" id="success"></div>
+<div class='row' style="margin-left:5%;">
+    <div class='column' style="flex:0 0 90%;">
+        {{template.template_body|safe}}
+    </div>
+    <div class='column' style="flex:0 0 5%">
+        {% csrf_token %}
+         {% if request.user|has_bookmark:template.id and template.type == "custom" %}
+        <a><i class="fa-solid fa-star" id="bookmark" style="font-size:50px" onclick="bookmark({{template.id}})"></i></a>
+        <a><i class="fa-regular fa-star" id="no_bookmark" style="font-size:50px;display:none" onclick="bookmark({{template.id}})"></i></a>
+        
+        {% elif template.type == "custom" %}
+        <a><i class="fa-solid fa-star" id="bookmark" style="font-size:50px;display:none" onclick="bookmark({{template.id}})"></i></a>
+        <a><i class="fa-regular fa-star" id="no_bookmark" style="font-size:50px;" onclick="bookmark({{template.id}})"></i></a>
+        {% endif %}
+    </div>
+  </div>
 {% if user.is_superuser %}
 <hr>
 <a href="{% url 'email_template_editor' %}?template_id={{template.id}}" class="btn btn-primary">Edit</a>
 {% endif %}
+<style>
+    .row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 95%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  flex: 1;
+}
+</style>
+<script>
+    function bookmark(template_id) {
+        fetch(`/bookmark`, {
+        method: 'POST',
+        headers: {
+                'X-CSRFToken': document.getElementsByName('csrfmiddlewaretoken')[0].value,
+            },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+            'template_id': `${template_id}`
+        })
+    })
+    .then(response=>response.json())
+    .then(result => {
+        if(result['status'] == 200) {
+            if (result['b'] == 0) {
+                document.getElementById("bookmark").style.display = 'none'
+                document.getElementById("no_bookmark").style.display = 'block'
+
+            } else {
+                document.getElementById("bookmark").style.display = 'block'
+                document.getElementById("no_bookmark").style.display = 'none'    
+            }
+        }
+    })
+    }
+</script>
 {% endblock %}

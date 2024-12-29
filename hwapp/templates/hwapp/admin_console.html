@@ -18,11 +18,13 @@ Admin Console
     <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-Communications" role="tab" aria-controls="v-pills-home" onclick="toggle('communications')" aria-selected="false"><i class="fa-solid fa-envelope"></i>&nbsp;<span class="mobile_hide">Communications</span></a>
     {% endif %} 
     {% if request.user.is_superuser %}
-    <a class="nav-link" id="v-pills-messages-tab" href="{% url 'experience_manager' %}" role="tab" aria-selected="false"><i class="fa-solid fa-camera"></i>&nbsp;<span class="mobile_hide">Experience Manager</span></a>
     <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-Helpers" role="tab" aria-controls="v-pills-home" onclick="toggle('helpers')" aria-selected="false"><i class="fa-solid fa-handshake-angle"></i>&nbsp;<span class="mobile_hide">Helpers</span></a>
     {% endif %}
     {% if request.user|has_group:"Integration Admins" or request.user.is_superuser %}
     <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-Integrations" role="tab" aria-controls="v-pills-home" onclick="toggle('integrations')" aria-selected="false"><i class="fa-solid fa-circle-nodes"></i>&nbsp;<span class="mobile_hide">Integrations</span></a>
+    {% endif %}
+    {% if request.user.is_superuser %}
+    <a class="nav-link" id="v-pills-messages-tab" href="{% url 'experience_manager' %}" role="tab" aria-selected="false"><i class="fa-solid fa-camera"></i>&nbsp;<span class="mobile_hide">Template Manager</span></a>
     {% endif %}
   </div>
   <div style="width: 80%;float:left;margin-left: 0%;height: 100%;" class="tab-content" id="v-pills-tabContent">
@@ -31,8 +33,8 @@ Admin Console
             <a href="#" onclick="admin(function1='canvas_class')" class="list-group-item list-group-item-action integrations all"><i class="fa-solid fa-people-roof"></i>&nbsp;Canvas Class Refresh</a>
             <a href="#" onclick="admin(function1='canvas_hw')" class="list-group-item list-group-item-action integrations all"><i class="fa-solid fa-note-sticky"></i>&nbsp; Canvas HW Refresh</a>
             <a href='cronitor.io/app/?env=production' class="list-group-item list-group-item-action bookmarks all"><i class="fa-brands fa-watchman-monitoring"></i>&nbsp;Cronitor</a>
-            <a href="{% url 'experience_manager' %}" class="list-group-item list-group-item-action all"><i class="fa-solid fa-camera-retro"></i>&nbsp;Experience</a>
             <a href="{% url 'filebin' %}" class="list-group-item list-group-item-action helpers all"><i class="fa-solid fa-folder"></i>&nbsp;Filebin</a>
+            <a href="{% url 'group_management' %}" class="list-group-item list-group-item-action permission all"><i class="fa-solid fa-users"></i>&nbsp;Groups</a>
             <a href="{% url 'helpformlist' %}" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-question"></i>&nbsp;Help Forms</a>
             <a href="{% url 'integration_log' %}" class="list-group-item list-group-item-action integrations all"><i class="fa-regular fa-floppy-disk"></i>&nbsp;Integration Log</a>
             <a target="_blank" href="https://matthew-homeworkapp.atlassian.net/jira/servicedesk/projects/IP/queues/custom/15" class="list-group-item list-group-item-action bookmarks all"><i class="fa-solid fa-bug"></i>&nbsp;ITSM Console</a>
@@ -44,7 +46,8 @@ Admin Console
             <a href="/email" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-paper-plane"></i>&nbsp; Send Email</a>
             <a href="#" onclick="confirm_refresh()" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-paper-plane"></i>&nbsp; Send Homework Email</a>
             <a target="_blank" href="https://sentry.io/organizations/homework-app/issues/?project=6359235" class="list-group-item list-group-item-action bookmarks all"><i class="fa-brands fa-watchman-monitoring"></i>&nbsp;Sentry</a>
-            <a href="/admin_dashboard/users" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-users"></i>&nbsp; User Management</a>
+            <a href="{% url 'experience_manager' %}" class="list-group-item list-group-item-action all"><i class="fa-solid fa-camera-retro"></i>&nbsp;Template Manager</a>
+            <a href="/admin_dashboard/users" class="list-group-item list-group-item-action communications all"><i class="fa-solid fa-user"></i>&nbsp; User Management</a>
         </div>
     </div>
   </div>
@@ -85,7 +88,10 @@ only screen and (max-width: 760px),
         }
     };
     document.addEventListener('DOMContentLoaded', () => {
-        {% if groups %}
+        {% if request.user.is_superuser %}
+        document.getElementById("v-pills-tab").style.display='block'
+
+        {% elif groups %}
         const allDivs = document.getElementsByClassName("all")
         remove_list = []
         for(let i = 0; i<allDivs.length; i++) {
@@ -98,7 +104,11 @@ only screen and (max-width: 760px),
         }
         document.getElementById("v-pills-tab").style.display='block'
         {% else %}
-        document.getElementById("v-pills-tab").style.display='block'
+        const allDivs = document.getElementsByClassName("all")
+        cloneDivs = Array.from(allDivs)
+        for(let i = 0; i<cloneDivs.length; i++) {
+            cloneDivs[i].remove()
+        }
         {% endif %}
     })
 </script>

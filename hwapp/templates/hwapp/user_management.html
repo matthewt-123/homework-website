@@ -18,7 +18,7 @@
     </thead>
     <tbody>
         {% for user1 in users %}
-        <tr><td><a href='{% url "user_management_individual" user.id %}'>{{user1.username}}</a></td>
+        <tr><td><a href='{% url "user_management_individual" user1.id %}'>{{user1.username}}</a></td>
         <td>
             {{user1.first_name}}
         </td>

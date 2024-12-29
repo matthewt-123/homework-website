@@ -12,9 +12,11 @@ My Profile
     </button>
 </div>
 {% endif %}
-<div class="alert alert-danger" role="alert" style="display:none" id="error_message">
+
+<div class="alert alert-danger" role="alert" {% if not error %}style='display:none'{% endif %}id="error_message">
     {{error}}
   </div>
+  
 <div class="nav flex-column nav-pills" style="width: 20%; float: left;" id="v-pills-tab" role="tablist" aria-orientation="vertical">
     <a class="nav-link active" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="true">Profile</a>
     <a class="nav-link" id="v-pills-export-tab" data-toggle="pill" href="#v-pills-export" role="tab" aria-controls="v-pills-export" aria-selected="false">Export Homework</a>

@@ -1,5 +1,6 @@
 {% extends "hwapp/layout.html" %}
 {% block title %}User Management{% endblock %}
+{% load has_group %}
 {% block body %}
 
 <ul>
@@ -22,9 +23,15 @@
         <b>Groups: </b>
         {% if user1.groups.all %}
         <ul>
+            {% if request.user|has_group:"Permission Admins" %}
+            {% for group in user1.groups.all %}
+            <li><a href="{% url 'group_management' %}?group_id={{group.id}}">{{group.name}}</a></li>
+            {% endfor %}
+            {% else %}
             {% for group in user1.groups.all %}
             <li>{{group.name}}</li>
             {% endfor %}
+            {% endif %}
         </ul>
         {% else %} No Groups Found {% endif %}
     </li>
