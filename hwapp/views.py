@@ -26,7 +26,7 @@ import sys
 sys.path.append("..")
 from integrations.models import IcsHashVal, NotionData, Log
 from integrations.views import schoology_class, schoology_hw, canvas_class, canvas_hw
-from integrations.helper import notion_push, notion_pull
+from integrations.helper import notion_push, notion_pull, gradescope_refresh
 from external.forms import HelpForm1
 from external.models import HelpForm
 from mywebsite.settings import DEBUG
@@ -912,6 +912,9 @@ def admin_console(request):
                 return JsonResponse({"status": 200}, status=200)     
             elif json_val['function'] == 'notion_pull':
                 notion_pull() 
+                return JsonResponse({"status": 200}, status=200) 
+            elif json_val['function'] == 'gradescope_refresh':
+                gradescope_refresh() 
                 return JsonResponse({"status": 200}, status=200) 
             else:
                 return JsonResponse({"status": 404}, status=404)

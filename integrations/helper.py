@@ -175,7 +175,6 @@ def gradescope_refresh():
                                     id = a1.get('href').split('/assignments/')[1].split('/submissions')[0]
                                 due = row.find('time', class_='submissionTimeChart--dueDate').get('datetime')
                                 status = row.find('div', class_="submissionStatus--text").text
-                                print(f"{name}: {due}: {status}: {id}: {gclass.linked_class.class_name}")
                                 due = datetime.strptime(due, '%Y-%m-%d %H:%M:%S %z')
                                 #check: is assignment logged? 
                                 if str(id) in str(assignment_list):
@@ -197,11 +196,7 @@ def gradescope_refresh():
                                     h = Homework.objects.create(hw_user=gclass.user, hw_class=gclass.linked_class, hw_title=name, due_date=due, completed=c, overdue=False, notion_migrated=False, notion_id="", ics_id="", external_id=id, external_src="gradescope", archive=False)
                                     h.save()
                                 #Yes: update if needed
-                                print("done")
                             except Exception as e:
                                 print(e)
                                 # must not be a row oopsie
                                 pass
-            else:
-                print(response.text)
-                break

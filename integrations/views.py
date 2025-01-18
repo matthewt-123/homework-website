@@ -520,17 +520,12 @@ def gradescope_init(request):
         for entry in request.POST:
             if entry == "csrfmiddlewaretoken":
                 continue
-            print(entry)
             class_id = request.POST.get(entry)
             gclasses = [i.class_id for i in GradescopeClasses.objects.filter(user=request.user)]
-            print(gclasses)
             try:
                 if '-1' not in str(class_id):
                     class1 = Class.objects.get(id=class_id, class_user = request.user)
                     if str(entry) not in str(gclasses):
-                        print('fuckass')
-                        print(str(gclasses))
-                        print(str(entry))
                         gs_class = GradescopeClasses.objects.create(user=request.user, linked_class=class1, class_name=class1.class_name, active=True, class_id=entry)
                         gs_class.save()
             except Exception as e:
@@ -538,6 +533,9 @@ def gradescope_init(request):
                 return render(request, 'hwapp/error.html', {
                     "error": "Access Denied",
                 })
+        return render(request, 'hwapp/success.html', {
+            "message": "Gradescope Classes Added Successfully"
+        })
     else:
         # step 1: get authenticity token
         url = "https://www.gradescope.com"
@@ -580,12 +578,12 @@ def gradescope_init(request):
                 for subhead in s.find_all('h3'):
                     name = subhead.text
                     break
-                if str(class1.get('href').replace('/courses/', '')) not in syncedClasses:
+                if str(class1.get('href').replace('/courses/', '')) not in str(syncedClasses):
                     gclasses.append((class1.get('href').replace('/courses/', ''), name))
         return render(request, 'hwapp/gradescope_init.html', {
             "gclasses": gclasses,
             "classes": Class.objects.filter(class_user=request.user, archived=False)
         })
-@user_passes_test(superuser)
-def gradescope_ref(request):
-    return HttpResponse(gradescope_refresh())
+# @user_passes_test(superuser)
+# def gradescope_ref(request):
+#     return HttpResponse(gradescope_refresh())

@@ -20,5 +20,4 @@ urlpatterns = [
 
     #gradescope
     path('gradescope_init', views.gradescope_init, name='gradescope_init'),
-    path('gradescope_ref', views.gradescope_ref)
 ]
