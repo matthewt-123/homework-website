@@ -1,6 +1,6 @@
 arrow==0.14.7
 authlib
-Django==4.2.8
+Django==4.2.15
 django-allauth
 django-ical==1.8.0
 fonttools==4.22.0
