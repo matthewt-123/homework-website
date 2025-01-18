@@ -27,3 +27,4 @@ dateparser
 azure-communication-email
 django-model-utils
 dj_database_url
+bs4

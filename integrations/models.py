@@ -61,3 +61,13 @@ class Log(models.Model):
     ip_address = models.CharField(max_length=16, default=0, blank=0, null=0)
     def __str__(self):
         return f"{self.user}: {self.log_type}"
+class GradescopeCredentials(models.Model):
+    user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
+    email = models.CharField(max_length=512, default=None, blank=True, null=True)
+    password = models.CharField(max_length=512, default=None, blank=True, null=True)
+class GradescopeClasses(models.Model):
+    user = models.ForeignKey('hwapp.User', on_delete=models.CASCADE)
+    class_id = models.IntegerField(default=None, blank=True, null=True)
+    class_name = models.CharField(max_length=512, default=None, blank=True, null=True)
+    linked_class = models.ForeignKey('hwapp.Class', on_delete=models.CASCADE)
+    active = models.BooleanField(default=True, blank=True, null=True)

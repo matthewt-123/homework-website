@@ -1,0 +1,33 @@
+{% extends "hwapp/layout.html" %}
+{% load static %}
+{% block title %}
+Gradescope Init
+{% endblock %}
+{% block body %}
+<h1>Match Gradescope Courses to Canvas Classes</h1>
+<hr>
+<div style="margin-left:25%">
+    <table>
+        <form action="{% url 'gradescope_init' %}" method="POST">
+            {% csrf_token %}
+            {% for id, name in gclasses %}
+                <tr>
+                    <td>{{ name }}: </td>
+                    <td><select name="{{id}}">
+                        {% for class in classes %}
+                            <option value="{{ class.id }}">{{ class.class_name }}</option>
+                        {% endfor %}
+                        <option value="-1" selected>Not a current class</option>
+                    </select></td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </td>
+            </tr>
+        </form>
+    </table>
+
+</div>
+{% endblock %}

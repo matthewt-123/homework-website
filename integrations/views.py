@@ -5,16 +5,17 @@ from django.http.response import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 import os
-from .models import IcsHashVal, NotionData, SchoologyClasses, SchoologyAuth, IntegrationLog, Log
+from .models import IcsHashVal, NotionData, SchoologyClasses, SchoologyAuth, IntegrationLog, Log, GradescopeClasses, GradescopeCredentials
 import datetime
 import json
 import pytz
 import requests
 # from ics import Calendar, Event
-from .helper import notion_push, notion_expired
+from .helper import notion_push, notion_expired, g_headers, gradescope_refresh
 import secrets
 from time import time
 import csv
+from bs4 import BeautifulSoup
 
 
 #import hwapp models
@@ -513,3 +514,78 @@ def integration_log_view(request, log_id):
         "log": log,
     })
 
+@user_passes_test(superuser)
+def gradescope_init(request):
+    if request.method == "POST":
+        for entry in request.POST:
+            if entry == "csrfmiddlewaretoken":
+                continue
+            print(entry)
+            class_id = request.POST.get(entry)
+            gclasses = [i.class_id for i in GradescopeClasses.objects.filter(user=request.user)]
+            print(gclasses)
+            try:
+                if '-1' not in str(class_id):
+                    class1 = Class.objects.get(id=class_id, class_user = request.user)
+                    if str(entry) not in str(gclasses):
+                        print('fuckass')
+                        print(str(gclasses))
+                        print(str(entry))
+                        gs_class = GradescopeClasses.objects.create(user=request.user, linked_class=class1, class_name=class1.class_name, active=True, class_id=entry)
+                        gs_class.save()
+            except Exception as e:
+                print(e)
+                return render(request, 'hwapp/error.html', {
+                    "error": "Access Denied",
+                })
+    else:
+        # step 1: get authenticity token
+        url = "https://www.gradescope.com"
+        response = requests.get(url)
+        cookie = response.cookies
+        soup = BeautifulSoup(response.text, 'html.parser')
+        token = 0
+        for f in soup.find_all('form'):
+            if f.get('action') == '/login':
+                for val in f.find_all('input'):
+                    if val.get('name') == "authenticity_token":
+                        token = val.get('value')
+        url = 'https://www.gradescope.com/login'
+        try:
+            creds = GradescopeCredentials.objects.get(user=request.user)
+            gs_classes = GradescopeClasses.objects.filter(user=request.user)
+        except Exception as e:
+            return JsonResponse({"error": "No Gradescope Credentials Found"}, status=400)
+        email = creds.email
+        password = creds.password
+        body = {
+            'utf8': '✓',
+            'authenticity_token': token,
+            'session[email]': email,
+            'session[password]': password,
+            'session[remember_me]': 0,
+            'commit': 'Log In',
+            'session[remember_me_sso]': 0
+        }
+        # step 2: log in
+        res = requests.post(url, headers=g_headers, data=body, cookies=cookie)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        gclasses = []
+        name = ""
+        syncedClasses = [i.class_id for i in gs_classes]
+        #2.1 parse HTML for classes
+        for class1 in soup.find_all('a'):
+            if 'courseBox' in str(class1.get("class")):
+                s = BeautifulSoup(str(class1), 'html.parser')
+                for subhead in s.find_all('h3'):
+                    name = subhead.text
+                    break
+                if str(class1.get('href').replace('/courses/', '')) not in syncedClasses:
+                    gclasses.append((class1.get('href').replace('/courses/', ''), name))
+        return render(request, 'hwapp/gradescope_init.html', {
+            "gclasses": gclasses,
+            "classes": Class.objects.filter(class_user=request.user, archived=False)
+        })
+@user_passes_test(superuser)
+def gradescope_ref(request):
+    return HttpResponse(gradescope_refresh())

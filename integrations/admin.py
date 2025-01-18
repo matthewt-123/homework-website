@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import IcsHashVal, NotionData,SchoologyAuth,SchoologyClasses,IntegrationLog,Log
+from .models import IcsHashVal, NotionData,SchoologyAuth,SchoologyClasses,IntegrationLog,Log,GradescopeCredentials,GradescopeClasses
 
 @admin.action(description='Disable Class Import')
 def disable(modeladmin, request, queryset):
@@ -27,10 +27,11 @@ class LogAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "log_type", "date", "error")
 class NotionDataAdmin(admin.ModelAdmin):
     list_display = ("id", "notion_user", "workspace_name", "tag")
-admin.site.register(IcsHashVal)
+admin.site.register(GradescopeCredentials)
+admin.site.register(GradescopeClasses)
 admin.site.register(IntegrationLog, IntegrationLogAdmin)
 admin.site.register(Log, LogAdmin)
-
+ 
 admin.site.register(NotionData, NotionDataAdmin)
 admin.site.register(SchoologyAuth, SchoologyAuthAdmin)
 admin.site.register(SchoologyClasses, SchoologyClassesAdmin)

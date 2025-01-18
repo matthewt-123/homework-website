@@ -17,4 +17,8 @@ urlpatterns = [
     #Integration Admins
     path('integration_log', views.integration_log, name='integration_log'),
     path('integration_log/<int:log_id>', views.integration_log_view, name='integration_log_view'),
+
+    #gradescope
+    path('gradescope_init', views.gradescope_init, name='gradescope_init'),
+    path('gradescope_ref', views.gradescope_ref)
 ]

@@ -8,7 +8,15 @@ function reset_pw() {
     })
     .then(response => response.json())
     .then(result => {
-        if(result['status'] == 400) {
+        if(result['status'] == 200) {
+            /* show success message if success*/
+            const alert = document.getElementById('alert')
+            alert.innerHTML = result['message']
+            alert.style.display='block'
+
+            /* hide error message if any */
+            document.getElementById('error_message').style.display='none'
+        } else {
             /* show error message if error*/
             const alert = document.getElementById('error_message')
             alert.innerHTML = result['message']
@@ -16,14 +24,6 @@ function reset_pw() {
 
             /* hide success message if any */
             document.getElementById('alert').style.display='none'
-        } else {
-            /* show error message if error*/
-            const alert = document.getElementById('alert')
-            alert.innerHTML = result['message']
-            alert.style.display='block'
-
-            /* hide success message if any */
-            document.getElementById('error_message').style.display='none'
         }
     });
     return false
