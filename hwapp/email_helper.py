@@ -15,6 +15,8 @@ from integrations.views import notion_push
 from integrations.models import SchoologyAuth, SchoologyClasses, IntegrationLog
 from azure.communication.email import EmailClient
 
+domain_name = {os.environ.get("DOMAIN_NAME")}
+
 def overdue_check():
     my_date = datetime.datetime.now()
     day = my_date.strftime("%d")
@@ -25,8 +27,7 @@ def overdue_check():
     for hw in allhw:
         hw.overdue = True
         hw.save()
-connection_string = "endpoint=https://hwapp-communication-services.communication.azure.com/;accesskey=q0qTkReuMcHOJpq83kt349TO0xpE0Au8H1jygmFvhMgt258vA55GVTjlDxnjtqM5tGH5zQZ+ixvbcXUclqPh6A=="
-client = EmailClient.from_connection_string(connection_string)
+client = EmailClient.from_connection_string(os.environ.get("AZURE_CONNECTION_STRING"))
 
 
 def send_email(interval=0):
@@ -64,7 +65,7 @@ def send_email(interval=0):
                         }
                     ]
                 },
-                "senderAddress": f"support@email.matthewtsai.tech"
+                "senderAddress": f"support@email.{domain_name}"
             }
             poller = client.begin_send(message)
             result = poller.result()
@@ -83,7 +84,7 @@ def pw_reset_email(user, hash_val, expires, email):
         f"{os.environ.get('API_BASE_URL')}/messages",
             auth=HTTPBasicAuth("api", f"{os.environ.get('mailgun_api_key')}"),
             data={
-                "from": "Homework App <noreply@matthewtsai.me>",
+                "from": f"Homework App <noreply@{domain_name}",
                 "to": [email],
                 "subject": f"{user}'s Password Reset Email",
                 "html": listed 
@@ -103,10 +104,10 @@ def email_user(email, content, subject, recipient_name):
                 }
             ]
         },
-        "senderAddress": f"support@email.matthewtsai.tech",
+        "senderAddress": f"support@email.{domain_name}",
         "replyTo": [
             {
-                "address": "support@matthewtsai.tech",  # Email address. Required.
+                "address": f"support@{domain_name}",  # Email address. Required.
                 "displayName": "Homework App Support"  
             }
         ]
@@ -123,18 +124,18 @@ def email_admin(f_name, l_name, email, message):
     content = f"First Name: {f_name}<br>Last Name: {l_name}<br>Email: {email}<br>Message: {message}"
     message = {
         "content": {
-            "subject": "[matthewtsai.tech] New Help Form Submitted",
+            "subject": f"[{domain_name}] New Help Form Submitted",
             "html": content
         },
         "recipients": {
             "to": [
                 {
-                    "address": "product@matthewtsai.uk",
+                    "address": f"product@{domain_name}",
                     "displayName": f"Homework App Support"
                 }
             ]
         },
-        "senderAddress": f"support@email.matthewtsai.uk"
+        "senderAddress": f"support@email.{domain_name}"
     }
     poller = client.begin_send(message)
     result = poller.result()

@@ -12,7 +12,7 @@ def unpush_notion(modeladmin, request, queryset):
 def archive_class(modeladmin, request, queryset):
     queryset.update(archived=True)
 @admin.action(description='Archive Homework')
-def archive_hw(modeladmin, request, queryset):
+def archive_hw_admin(modeladmin, request, queryset):
     queryset.update(archive=True)
 @admin.action(description='Complete Homework')
 def archive_hw(modeladmin, request, queryset):
@@ -22,13 +22,13 @@ class ClassAdmin(admin.ModelAdmin):
     actions = [archive_class]
 class HomeworkAdmin(admin.ModelAdmin):
     list_display = ("id", "hw_class", "hw_user", "hw_title", "priority", "notes", "completed")
-    actions=[unpush_notion, archive_hw]
+    actions=[unpush_notion, archive_hw_admin]
 class PreferencesAdmin(admin.ModelAdmin):
     list_display = ("id", "preferences_user")
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    def get_form(self, request, obj=None, **kwargs):
+    def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         is_superuser = request.user.is_superuser
         if not is_superuser:
@@ -39,8 +39,8 @@ class CustomUserAdmin(UserAdmin):
                 'last_login'
             }
             for f in disabled_fields:
-                if f in form.base_fields:
-                    form.base_fields[f].disabled = True
+                if f in form.base_fields: # type: ignore
+                    form.base_fields[f].disabled = True # type: ignore
         return form
 
 admin.site.register(Class, ClassAdmin)

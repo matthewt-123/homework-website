@@ -10,7 +10,7 @@ class HelpForm(models.Model):
     last_name = models.CharField(max_length=64)
     email = models.EmailField()
     received = models.DateField(default = django.utils.timezone.now)
-    subject = models.CharField(default="", null="", blank="", max_length=256)
+    subject = models.CharField(default="", null=True, blank=True, max_length=256)
     message = models.TextField()
     status = StatusField()
     parent_form= models.ForeignKey('HelpForm',null=True,blank=True, on_delete=models.CASCADE)

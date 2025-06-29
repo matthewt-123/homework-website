@@ -3,7 +3,6 @@ import json
 import sys
 import os
 from .models import NotionData, IntegrationLog
-sys.path.append("..")
 from hwapp.models import Homework
 from integrations.models import GradescopeClasses, GradescopeCredentials
 import pytz
@@ -12,6 +11,8 @@ from azure.communication.email import EmailClient
 from bs4 import BeautifulSoup
 from django.http import JsonResponse, HttpResponse
 #email helper function
+
+domain_name = os.environ.get("DOMAIN_NAME")
 
 g_headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -39,10 +40,10 @@ def email_user(email, content, subject, recipient_name):
                 }
             ]
         },
-        "senderAddress": "support@email.matthewtsai.uk",
+        "senderAddress": f"support@email.{domain_name}",
         "replyTo": [
             {
-                "address": "support@matthewtsai.uk",  # Email address. Required.
+                "address": f"support@{domain_name}",  # Email address. Required.
                 "displayName": "Homework App Support"  
             }
         ]

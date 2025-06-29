@@ -29,9 +29,9 @@ class Homework(models.Model):
     completed = models.BooleanField(blank=True, default=True, null=True)
     overdue = models.BooleanField(blank=True, default=False, null=True)
     notion_migrated = models.BooleanField(blank=True, default=False, null=True)
-    notion_id = models.CharField(blank=True, default=False, null=True, max_length=256)
-    ics_id = models.CharField(blank=True, default=False, null=True, max_length=256)
-    external_id = models.CharField(blank=True, default=False, null=True, max_length=128)
+    notion_id = models.CharField(blank=True, default="", null=True, max_length=256)
+    ics_id = models.CharField(blank=True, default="", null=True, max_length=256)
+    external_id = models.CharField(blank=True, default="", null=True, max_length=128)
     external_src = models.CharField(null=True, blank=True,max_length=128)
     archive = models.BooleanField(blank=False, default=False, null=False)
     def __str__(self):
@@ -49,7 +49,7 @@ class Preferences(models.Model):
 class EmailTemplate(models.Model):
     template_name = models.CharField(max_length=64)
     template_body = models.TextField()
-    type = models.CharField(max_length=64, default=False, blank=False, null=True)
+    type = models.CharField(max_length=64, default="", blank=False, null=True)
     version_id = models.IntegerField(default=False, blank=False, null=True)
     def __str__(self):
         return f"{self.template_name}"
@@ -66,7 +66,7 @@ class AllAuth(models.Model):
 
 class PasteBin(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    content = models.TextField(default="", blank="") 
+    content = models.TextField(default="", blank=True) 
 
 def user_directory_path(instance, filename): 
     # file will be uploaded to MEDIA_ROOT / user_<id>/<filename>

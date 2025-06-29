@@ -166,7 +166,7 @@ Integrations
         {% if DEBUG %}
         <a href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=http%3A%2F%2Flocalhost:8000%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">sign in again.</a><br>
         {% else %}
-                <a href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=https%3A%2F%2Fmatthewtsai.tech%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">sign in again.</a><br>
+                <a href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=https%3A%2F%2F{{domain_name}}%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">sign in again.</a><br>
         {% endif %}    
         </div>
     
@@ -196,7 +196,7 @@ Integrations
     {% if DEBUG %}
     <a class="btn btn-danger" href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=http%3A%2F%2Flocalhost:8000%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">Integrate with Notion</a><br>
     {% else %}
-            <a class="btn btn-primary" href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=https%3A%2F%2Fmatthewtsai.tech%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">Integrate with Notion</a><br>
+            <a class="btn btn-primary" href="https://api.notion.com/v1/oauth/authorize?client_id=592037bf-6166-4a9b-bf67-69d87950763d&redirect_uri=https%3A%2F%2F{{domain_name}}%2Fintegrations%2Fnotion_callback&response_type=code&owner=user">Integrate with Notion</a><br>
     {% endif %}
         </tr>
     

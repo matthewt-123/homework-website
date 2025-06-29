@@ -1,3 +1,5 @@
+""" Sync notion data. For use with cron"""
+
 from hwapp.models import Homework
 from django.core.management.base import BaseCommand
 
@@ -6,6 +8,7 @@ from integrations.helper import notion_push, notion_pull
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
+        """ Sync notion data. For use with cron"""
         notion_pull()
         users = NotionData.objects.all()
         for user1 in users:

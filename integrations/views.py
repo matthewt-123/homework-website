@@ -54,7 +54,8 @@ def index(request):
         'integrations': integrations,
         'n_datas': n_data,
         'int_status': n,
-        'DEBUG': DEBUG
+        'DEBUG': DEBUG,
+        'domain_name': os.environ.get("DOMAIN_NAME")
     })  
 
 @login_required(login_url='/login')

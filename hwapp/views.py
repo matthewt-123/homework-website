@@ -22,14 +22,15 @@ from django.conf import settings
 from urllib.parse import quote_plus, urlencode
 from django.contrib.auth.models import Group
 #allow python to access Calendar data model
-import sys
-sys.path.append("..")
+
 from integrations.models import IcsHashVal, NotionData, Log
 from integrations.views import schoology_class, schoology_hw, canvas_class, canvas_hw
 from integrations.helper import notion_push, notion_pull, gradescope_refresh
 from external.forms import HelpForm1
 from external.models import HelpForm
 from mywebsite.settings import DEBUG
+
+domain_name = {os.environ.get("DOMAIN_NAME")}
 
 #helper functions
 def superuser(user):
@@ -68,51 +69,32 @@ def sso_login(request):
         request, request.build_absolute_uri(reverse("callback"))
     )
 def callback(request):
-    if request.GET.get('error'):
-        #getting access token
-        url = "https://dev-q8234yaa.us.auth0.com/oauth/token"
-        data = "{\"client_id\":\"OMlu360UoElELWmLxf4heWZOSJWmL8yv\",\"client_secret\":\"XQvngJGK_3SUjuaEuzzJ3jX1WGrMxgcwJfcT6nPj6Sx5-bOzOORkfQtGWAnyEEmw\",\"audience\":\"https://dev-q8234yaa.us.auth0.com/api/v2/\",\"grant_type\":\"client_credentials\"}"
-        headers = { 'content-type': "application/json" }
-        response = requests.post(url, data=data, headers=headers)
-        uid = request.GET.get('error_description')
-        url = f"https://dev-q8234yaa.us.auth0.com/api/v2/jobs/verification-email"
-        data = {
-            "user_id": uid,
-        }
-        headers = { 'content-type': "application/json", "Authorization": f"Bearer {json.loads(response.text)['access_token']}" }
-        response = requests.post(url, data = json.dumps(data), headers=headers)
-        extra_msg = "One more step to create your profile! Please check your email for a verification link"
-        request.session.clear()
-
-        return render(request, 'hwapp/success.html', {
-            "message": extra_msg
-        })
-    else:
-        token = oauth.auth0.authorize_access_token(request)
-        request.session["user"] = token
-        request.user = token
-        e_info = token.get("userinfo")
-        a_id = e_info.get('sub')
+    token = oauth.auth0.authorize_access_token(request)
+    request.session["user"] = token
+    request.user = token
+    e_info = token.get("userinfo")
+    a_id = e_info.get('sub')
+    user1 = None
+    try:
+        user1 = AllAuth.objects.get(uid=a_id).allauth_user
+    except:
         try:
-            user1 = AllAuth.objects.get(uid=a_id).allauth_user
+            user1 = User.objects.create_user(e_info.get('nickname'), e_info.get('email'), ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.punctuation) for _ in range(256)))
+            user1.save()
         except:
-            try:
-                user1 = User.objects.create_user(e_info.get('nickname'), e_info.get('email'), ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.punctuation) for _ in range(256)))
-                user1.save()
-            except:
-                s=False
-                c=1
-                while s==False:
-                    try:
-                        user1 = User.objects.create_user(f"{e_info.get('nickname')}{c}", e_info.get('email'), ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.punctuation) for _ in range(256)))
-                        user1.save()
-                        s = True
-                    except:
-                        c+=1
-            a_auth = AllAuth.objects.create(uid=a_id, extra_data = e_info, allauth_user=user1)
-            a_auth.save()
-        login(request, user1)
-        return redirect(request.build_absolute_uri(reverse("index")))
+            s=False
+            c=1
+            while s==False:
+                try:
+                    user1 = User.objects.create_user(f"{e_info.get('nickname')}{c}", e_info.get('email'), ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.punctuation) for _ in range(256)))
+                    user1.save()
+                    s = True
+                except:
+                    c+=1
+        a_auth = AllAuth.objects.create(uid=a_id, extra_data = e_info, allauth_user=user1)
+        a_auth.save()
+    login(request, user1)
+    return redirect(request.build_absolute_uri(reverse("index")))
 def login_view(request):
     return HttpResponseRedirect('/accounts/auth0/login/')
 def home(request):
@@ -204,7 +186,8 @@ def index(request):
         'class1': class1,
         'extra_message': extra_message,
         'n_status': n_status,
-        'debug': DEBUG
+        'debug': DEBUG,
+        'domain_name': domain_name
     })
 
 
@@ -417,7 +400,8 @@ def profile(request):
         if request.user.email != request.POST['email']:
             #getting access token
             url = "https://dev-q8234yaa.us.auth0.com/oauth/token"
-            data = "{\"client_id\":\"OMlu360UoElELWmLxf4heWZOSJWmL8yv\",\"client_secret\":\"XQvngJGK_3SUjuaEuzzJ3jX1WGrMxgcwJfcT6nPj6Sx5-bOzOORkfQtGWAnyEEmw\",\"audience\":\"https://dev-q8234yaa.us.auth0.com/api/v2/\",\"grant_type\":\"client_credentials\"}"
+            data = "{\"client_id\":\"" + str(os.environ.get("AUTH0_CLIENT_ID")) + "\",\"client_secret\":\"" + str(os.environ.get("AUTH0_CLIENT_SECRET")) + \
+                "\",\"audience\":\"https://dev-q8234yaa.us.auth0.com/api/v2/\",\"grant_type\":\"client_credentials\"}"
             headers = { 'content-type': "application/json" }
             response = requests.post(url, data=data, headers=headers)
             #checking duplicate
@@ -475,7 +459,8 @@ def profile(request):
         })
     else:
         url = "https://dev-q8234yaa.us.auth0.com/oauth/token"
-        data = "{\"client_id\":\"OMlu360UoElELWmLxf4heWZOSJWmL8yv\",\"client_secret\":\"XQvngJGK_3SUjuaEuzzJ3jX1WGrMxgcwJfcT6nPj6Sx5-bOzOORkfQtGWAnyEEmw\",\"audience\":\"https://dev-q8234yaa.us.auth0.com/api/v2/\",\"grant_type\":\"client_credentials\"}"
+        data = "{\"client_id\":\"" + str(os.environ.get("AUTH0_CLIENT_ID")) + "\",\"client_secret\":\"" + str(os.environ.get("AUTH0_CLIENT_SECRET")) + \
+            "\",\"audience\":\"https://dev-q8234yaa.us.auth0.com/api/v2/\",\"grant_type\":\"client_credentials\"}"
         headers = { 'content-type': "application/json" }
         response = requests.post(url, data=data, headers=headers)
         try: 
@@ -675,7 +660,7 @@ def pastebin(request):
         })
 def pastebin_html(request):
     try:
-        assert(request.headers['login'] == "7jo4RcqewFnb2hu61QgF")
+        assert(request.headers['login'] == str(os.environ.get("PASTEBIN_HASH")))
         p = PasteBin.objects.get(user=User.objects.get(username="admin"))
         try:
             d = request.headers['link']
@@ -719,7 +704,7 @@ def filebin(request):
 @csrf_exempt
 def filebin_html(request):
     try:
-        assert(request.headers['login'] == "7jo4RcqewFnb2hu61QgF")
+        assert(request.headers['login'] == str(os.environ.get("PASTEBIN_HASH")))
         p = FileBin.objects.get(user=User.objects.get(username="admin"))
         if os.path.exists(p.file.path):
             os.remove(p.file.path)
@@ -824,11 +809,14 @@ def helpformview(request, id):
         try:
             helpform = HelpForm.objects.get(id=id, parent_form=None)
             tracking_id = round(46789234*(int(helpform.id) + 34952)/234567)
-            tracking_info = f"----------------------------------------------------------------------------------------------------------------------------------------------<div style='display:none;color:white;font-size:0%'>@@@@tracking_id={tracking_id}@@@@</div>"
-            email_user(email=helpform.email, content=f"{request.POST['message']}{tracking_info}", subject=f"[matthewtsai.tech] Help Form: {request.POST['subject']}", recipient_name=helpform.first_name)
+            tracking_info = f"---------------------------------------------------------------------------------------------------------------------------------------------- \
+                <div style='display:none;color:white;font-size:0%'>@@@@tracking_id={tracking_id}@@@@</div>"
+            email_user(email=helpform.email, content=f"{request.POST['message']}{tracking_info}", \
+                       subject=f"[{os.environ.get("DOMAIN_NAME")}] Help Form: {request.POST['subject']}", recipient_name=helpform.first_name)
             helpform.status = "Completed"
             helpform.save()
-            new_response = HelpForm(parent_form=helpform, first_name=request.user.first_name, last_name = request.user.last_name, email = "support@email.matthewtsai.tech", received=datetime.now(), subject=f"[matthewtsai.tech] Help Form: {request.POST['subject']}", message=request.POST['message'], status="Completed")
+            new_response = HelpForm(parent_form=helpform, first_name=request.user.first_name, last_name=request.user.last_name, \
+                                    email = f"support@email.{os.environ.get("DOMAIN_NAME")}", received=datetime.now(), subject=f"[{os.environ.get("DOMAIN_NAME")}] Help Form: {request.POST['subject']}", message=request.POST['message'], status="Completed")
             new_response.save()
             return render(request, 'hwapp/success.html', {
                 'message': f"Message sent successfully. Click <a href='/helpformlist'>here</a> to return to the help form listing or <a href='/helpformview/{helpform.id}'>here</a> to return to your previous page"
