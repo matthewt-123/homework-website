@@ -200,8 +200,13 @@ def gradescope_refresh():
                                     c = False
                                     if status.lower() == "submitted":
                                         c = True
-                                    h = Homework.objects.create(hw_user=gclass.user, hw_class=gclass.linked_class, hw_title=name, due_date=due, completed=c, overdue=False, notion_migrated=False, notion_id="", ics_id="", external_id=id, external_src="gradescope", archive=False)
-                                    h.save()
+                                    hw = Homework.objects.create(hw_user=gclass.user, hw_class=gclass.linked_class, hw_title=name, due_date=due, completed=c, overdue=False, notion_migrated=False, notion_id="", ics_id="", external_id=id, external_src="gradescope", archive=False)
+                                    hw.save()
+                                try:
+                                    NotionData.objects.get(notion_user=gclass.user)
+                                    notion_push(hw=hw,user=gclass.user)
+                                except:
+                                    pass
                                 #Yes: update if needed
                             except Exception as e:
                                 print(e)
