@@ -39,22 +39,26 @@ def email_user(email, content, subject, recipient_name):
                 }
             ]
         },
-        "senderAddress": f"support@email.matthewtsai.tech",
+        "senderAddress": "support@email.matthewtsai.uk",
         "replyTo": [
             {
-                "address": "support@matthewtsai.tech",  # Email address. Required.
+                "address": "support@matthewtsai.uk",  # Email address. Required.
                 "displayName": "Homework App Support"  
             }
         ]
     }
     poller = client.begin_send(message)
     result = poller.result()
-#if notion credentials expire, notify user
-def notion_expired(user, notion_data):
-    content = f"Notion login has expired. Please <a href='https://{os.environ.get('website_root')}/integrations/notion_auth'>sign in again</a> to continue using Notion with HW App. Thank you"
+def notion_expired(user, notion_data=None):
+    """
+    if notion credentials expire, notify user
+    """
+    content = f"Notion login has expired. Please \
+        <a href='https://{os.environ.get('website_root')}/integrations/notion_auth'>sign in again</a> to continue using Notion with HW App. Thank you"
     email_user(user.email, content, "[ACTION REQUIRED]: HW App Notion Login Expired", user.username)   
-    notion_data.error = True
-    notion_data.save() 
+    if notion_data:
+        notion_data.error = True
+        notion_data.save() 
 #push hwapp to notion
 def notion_push(hw, user):
     n_data = NotionData.objects.get(notion_user=user, tag="homework")
@@ -68,8 +72,7 @@ def notion_push(hw, user):
         },
         "properties": {
             "Name": {
-                "title": [{"type":"text","text":{"content":f"{hw.hw_title}","link":None},"plain_text":f"{hw.hw_title}","href":None}]
-                
+                "title": [{"type":"text","text":{"content":f"{hw.hw_title}","link":None},"plain_text":f"{hw.hw_title}","href":None}]              
             },
             "Status": {
                 "status": {
@@ -77,7 +80,7 @@ def notion_push(hw, user):
                 }
             },
             "Class": {
-                "type": f"select",
+                "type": "select",
                 "select": {
                     "name": f"{hw.hw_class.class_name}"
                 }
@@ -89,11 +92,12 @@ def notion_push(hw, user):
                     "end": None,
                     "time_zone": "US/Pacific"
                 }
-            }
-            
+            }      
         }
     }
-    response = requests.post(url, data=json.dumps(body), headers={'Authorization': f'Bearer {token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
+    response = requests.post(url, data=json.dumps(body), \
+                             headers={'Authorization': f'Bearer {token}', 'Notion-Version': \
+                                      '2022-02-22', "Content-Type": "application/json"})
     hw.notion_migrated = True
     hw.notion_id = json.loads(response.text)['id']
     hw.save()
@@ -102,7 +106,9 @@ def notion_push(hw, user):
         error = True
     else:
         error = False
-    i = IntegrationLog.objects.create(user=user, src="hwapp", dest="notion", url = url, date = datetime.now(), message=response.text, error=error, hw_name=hw.hw_title)
+    i = IntegrationLog.objects.create(user=user, src="hwapp", dest="notion", url = url, \
+                                      date = datetime.now(), message=response.text, error=error, \
+                                        hw_name=hw.hw_title)
     i.save()
     return 0
 

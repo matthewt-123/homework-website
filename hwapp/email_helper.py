@@ -129,12 +129,12 @@ def email_admin(f_name, l_name, email, message):
         "recipients": {
             "to": [
                 {
-                    "address": "product@matthewtsai.tech",
+                    "address": "product@matthewtsai.uk",
                     "displayName": f"Homework App Support"
                 }
             ]
         },
-        "senderAddress": f"support@email.matthewtsai.tech"
+        "senderAddress": f"support@email.matthewtsai.uk"
     }
     poller = client.begin_send(message)
     result = poller.result()

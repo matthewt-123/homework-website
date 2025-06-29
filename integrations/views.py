@@ -91,8 +91,14 @@ def notion_callback(request):
             "code": code,
             "redirect_uri": redirect_uri
         }
-        b64 = os.environ.get('notion_bearer_token')
+        #b64 encode:
+        import base64
+        secret = f"{os.environ.get("notion_client_id")}:{os.environ.get("notion_secret")}".encode('utf-8')
+        b64 = base64.b64encode(secret).decode('utf-8')
+        # b64 = os.environ.get('notion_bearer_token')
         response = requests.post(url, data=body, headers={"Authorization": f"Basic {b64}"})
+        print(response)
+        print(response.text)
         data1 = json.loads(response.text)
         if str(response) != "<Response [200]>":
             notion_expired(request.user, n_data)
@@ -117,7 +123,7 @@ def notion_callback(request):
         except:
             pass
 
-        #get DB id 
+        #get DB id (duplicated_template_id)
         try:
             url = 'https://api.notion.com/v1/databases'
             response = requests.get(url, headers={"Authorization": f"Bearer {n_data.access_token}", "Notion-Version": "2021-08-16"})
@@ -179,56 +185,6 @@ def notion_callback(request):
         })
     else:
         return JsonResponse({"error": "invalid request"}, status=400)
- 
-def notion_toics(request, user_id, hash_value, tag):
-    return 0
-    try:
-        user = User.objects.get(id=user_id)
-        IcsHashVal.objects.get(hash_user=user, hash_val=hash_value)
-    except:
-        return JsonResponse({"Error": "Not Authorized"}, status=403)
-    c = Calendar()
-    if tag == "personal":
-        notion_obj = NotionData.objects.get(notion_user=user, tag="personal")
-        url = f'https://api.notion.com/v1/databases/{notion_obj.db_id}/query'
-        response = requests.post(url, headers={'Authorization': f'Bearer {notion_obj.access_token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
-        if '200' not in str(response):
-            IntegrationLog.objects.create(user=user, src="notion", dest="hwapp", url = url, date = datetime.datetime.now(), message=response.text, error=True, hw_name="None (ICS Export: Personal)")
-            notion_obj.error = True
-            notion_obj.save()
-            return HttpResponseRedirect(reverse('notion_auth'))
-        i = json.loads(response.text)
-        for event in i['results']:
-            e = Event()
-            try:
-                e.name = event['properties']['Name']['title'][0]['plain_text']
-                e.begin = dateparser.parse(event['properties']['Date']['date']['start']) - datetime.timedelta(hours=7) + datetime.timedelta(days=1)
-                if event['properties']['Date']['date']['end']:
-                    e.end = dateparser.parse(event['properties']['Date']['date']['start']) - datetime.timedelta(hours=7) + datetime.timedelta(days=1)
-                e.created = datetime.datetime.now()
-                c.events.add(e)
-            except:
-                pass
-    else:
-        notion_obj = NotionData.objects.get(notion_user=user, tag="homework")
-        url = f'https://api.notion.com/v1/databases/{notion_obj.db_id}/query'
-        response = requests.post(url, headers={'Authorization': f'Bearer {notion_obj.access_token}', 'Notion-Version': '2022-02-22', "Content-Type": "application/json"})
-        if '200' not in str(response):
-            IntegrationLog.objects.create(user=request.user, src="notion", dest="hwapp", url = url, date = datetime.datetime.now(), message=response.text, error=True, hw_name="None (ICS Export: HW)")
-            return HttpResponseRedirect(reverse('notion_auth'))
-        i = json.loads(response.text)
-        for event in i['results']:
-            e = Event()
-            try:
-                e.name = event['properties']['Name']['title'][0]['plain_text']
-                e.begin = dateparser.parse(event['properties']['Due']['date']['start']).astimezone(pytz.utc)
-                e.created = datetime.datetime.now()
-                e.description = f"Class: {event['properties']['Class']['select']['name']}; Status: {event['properties']['Status']['status']['name']}"
-                c.events.add(e)
-            except Exception as e:
-                IntegrationLog.objects.create(user=request.user, src="notion", dest="hwapp- ICS", url = url, date = datetime.datetime.now(), message=e, error=True, hw_name="None (ICS Export: HW)")
-    response = HttpResponse(c, content_type="text/html")
-    return response
 
 @login_required(login_url='/login')
 def schoology_class(request):

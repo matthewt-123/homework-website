@@ -1,12 +1,15 @@
-from django.shortcuts import render
-from .models import HelpForm
-from django.http.response import JsonResponse, HttpResponse
+"""Module providing help form functionality"""
+
 import json
 import sys
 import html
 from datetime import datetime
-sys.path.append("..")
+
+from django.shortcuts import render
+from django.http.response import JsonResponse, HttpResponse
+
 from hwapp.email_helper import email_admin
+from .models import HelpForm
 # Create your views here.
 def contact(request):
     if request.method == 'POST':
