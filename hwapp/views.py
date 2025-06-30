@@ -879,7 +879,7 @@ def admin_console(request):
                 response = send_email()
                 if response:
                     message = send_email()
-                    if str(message['status']) == "Succeeded":
+                    if str(message['status']) == "Succeeded": # type: ignore
                         error = False
                     else:
                         error = True
