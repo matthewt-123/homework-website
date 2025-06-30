@@ -9,7 +9,6 @@ import datetime
 import json
 import pytz
 import requests
-# from ics import Calendar, Event
 from .helper import notion_push, notion_expired, g_headers
 import secrets
 from time import time
