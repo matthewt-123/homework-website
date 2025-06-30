@@ -27,7 +27,7 @@ def overdue_check():
     for hw in allhw:
         hw.overdue = True
         hw.save()
-client = EmailClient.from_connection_string(os.environ.get("AZURE_CONNECTION_STRING"))
+client = EmailClient.from_connection_string(os.environ.get("AZURE_CONNECTION_STRING", ""))
 
 
 def send_email(interval=0):
@@ -44,9 +44,16 @@ def send_email(interval=0):
             listed = "<ul>"
             for each in hw_list:
                 if each.overdue:
-                    listed = listed + f"<li style='color:red'><a style='color:red' href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li>"
+                    listed += (
+                        f"<li style='color:red'><a style='color:red' href='https://{os.environ.get('website_root')}/homework/{each.id}'>" # type: ignore
+                        f"{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li>" # type: ignore
+                    )
                 else:
-                    listed = listed + f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>{each.hw_title} for {each.hw_class} is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li>"
+                    listed += (
+                        f"<li><a href='https://{os.environ.get('website_root')}/homework/{each.id}'>" # type: ignore
+                        f"{each.hw_title} for {each.hw_class}" # type: ignore
+                        f"is due at {each.due_date.strftime('%d %B, %Y, %I:%M %p')}</a></li>" # type: ignore
+                    )
             #add closing tag
             listed = f"{listed}</ul>"
             html_content = str(EmailTemplate.objects.get(id=2).template_body)
@@ -77,8 +84,8 @@ def send_email(interval=0):
 def pw_reset_email(user, hash_val, expires, email):
     pw_email_template = str(EmailTemplate.objects.get(id=1).template_body)
     listed = pw_email_template.replace('$$exp_time', expires.strftime('%d %B, %Y, %I:%M %p'))
-    listed = listed.replace('$$pw_reset_link', f'https://{os.environ.get("website_root")}/reset_password?hash={hash_val}')
-    listed = listed.replace('$$website_root', os.environ.get("website_root"))
+    listed = listed.replace('$$pw_reset_link', f'https://{os.environ.get("website_root", "")}/reset_password?hash={hash_val}')
+    listed = listed.replace('$$website_root', os.environ.get("website_root", ""))
     #listed = f"<h1>Password Reset Email for {user.username}:</h1><br>Please navigate to the below link to reset your password. Please note that this link expires at {expires}: <br><a href='{os.environ.get('website_root')}/reset_password?hash={hash_val}'>{os.environ.get('website_root')}/reset_password?hash={hash_val}</a>"
     send = requests.post(
         f"{os.environ.get('API_BASE_URL')}/messages",
@@ -204,7 +211,7 @@ def canvas_class():
         response = requests.get(url, headers=headers)
         #print(response.text)
         response = json.loads(response.text)
-        s_class = SchoologyClasses.objects.filter(schoology_user=all.h_user, src='Canvas')
+        s_class = SchoologyClasses.objects.filter(schoology_user=all.h_user, src='Canvas') # type: ignore
         classes = []
         for i in s_class:
             classes.append(str(i.class_id))
@@ -213,20 +220,28 @@ def canvas_class():
                 assert i['access_restricted_by_date'] == True
             except KeyError:
                 if str(i['id']) not in classes:
-                    c = Class.objects.create(class_user=all.h_user, class_name=i['name'], external_src="Canvas", external_id=i['id'])
-                    SchoologyClasses.objects.create(schoology_user=all.h_user, class_id=i['id'], s_class_name=i['name'],s_grading_period=i['enrollment_term_id'], linked_class=c, src='Canvas', auth_data=s)
+                    c = Class.objects.create(class_user=all.h_user, class_name=i['name'], external_src="Canvas", external_id=i['id']) # type: ignore
+                    SchoologyClasses.objects.create(
+                        schoology_user=all.h_user,  # type: ignore
+                        class_id=i['id'], 
+                        s_class_name=i['name'],
+                        s_grading_period=i['enrollment_term_id'], 
+                        linked_class=c, 
+                        src='Canvas', 
+                        auth_data=s
+                    )
 
 def canvas_hw():
     c = SchoologyClasses.objects.filter(src='Canvas').exclude(update=False)
-    c = [s_class for s_class in c if s_class.linked_class.archived != True]
+    c = [s_class for s_class in c if s_class.linked_class.archived != True] # type: ignore
     for class1 in c:
         existing_hws = Homework.objects.filter(hw_user=class1.schoology_user, external_src="Canvas")
         z = []
         for existing_hw in existing_hws:
             z.append(str(existing_hw.external_id))
-        url = f"https://canvas.instructure.com/api/v1/courses/{class1.class_id}/assignments?access_token={class1.auth_data.s_secret_key}"
+        url = f"https://canvas.instructure.com/api/v1/courses/{class1.class_id}/assignments?access_token={class1.auth_data.s_secret_key}" # type: ignore
         headers = {
-            "Authorization": f'Bearer {class1.auth_data.s_secret_key}'
+            "Authorization": f'Bearer {class1.auth_data.s_secret_key}' # type: ignore
         }   
         response = requests.get(url, headers=headers)
         if str(response) != "<Response [200]>":
@@ -240,7 +255,6 @@ def canvas_hw():
             class1.save()
             break
         for hw in data:
-            (data)
             if str(hw['id']) not in z:
                 try:
                     l = datetime.datetime.strptime(hw['due_at'], "%Y-%m-%dT%H:%M:%S%z")

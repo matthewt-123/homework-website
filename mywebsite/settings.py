@@ -14,7 +14,6 @@ from pathlib import Path
 import os
 
 import sentry_sdk
-import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +27,7 @@ VERSION = "19"
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', "x#xf%%!upe%h(3rlrrnr#uj(30*$g#$n_f!@ok=@k=n5@^26i#")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes")
 
 if DEBUG:
     from dotenv import load_dotenv, find_dotenv
@@ -47,7 +46,7 @@ ALLOWED_HOSTS_TYPES = {
     "dev":
     ['localhost'], 
      "prod":
-    ['matthewtsai.tech', '10.2.0.4'], 
+    ['matthewtsai.uk', f"{os.environ.get('other_ips')}"], 
 }
 
 
@@ -71,8 +70,6 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'integrations',
     'external',
-    'hijack',
-    'hijack.contrib.admin',
     'spotify'
 
 ]
@@ -83,8 +80,6 @@ LOGOUT_REDIRECT_URL = '/'
 
 LOGIN_URL = '/login'
 
-INTERNAL_IPS = ['10.2.0.4']
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -94,8 +89,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'hijack.middleware.HijackUserMiddleware',
-
 ]
 
 ROOT_URLCONF = 'mywebsite.urls'

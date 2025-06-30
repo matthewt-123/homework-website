@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-import dateparser
-from django.http.response import HttpResponseRedirect, JsonResponse
+from django.http.response import JsonResponse
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 import os
@@ -11,7 +10,7 @@ import json
 import pytz
 import requests
 # from ics import Calendar, Event
-from .helper import notion_push, notion_expired, g_headers, gradescope_refresh
+from .helper import notion_push, notion_expired, g_headers
 import secrets
 from time import time
 import csv
@@ -19,10 +18,9 @@ from bs4 import BeautifulSoup
 
 
 #import hwapp models
-import sys
-sys.path.append("..")
 from hwapp.models import Homework, Class, Preferences, User
 from mywebsite.settings import DEBUG
+
 def superuser(user):
     return user.is_superuser
 def user_in_group(*group_names):
@@ -47,7 +45,7 @@ def index(request):
     except:
         n_data = False
     try:
-        n = n_data.get(tag="homework")
+        n = n_data.get(tag="homework") # type: ignore
     except:
         n = False
     return render(request, 'hwapp/integrations.html', {
@@ -96,39 +94,53 @@ def notion_callback(request):
         import base64
         secret = f"{os.environ.get("notion_client_id")}:{os.environ.get("notion_secret")}".encode('utf-8')
         b64 = base64.b64encode(secret).decode('utf-8')
-        # b64 = os.environ.get('notion_bearer_token')
+
         response = requests.post(url, data=body, headers={"Authorization": f"Basic {b64}"})
-        print(response)
-        print(response.text)
         data1 = json.loads(response.text)
-        if str(response) != "<Response [200]>":
-            notion_expired(request.user, n_data)
+        # check if notion object exists and create if dne
         try:
             n_data = NotionData.objects.get(notion_user=request.user, tag="homework")
-            n_data.notion_user = request.user
-            n_data.access_token = data1['access_token']
-            n_data.bot_id = data1['bot_id']
-            n_data.workspace_name = data1['workspace_name']
-            n_data.workspace_id = data1['workspace_id']
-            n_data.tag = "homework"
-            n_data.error = False
-            n_data.save()
-        except:
-            n_data = NotionData.objects.create(notion_user = request.user, access_token = data1['access_token'], bot_id = data1['bot_id'],workspace_name = data1['workspace_name'], workspace_id = data1['workspace_id'], error=False)
-        #update notion personal if it exists:
+        except NotionData.DoesNotExist:
+            n_data = NotionData.objects.create(notion_user=request.user)
+
+        # check expiration and have user reauthorize notion if needed
+        if str(response) != "<Response [200]>":
+            notion_expired(request.user, n_data)
+        
+        # set attributes 
+        n_data.notion_user = request.user
+        n_data.access_token = data1['access_token']
+        n_data.bot_id = data1['bot_id']
+        n_data.workspace_name = data1['workspace_name']
+        n_data.workspace_id = data1['workspace_id']
+        n_data.tag = "homework"
+        n_data.error = False
+        n_data.save()
+    #update notion personal if it exists:
         try:
             n_personal = NotionData.objects.get(notion_user=request.user, tag="personal")
             n_personal.access_token = data1['access_token']
             n_data.bot_id = data1['bot_id']
             n_personal.save()
-        except:
+        except NotionData.DoesNotExist:
+            # not all users have a personal notion
             pass
 
         #get DB id (duplicated_template_id)
         try:
+            #decode JSON
+            data = 0
+            try:
+                data = json.loads(response.text)
+                try:
+                    db_id = data["results"][0]["id"]
+                except (KeyError, IndexError):
+                    db_id = data["results"][0].get("duplicated_template_id")
+            except (json.JSONDecodeError, KeyError, IndexError):
+                db_id = None
             url = 'https://api.notion.com/v1/databases'
             response = requests.get(url, headers={"Authorization": f"Bearer {n_data.access_token}", "Notion-Version": "2021-08-16"})
-            n_data.db_id = json.loads(response.text)['results'][0]['id']
+            n_data.db_id = db_id
             n_data.save()
         except:
             return render(request, 'hwapp/error.html', {
@@ -142,7 +154,7 @@ def notion_callback(request):
         url = 'https://api.notion.com/v1/pages'
         to_post = Homework.objects.filter(hw_user=request.user, completed=False, notion_migrated=False)
         for hw in to_post:
-            hw.due_date = datetime.datetime.strftime(hw.due_date, '%Y-%m-%dT%H:%M')
+            hw.due_date = datetime.datetime.strftime(hw.due_date, '%Y-%m-%dT%H:%M') # type: ignore
             body = {
                 "parent": {
                     "database_id": f"{page_id}"
@@ -163,7 +175,7 @@ def notion_callback(request):
                     "Class": {
                         "type": f"select",
                         "select": {
-                            "name": f"{hw.hw_class.class_name}"
+                            "name": f"{hw.hw_class.class_name}" # type: ignore
                         }
                     },
                     "Due": {
@@ -210,9 +222,25 @@ def schoology_class(request):
             pass
         else:
             c = Class.objects.create(class_user=request.user, class_name=i['course_title'], external_src="Schoology", external_id=i['id'])
-            SchoologyClasses.objects.create(schoology_user=request.user, class_id=i['id'], s_class_name=i['course_title'],s_grading_period=i['grading_periods'][0], linked_class=c, src='Schoology', auth_data=s)
-    Log.objects.create(user=request.user, date=datetime.datetime.now(), message="Refreshed Schoology Classes", error=False, log_type="Schoology Refresh", ip_address = request.META.get("REMOTE_ADDR"))
-
+            SchoologyClasses.objects.create(
+                schoology_user=request.user, 
+                class_id=i['id'], 
+                s_class_name=i['course_title'],
+                s_grading_period=i['grading_periods'][0],
+                linked_class=c, 
+                src='Schoology', 
+                auth_data=s
+            )
+    Log.objects.create(
+        user=request.user, 
+        date=datetime.datetime.now(), 
+        message="Refreshed Schoology Classes", 
+        error=False, 
+        log_type="Schoology Refresh", 
+        ip_address = request.META.get("REMOTE_ADDR")
+    )
+    return JsonResponse({"message": "Schoology class refreshed successfully"})
+    
 @login_required(login_url='/login')
 def schoology_hw(request):
     try:
@@ -229,7 +257,16 @@ def schoology_hw(request):
         s = class1.auth_data
         url = f"https://api.schoology.com/v1/sections/{class1.class_id}/assignments?start=0&limit=1000"
         headers = {
-            "Authorization": f'OAuth realm="Schoology API",oauth_consumer_key="{s.s_consumer_key}",oauth_token="",oauth_nonce="{secrets.token_urlsafe()}",oauth_timestamp="{int(time())}",oauth_signature_method="PLAINTEXT",oauth_version="1.0",oauth_signature="{s.s_secret_key}%26"'
+            "Authorization": (
+                'OAuth realm="Schoology API",'
+                f'oauth_consumer_key="{s.s_consumer_key}",' # type: ignore
+                'oauth_token="",'
+                f'oauth_nonce="{secrets.token_urlsafe()}",'
+                f'oauth_timestamp="{int(time())}",'
+                f'oauth_signature_method="PLAINTEXT",'
+                f'oauth_version="1.0",'
+                f'oauth_signature="{s.s_secret_key}%26"' # type: ignore
+            )
         }   
         response = requests.get(url, headers=headers)
         data = json.loads(response.text)
@@ -243,7 +280,17 @@ def schoology_hw(request):
                     l = datetime.datetime.strptime(hw['due'], "%Y-%m-%d %H:%M:%S")
                 except:
                     l = datetime.datetime.now()
-                h = Homework.objects.create(hw_user=request.user,hw_class=class1.linked_class,hw_title=hw['title'], external_id=hw['id'], external_src="Schoology", due_date=l,notes=f"{hw['description']}, {hw['web_url']}",completed=False, overdue=False)
+                h = Homework.objects.create(
+                    hw_user=request.user,
+                    hw_class=class1.linked_class,
+                    hw_title=hw['title'],
+                    external_id=hw['id'],
+                    external_src="Schoology",
+                    due_date=l,
+                    notes=f"{hw['description']}, {hw['web_url']}",
+                    completed=False,
+                    overdue=False
+                )
                 IntegrationLog.objects.create(user=class1.schoology_user, src="schoology", dest="hwapp", url = url, date = datetime.datetime.now(), message=response.text, error=error, hw_name=h.hw_title)
                 try:
                     notion_push(hw=h,user=request.user)
@@ -251,6 +298,7 @@ def schoology_hw(request):
                     pass
             pass
     Log.objects.create(user=request.user, date=datetime.datetime.now(), message="Refreshed Schoology Homework", error=False, log_type="Schoology Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+    return JsonResponse({"message": "Schoology homework refreshed successfully"})
 
 @login_required(login_url='/login')
 def canvas_class(request):
@@ -278,8 +326,17 @@ def canvas_class(request):
             except KeyError:
                 if str(i['id']) not in classes:
                     c = Class.objects.create(class_user=request.user, class_name=i['name'], external_src="Canvas", external_id=i['id'])
-                    SchoologyClasses.objects.create(schoology_user=request.user, class_id=i['id'], s_class_name=i['name'],s_grading_period=i['enrollment_term_id'], linked_class=c, src='Canvas', auth_data=s)
+                    SchoologyClasses.objects.create(
+                        schoology_user=request.user, 
+                        class_id=i['id'],
+                        s_class_name=i['name'],
+                        s_grading_period=i['enrollment_term_id'],
+                        linked_class=c,
+                        src='Canvas',
+                        auth_data=s
+                    )
     Log.objects.create(user=request.user, date=datetime.datetime.now(), message="Refreshed Canvas Classes", error=False, log_type="Canvas Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+    return JsonResponse({"message": "Canvas classes refreshed successfully"})
 
 @login_required(login_url='/login')
 def canvas_hw(request):
@@ -295,16 +352,14 @@ def canvas_hw(request):
     for existing_hw in existing_hws:
         z.append(str(existing_hw.external_id))
     for class1 in c:
-        url = f"https://canvas.instructure.com/api/v1/courses/{class1.class_id}/assignments?access_token={class1.auth_data.s_secret_key}&per_page=1000"
+        url = f"https://canvas.instructure.com/api/v1/courses/{class1.class_id}/assignments?access_token={class1.auth_data.s_secret_key}&per_page=1000" # type: ignore
         headers = {
-            "Authorization": f'Bearer {class1.auth_data.s_secret_key}'
+            "Authorization": f'Bearer {class1.auth_data.s_secret_key}' # type: ignore
         }   
         response = requests.get(url, headers=headers)
         data = json.loads(response.text)
-        if str(response) != "<Response [200]>":
-            error = True
-        else:
-            error = False
+        error = str(response) != "<Response [200]>"
+
         t = Preferences.objects.get(preferences_user=request.user)
         for hw in data:
             try:
@@ -324,15 +379,34 @@ def canvas_hw(request):
                     return render(request, 'hwapp/error.html', {
                         "error": "Please set timezone <a href='/preferences'>here</a>"
                     })
-                h = Homework.objects.create(hw_user=request.user,hw_class=class1.linked_class,hw_title=hw['name'], external_id=hw['id'], external_src="Canvas", due_date=l,notes=f"{hw['description']}",completed=False, overdue=False)
-                IntegrationLog.objects.create(user=class1.schoology_user, src="canvas", dest="hwapp", url = url, date = datetime.datetime.now(), message=response.text, error=error, hw_name=h.hw_title)
-                
+                h = Homework.objects.create(
+                    hw_user=request.user,
+                    hw_class=class1.linked_class,
+                    hw_title=hw['name'],
+                    external_id=hw['id'],
+                    external_src="Canvas",
+                    due_date=l,
+                    notes=f"{hw['description']}",
+                    completed=False,
+                    overdue=False
+                )
+                IntegrationLog.objects.create(
+                    user=class1.schoology_user,
+                    src="canvas",
+                    dest="hwapp",
+                    url = url,
+                    date = datetime.datetime.now(),
+                    message=response.text,
+                    error=error,
+                    hw_name=h.hw_title
+                )
                 try:
                     notion_push(hw=h,user=request.user)
                 except:
                     pass
             pass
     Log.objects.create(user=request.user, date=datetime.datetime.now(), message="Refreshed Canvas Homework", error=False, log_type="Canvas Refresh", ip_address = request.META.get("REMOTE_ADDR"))
+    return JsonResponse({"message": "Canvas homework refreshed successfully"})
     
 @login_required(login_url='/login')
 def canvas_api(request):
@@ -416,7 +490,9 @@ def edit_api(request, integration_id):
         s_obj.save()
         return render(request, 'hwapp/success.html', {
             "message": f"{s_obj.url} updated successfully"
-        })
+        }) 
+    else:
+        return JsonResponse({"error": "method not allowed"}, status=405)
 @login_required(login_url='/login')
 def csv_export(request):
     response = HttpResponse(content_type='text/csv')
@@ -452,7 +528,14 @@ def integration_log(request):
         logs = IntegrationLog.objects.filter(error=True).order_by("-id")
     else:
         logs = IntegrationLog.objects.all().order_by("-id")
-    Log.objects.create(user=request.user, date=datetime.datetime.now(), message="Viewed Integration Log", error=False, log_type="Integration Log Access", ip_address = request.META.get("REMOTE_ADDR"))
+    Log.objects.create(
+        user=request.user,
+        date=datetime.datetime.now(),
+        message="Viewed Integration Log",
+        error=False,
+        log_type="Integration Log Access",
+        ip_address = request.META.get("REMOTE_ADDR")
+    )
     return render(request, 'hwapp/integrationlog.html', {
         "logs": logs,
     })
@@ -501,10 +584,10 @@ def gradescope_init(request):
         soup = BeautifulSoup(response.text, 'html.parser')
         token = 0
         for f in soup.find_all('form'):
-            if f.get('action') == '/login':
-                for val in f.find_all('input'):
-                    if val.get('name') == "authenticity_token":
-                        token = val.get('value')
+            if f.get('action') == '/login': # type: ignore
+                for val in f.find_all('input'): # type: ignore
+                    if val.get('name') == "authenticity_token": # type: ignore
+                        token = val.get('value') # type: ignore
         url = 'https://www.gradescope.com/login'
         try:
             creds = GradescopeCredentials.objects.get(user=request.user)
@@ -530,17 +613,14 @@ def gradescope_init(request):
         syncedClasses = [i.class_id for i in gs_classes]
         #2.1 parse HTML for classes
         for class1 in soup.find_all('a'):
-            if 'courseBox' in str(class1.get("class")):
+            if 'courseBox' in str(class1.get("class")): # type: ignore
                 s = BeautifulSoup(str(class1), 'html.parser')
                 for subhead in s.find_all('h3'):
                     name = subhead.text
                     break
-                if str(class1.get('href').replace('/courses/', '')) not in str(syncedClasses):
-                    gclasses.append((class1.get('href').replace('/courses/', ''), name))
+                if str(class1.get('href').replace('/courses/', '')) not in str(syncedClasses): # type: ignore
+                    gclasses.append((class1.get('href').replace('/courses/', ''), name)) # type: ignore
         return render(request, 'hwapp/gradescope_init.html', {
             "gclasses": gclasses,
             "classes": Class.objects.filter(class_user=request.user, archived=False)
         })
-# @user_passes_test(superuser)
-# def gradescope_ref(request):
-#     return HttpResponse(gradescope_refresh())

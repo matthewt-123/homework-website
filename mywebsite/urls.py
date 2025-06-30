@@ -26,7 +26,6 @@ urlpatterns = [
     path('', include('hwapp.urls')),
     path('integrations/', include('integrations.urls')),
     path('home/', include('external.urls')),
-    path('hijack/', include('hijack.urls')),
     path('spotify/', include('spotify.urls')),
 ]
 

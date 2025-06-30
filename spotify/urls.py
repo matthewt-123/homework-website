@@ -10,5 +10,4 @@ urlpatterns = [
     path("deleteplaylist", views.deleteplaylist, name="spotify_deleteplaylist"),
     path("queue", views.queuedump, name="spotify_queuedump"),
     path("queue_html", views.queue_html, name="spotify_queuedump_html"),
-
 ]
