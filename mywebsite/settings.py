@@ -46,7 +46,7 @@ ALLOWED_HOSTS_TYPES = {
     "dev":
     ['localhost'], 
      "prod":
-    ['matthewtsai.uk', f"{os.environ.get("other_ips")}"], 
+    ['matthewtsai.uk', f"{os.environ.get('other_ips')}"], 
 }
 
 
