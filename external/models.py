@@ -9,7 +9,7 @@ class HelpForm(models.Model):
     first_name = models.CharField(max_length=32)
     last_name = models.CharField(max_length=64)
     email = models.EmailField()
-    received = models.DateField(default = django.utils.timezone.now)
+    received = models.DateField(default = django.utils.timezone.now) # type: ignore
     subject = models.CharField(default="", null=True, blank=True, max_length=256)
     message = models.TextField()
     status = StatusField()

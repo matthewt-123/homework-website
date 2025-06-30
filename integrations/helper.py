@@ -1,15 +1,13 @@
 import requests
 import json
-import sys
 import os
 from .models import NotionData, IntegrationLog
 from hwapp.models import Homework
 from integrations.models import GradescopeClasses, GradescopeCredentials
-import pytz
 from datetime import datetime
 from azure.communication.email import EmailClient
 from bs4 import BeautifulSoup
-from django.http import JsonResponse, HttpResponse
+
 #email helper function
 
 domain_name = os.environ.get("DOMAIN_NAME")
@@ -26,7 +24,7 @@ g_headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
 }
 def email_user(email, content, subject, recipient_name):
-    client = EmailClient.from_connection_string(os.environ.get('AZURE_CONNECTION_STRING'))
+    client = EmailClient.from_connection_string(os.environ.get('AZURE_CONNECTION_STRING', ""))
     message = {
         "content": {
             "subject": subject,
@@ -145,10 +143,10 @@ def gradescope_refresh():
         soup = BeautifulSoup(response.text, 'html.parser')
         token = 0
         for f in soup.find_all('form'):
-            if f.get('action') == '/login':
-                for val in f.find_all('input'):
-                    if val.get('name') == "authenticity_token":
-                        token = val.get('value')
+            if f.get('action') == '/login': # type: ignore
+                for val in f.find_all('input'): # type: ignore
+                    if val.get('name') == "authenticity_token": # type: ignore
+                        token = val.get('value') # type: ignore
         url = 'https://www.gradescope.com/login'
         gs_classes = GradescopeClasses.objects.filter(user=creds.user)
         email = creds.email
@@ -173,20 +171,30 @@ def gradescope_refresh():
                 soup = BeautifulSoup(response.text, 'html.parser')
                 for a in soup.find_all('table'):
                     #each assignment in table
-                    if "assignments-student-table" in str(a.get('id')):
+                    if "assignments-student-table" in str(a.get('id')): # type: ignore
                         s = BeautifulSoup(str(a), 'html.parser')
                         for row in s.find_all('tr'):
+                            print(row)
                             try:
-                                for a1 in row.find_all('a'):
+                                id = -1
+                                name = "unnamed assignment"
+                                for a1 in row.find_all('a'): # type: ignore
                                     name = a1.text
-                                    id = a1.get('href').split('/assignments/')[1].split('/submissions')[0]
-                                due = row.find('time', class_='submissionTimeChart--dueDate').get('datetime')
-                                status = row.find('div', class_="submissionStatus--text").text
-                                due = datetime.strptime(due, '%Y-%m-%d %H:%M:%S %z')
+                                    id = a1.get('href').split('/assignments/')[1].split('/submissions')[0] # type: ignore
+                                due = row.find('time', class_='submissionTimeChart--dueDate').get('datetime') # type: ignore
+                                
+                                # If assignment has been graded, the tag changes from --text to --score. check both to accurately 
+                                status_tag = row.find('div', class_="submissionStatus--text") # type: ignore
+                                submitted = False
+                                if status_tag is None:
+                                    status_tag = row.find('div', class_="submissionStatus--score") # type: ignore
+                                    submitted = True
+                                status = status_tag.text # type: ignore
+                                due = datetime.strptime(due, '%Y-%m-%d %H:%M:%S %z') # type: ignore
                                 #check: is assignment logged? 
                                 if str(id) in str(assignment_list):
                                     #yes:
-                                    if status.lower() == "submitted":
+                                    if status.lower() == "submitted" or submitted:
                                         #update status
                                         hw = Homework.objects.get(external_id=id, hw_user=gclass.user)
                                         hw.completed = True
@@ -197,13 +205,25 @@ def gradescope_refresh():
                                         hw.save()
                                 else:
                                     #create:
-                                    c = False
-                                    if status.lower() == "submitted":
-                                        c = True
-                                    h = Homework.objects.create(hw_user=gclass.user, hw_class=gclass.linked_class, hw_title=name, due_date=due, completed=c, overdue=False, notion_migrated=False, notion_id="", ics_id="", external_id=id, external_src="gradescope", archive=False)
+                                    complete = False
+                                    if status.lower() == "submitted" or submitted:
+                                        complete = True
+                                    h = Homework.objects.create(
+                                        hw_user=gclass.user, 
+                                        hw_class=gclass.linked_class, 
+                                        hw_title=name, 
+                                        due_date=due, 
+                                        completed=complete, 
+                                        overdue=False, 
+                                        notion_migrated=False, 
+                                        notion_id="", 
+                                        ics_id="", 
+                                        external_id=id, 
+                                        external_src="gradescope", 
+                                        archive=False
+                                    )
                                     h.save()
                                 #Yes: update if needed
                             except Exception as e:
-                                print(e)
-                                # must not be a row oopsie
+                                # must not be a row oopsie OR is a header row. Does not matter keep processing
                                 pass

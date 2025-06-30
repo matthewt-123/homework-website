@@ -13,8 +13,6 @@ from django.http.response import JsonResponse, HttpResponse, Http404
 import re
 from django.contrib.auth.decorators import login_required, user_passes_test
 
-
-sys.path.append("..")
 from mywebsite.settings import DEBUG
 from hwapp.models import User
 
@@ -71,24 +69,26 @@ def callback(request):
         }
         response = requests.post(url, data=data)
         data1 = json.loads(response.text)
-    try:
-        spotify_auth = SpotifyAuth.objects.get(user=request.user)
-    except:
-        spotify_auth = SpotifyAuth.objects.create(user=request.user)   
-    spotify_auth.access_token = data1['access_token']
-    spotify_auth.refresh_token = data1['refresh_token']
-    spotify_auth.scope = data1['scope']
-    spotify_auth.save()
+        try:
+            spotify_auth = SpotifyAuth.objects.get(user=request.user)
+        except:
+            spotify_auth = SpotifyAuth.objects.create(user=request.user)   
+        spotify_auth.access_token = data1['access_token']
+        spotify_auth.refresh_token = data1['refresh_token']
+        spotify_auth.scope = data1['scope']
+        spotify_auth.save()
 
-    #get user id
-    url = 'https://api.spotify.com/v1/me'
-    headers = {"Authorization": f"Bearer {SpotifyAuth.objects.get(user=request.user).access_token}"}
-    response = requests.get(url, headers=headers)
-    data1 = json.loads(response.text)
-    spotify_auth.s_user_id = data1['id']
-    spotify_auth.save()
+        #get user id
+        url = 'https://api.spotify.com/v1/me'
+        headers = {"Authorization": f"Bearer {SpotifyAuth.objects.get(user=request.user).access_token}"}
+        response = requests.get(url, headers=headers)
+        data1 = json.loads(response.text)
+        spotify_auth.s_user_id = data1['id']
+        spotify_auth.save()
 
-    return HttpResponseRedirect(reverse("spotify_index"))
+        return HttpResponseRedirect(reverse("spotify_index"))
+    else:
+        return HttpResponseRedirect(reverse("index"))
 
 @user_in_group("Spotify Users")
 def expired(request):
@@ -105,7 +105,9 @@ def expired(request):
         "client_id": os.environ.get('SPOTIFY_CLIENT_ID'),
         "client_secret": os.environ.get('SPOTIFY_CLIENT_SECRET'),
     }
+    print(data)
     response = requests.post(url, data=data)
+    print(response.text)
     spotify_auth.access_token = json.loads(response.text)['access_token']
     spotify_auth.save()
     return JsonResponse({"message": "refresh completed successfully", "status": 200}, status=200)
@@ -120,11 +122,11 @@ def recommendations(request):
     #part 1: get recommendations
     for uri in data:
         if data[uri] != "" and str(data[uri]).startswith("spotify:"):
-            t_type = re.search("(?<=spotify:)(.*)(?=:)", data[uri]).group(0)
+            t_type = re.search("(?<=spotify:)(.*)(?=:)", data[uri]).group(0) # type: ignore
             if str(t_type) == "artist":
-                seed_artists += f'{re.search(f"(?<=artist:)(.*)", data[uri]).group(0)},'
+                seed_artists += f'{re.search(f"(?<=artist:)(.*)", data[uri]).group(0)},' # type: ignore
             elif str(t_type) == "track":
-                seed_tracks += f'{re.search(f"(?<=track:)(.*)", data[uri]).group(0)},'
+                seed_tracks += f'{re.search(f"(?<=track:)(.*)", data[uri]).group(0)},' # type: ignore
             count += 1
     if count == 0:
         return JsonResponse({"error": "No tracks selected"}, status=400)
@@ -180,7 +182,7 @@ def recommendations(request):
         "uris": uri
     }
     response = requests.post(url, data=json.dumps(data), headers=headers)
-    return JsonResponse({"message": "playlist created successfully", "status": 200, "playlist_id": s_playlist.id}, status=200)
+    return JsonResponse({"message": "playlist created successfully", "status": 200, "playlist_id": s_playlist.id}, status=200) # type: ignore
 @user_in_group("Spotify Users")
 def playlists(request):
     spotify_auth = SpotifyAuth.objects.get(user=request.user)
@@ -240,7 +242,13 @@ def queuedump(request):
         }
         response = requests.post(url, data=json.dumps(data), headers=headers)
         data1 = json.loads(response.text)
-        s_playlist = SpotifyPlaylist.objects.create(auth=spotify_auth, playlist_name=playlist_name, url = data1['external_urls']['spotify'], uri = data1['id'], created=datetime.now())
+        s_playlist = SpotifyPlaylist.objects.create(
+            auth=spotify_auth,
+            playlist_name=playlist_name,
+            url = data1['external_urls']['spotify'],
+            uri = data1['id'],
+            created=datetime.now()
+        )
 
         #Part 3: Add to Playlist
         url = f"https://api.spotify.com/v1/playlists/{s_playlist.uri}/tracks"
@@ -248,13 +256,13 @@ def queuedump(request):
             "uris": uri
         }
         response = requests.post(url, data=json.dumps(data), headers=headers)
-        return JsonResponse({"message": "playlist created successfully", "status": 200, "playlist_id": s_playlist.id}, status=200)
+        return JsonResponse({"message": "playlist created successfully", "status": 200, "playlist_id": s_playlist.id}, status=200) # type: ignore
     else:
         return render(request, 'spotify/queue.html')
 
 def queue_html(request):
     try:
-        assert(request.headers['login'] == "^j8mCFM]a%1@d4Gbeg}TVQv@1H]+]9s5kqb6)qTeW7.kexK#p6uzn*togpKij07yv")
+        assert(request.headers['login'] == os.environ.get("PASTEBIN_HASH", ""))
         user = User.objects.get(id=1)
         spotify_auth = SpotifyAuth.objects.get(user=user)
         url = "https://api.spotify.com/v1/me/player/queue"
@@ -297,4 +305,4 @@ def queue_html(request):
         response = requests.post(url, data=json.dumps(data), headers=headers)
         return HttpResponse("playlist created successfully")
     except Exception as e:
-        raise HttpResponse(e)
+        return HttpResponse(f"An error occurred: {e}")

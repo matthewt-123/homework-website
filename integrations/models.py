@@ -15,7 +15,7 @@ class NotionData(models.Model):
     workspace_name = models.CharField(max_length=512, default=None, blank=True, null=True)
     workspace_id =  models.CharField(max_length=512, default=None, blank=True, null=True)
     db_id = models.TextField(default=None, blank=True, null=True)
-    tag = models.CharField(max_length = 128, default="homework", blank="homework", null="homework")
+    tag = models.CharField(max_length = 128, default="homework", blank=True, null=True)
     error = models.BooleanField(default=False, blank=False, null=False)
     def __str__(self):
         return f"{self.notion_user}"
@@ -58,7 +58,7 @@ class Log(models.Model):
     message = models.TextField(default=None, blank=True, null=True)
     error = models.BooleanField(default=False, blank=True, null=True)
     log_type = models.CharField(max_length=512, default=None, blank=True, null=True) #types: access, manual refresh, cron, hw/class refresh, notion pull
-    ip_address = models.CharField(max_length=16, default=0, blank=0, null=0)
+    ip_address = models.CharField(max_length=16, default="0", blank=True, null=True)
     def __str__(self):
         return f"{self.user}: {self.log_type}"
 class GradescopeCredentials(models.Model):

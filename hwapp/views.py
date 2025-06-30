@@ -65,11 +65,11 @@ oauth.register(
 PUBLIC VIEWS
 """
 def sso_login(request):
-    return oauth.auth0.authorize_redirect(
+    return oauth.auth0.authorize_redirect( # type: ignore
         request, request.build_absolute_uri(reverse("callback"))
     )
 def callback(request):
-    token = oauth.auth0.authorize_access_token(request)
+    token = oauth.auth0.authorize_access_token(request) # type: ignore
     request.session["user"] = token
     request.user = token
     e_info = token.get("userinfo")
@@ -164,7 +164,7 @@ def index(request):
         tmp = []
         q = str(request.GET.get('assignment')).lower()
         for hw in hwlist:
-            if q in hw.hw_title.lower():
+            if q in hw.hw_title.lower(): # type: ignore
                 tmp.append(hw)
         hwlist = tmp
     h = Paginator(hwlist, page_size)
@@ -215,13 +215,11 @@ def addhw(request):
                 return JsonResponse({
                     "message": "error: not authorized",
                     "status": 400
-                }, 403)
+                }, status=403)
             data['due_date'] = datetime.strptime(data['due_date'], "%Y-%m-%dT%H:%M")
-            try:
-                if data['notes'] != None:
-                    notes=data['notes']
-            except:
-                notes=""
+            notes = ""
+            if data['notes'] != None:
+                notes=data['notes']
             new_hw = Homework(hw_user=request.user, hw_class=hw_class, hw_title=data['hw_title'], due_date=data['due_date'], completed=False, notes=notes)
             new_hw.save()
             date_ics = data['due_date']
@@ -234,8 +232,8 @@ def addhw(request):
             return JsonResponse({
                 "message": "Homework added successfully!",
                 "status": 201,
-                'hw_id': new_hw.id,
-                'class_name': new_hw.hw_class.class_name,
+                'hw_id': new_hw.id, # type: ignore
+                'class_name': new_hw.hw_class.class_name, # type: ignore
                 'formatted_date': date
             }, status=201)
         except:
@@ -317,7 +315,7 @@ def edit_hw(request, hw_id):
             'classes': Class.objects.filter(class_user=request.user, archived=False),
             'hw': hw,
             'website_root': os.environ.get("website_root"),
-            'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M")
+            'due_date': hw.due_date.strftime("%Y-%m-%dT%H:%M") # type: ignore
         }) 
 
 @login_required(login_url='/login')
@@ -331,7 +329,7 @@ def addclass(request):
             time = form.cleaned_data['time']
             class1 = Class(class_user=user, class_name=class_name, period=period, time=time)
             class1.save()
-            newclass = Class.objects.get(id=class1.id)
+            newclass = Class.objects.get(id=class1.id) # type: ignore
             newclass.save()
         else:
             return render(request, 'hwapp/addclass.html', {
@@ -363,6 +361,9 @@ def editclass(request, class_id):
                     'error': "There was an error saving your changes"
                 })
             return HttpResponseRedirect(reverse('classes'))
+        return render(request, 'hwapp/error.html', {
+            'error': 'Invalid Form'
+        })
     else:
         try:
             editclass = Class.objects.get(class_user=request.user, id=class_id)
@@ -455,7 +456,7 @@ def profile(request):
             'last_name': request.user.last_name,
             'email': request.user.email,
             'timezones': Timezone.objects.all(),
-            'selected': new_tz.id
+            'selected': new_tz.id # type: ignore
         })
     else:
         url = "https://dev-q8234yaa.us.auth0.com/oauth/token"
@@ -680,7 +681,7 @@ def filebin(request):
         except:
             p = FileBin.objects.create(user=request.user)
             
-        p.hash_val = hash(f"{datetime.now()}:{p.user}")
+        p.hash_val = hash(f"{datetime.now()}:{p.user}") # type: ignore
         if os.path.exists(p.file.path):
             os.remove(p.file.path)
         p.file = request.FILES['content']
@@ -808,7 +809,7 @@ def helpformview(request, id):
     else:
         try:
             helpform = HelpForm.objects.get(id=id, parent_form=None)
-            tracking_id = round(46789234*(int(helpform.id) + 34952)/234567)
+            tracking_id = round(46789234*(int(helpform.id) + 34952)/234567) # type: ignore
             tracking_info = f"---------------------------------------------------------------------------------------------------------------------------------------------- \
                 <div style='display:none;color:white;font-size:0%'>@@@@tracking_id={tracking_id}@@@@</div>"
             email_user(email=helpform.email, content=f"{request.POST['message']}{tracking_info}", \
@@ -819,7 +820,8 @@ def helpformview(request, id):
                                     email = f"support@email.{os.environ.get("DOMAIN_NAME")}", received=datetime.now(), subject=f"[{os.environ.get("DOMAIN_NAME")}] Help Form: {request.POST['subject']}", message=request.POST['message'], status="Completed")
             new_response.save()
             return render(request, 'hwapp/success.html', {
-                'message': f"Message sent successfully. Click <a href='/helpformlist'>here</a> to return to the help form listing or <a href='/helpformview/{helpform.id}'>here</a> to return to your previous page"
+                'message': f"Message sent successfully. Click <a href='/helpformlist'>here</a> to return to the help form listing or \
+                    <a href='/helpformview/{helpform.id}'>here</a> to return to your previous page" # type: ignore
             })
         except Exception as e:
             return JsonResponse({"error": "form not found"}, status=404)
@@ -906,6 +908,8 @@ def admin_console(request):
                 return JsonResponse({"status": 200}, status=200) 
             else:
                 return JsonResponse({"status": 404}, status=404)
+        else:
+            return HttpResponseRedirect('/')
     elif request.method == "GET":
         groups = False
         if not request.user.is_superuser:
@@ -929,10 +933,9 @@ def add_template(request):
     if request.method =='GET':
         type1 = request.GET.get('type')
         if type1:
-            version_id =  EmailTemplate.objects.filter(type=type1).order_by('id').last().version_id + 1
+            version_id =  EmailTemplate.objects.filter(type=type1).order_by('id').last().version_id + 1 # type: ignore
         else:
             version_id = 0
-
         return render(request, 'hwapp/email_templates.html', {
             'type': type1,
             'version_id': version_id
@@ -945,15 +948,15 @@ def add_template(request):
             'email_template': to_edit,
             'website_root': os.environ.get('website_root')
         })
+    else:
+        return JsonResponse({"error": "method not allowed"}, status=405)
 @user_passes_test(superuser, login_url='/login')
 def email_all(request):
     if request.method == 'POST':
         content = request.POST['template_body']
         subject = request.POST['subject']
-        email_list = []
         for user in User.objects.all():
-            email_list.append(user.email)
-        email_user(emails = email_list, subject=subject, content=content)
+            email_user(email = user.email, subject=subject, content=content, recipient_name=user.first_name)
         return render(request, 'hwapp/success.html', {
             'message': 'email sent successfully'
         })
@@ -1008,3 +1011,5 @@ def email_template_editor(request):
                 'email_template': EmailTemplate.objects.get(id=template_id),
                 'website_root': os.environ.get('website_root')
             })
+    else:
+        return JsonResponse({"error": "method not allowed"}, status=405)
