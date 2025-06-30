@@ -122,7 +122,7 @@ DATABASES = {
     },
     "prod": {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME':  "/home/TestVM/database/db.sqlite3",
+        'NAME':  "/home/matthew/database/db.sqlite3",
     },
 }
 DATABASES['default'] = DATABASES['dev' if DEBUG else 'prod']

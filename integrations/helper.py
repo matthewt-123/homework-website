@@ -223,6 +223,7 @@ def gradescope_refresh():
                                         archive=False
                                     )
                                     h.save()
+
                                 #Yes: update if needed
                             except Exception as e:
                                 # must not be a row oopsie OR is a header row. Does not matter keep processing
